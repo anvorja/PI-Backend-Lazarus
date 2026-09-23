@@ -35,7 +35,7 @@ START_TIMEOUT_S = 15.0
 
 # Códigos de cierre hacia la app (rango 4000-4999, reservado para la aplicación).
 # La app decide con ellos si reconecta sola o avisa a la persona.
-CLOSE_UPSTREAM_ENDED = 4001  # Gemini cerró la sesión (p. ej. por inactividad)
+CLOSE_UPSTREAM_ENDED = 4001  # Gemini cerró la sesión (p. ej. límite de duración)
 CLOSE_UPSTREAM_ERROR = 4002  # fallo de red o de protocolo con Gemini
 CLOSE_QUOTA_EXCEEDED = 4003  # cuota de la API agotada
 CLOSE_MISCONFIGURED = 4004  # el servidor no tiene API key
@@ -73,6 +73,13 @@ async def _client_to_gemini(client: WebSocket, gemini) -> None:
         pass
 
 
+async def _session_limit(seconds: float) -> None:
+    """Termina cuando se cumple la duración máxima de la sesión (nunca si es 0)."""
+    if seconds <= 0:
+        await asyncio.Event().wait()
+    await asyncio.sleep(seconds)
+
+
 async def _close_client(client: WebSocket, code: int, reason: str) -> None:
     with contextlib.suppress(RuntimeError):
         await client.close(code=code, reason=_redact(reason)[:120])
@@ -98,7 +105,7 @@ async def _gemini_to_client(client: WebSocket, gemini) -> None:
         logger.warning("Live: Gemini cerró la sesión (%s → %s) — %s", code, cause, reason)
         await _close_client(client, cause, reason)
         return
-    # Gemini terminó la sesión de forma ordenada (p. ej. por inactividad).
+    # Gemini terminó la sesión de forma ordenada (p. ej. límite de duración).
     logger.info("Live: Gemini finalizó la sesión")
     await _close_client(client, CLOSE_UPSTREAM_ENDED, "upstream closed")
 
@@ -158,11 +165,13 @@ async def live_proxy(client: WebSocket) -> None:
             )
 
             # 3. Pipe bidireccional hasta que cualquier lado cierre.
+            limit = asyncio.create_task(_session_limit(settings.gemini_live_max_session_s))
             tasks = [
                 asyncio.create_task(_client_to_gemini(client, gemini)),
                 asyncio.create_task(_gemini_to_client(client, gemini)),
+                limit,
             ]
-            _, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+            done, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
             for task in pending:
                 task.cancel()
             # Recoge el resultado/excepción de TODAS las tareas (done + pending)
@@ -170,6 +179,12 @@ async def live_proxy(client: WebSocket) -> None:
             for task in tasks:
                 with contextlib.suppress(asyncio.CancelledError, ConnectionClosed):
                     await task
+            if limit in done:
+                # Mismo aviso que cuando Gemini termina la sesión por su cuenta.
+                logger.info("Live: se cumplió la duración máxima de la sesión")
+                await gemini.close()
+                await _close_client(client, CLOSE_UPSTREAM_ENDED, "session time limit")
+                return
     except Exception as exc:  # noqa: BLE001 — superficie de error hacia el cliente
         # Sin traceback: el mensaje de la excepción puede incluir la URL con la key.
         text = _redact(str(exc))

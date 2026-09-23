@@ -19,6 +19,10 @@ class Settings(BaseSettings):
     gemini_live_voice: str = "Charon"
     # Idioma por defecto si la app no lo indica en el frame `start` (es/en/fr/pt/it).
     gemini_live_language: str = "es"
+    # Duración máxima de una sesión en segundos (0 = sin límite propio; solo el de
+    # Gemini). Al cumplirse, la app recibe el cierre 4001 y retoma con un toque.
+    # Un valor corto (p. ej. 60) sirve para probar ese flujo en el teléfono.
+    gemini_live_max_session_s: float = 0
     # v1alpha: necesario para `proactivity` (audio proactivo) y affective dialog.
     # v1beta rechaza el campo `proactivity` con close 1007.
     gemini_live_url: str = (

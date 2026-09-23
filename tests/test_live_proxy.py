@@ -185,8 +185,8 @@ def test_gemini_termina_la_sesion_cierra_con_4001(monkeypatch):
     assert code == proxy_module.CLOSE_UPSTREAM_ENDED
 
 
-def test_gemini_cierra_por_inactividad_cierra_con_4001(monkeypatch):
-    code = _close_code_after_setup(monkeypatch, ClosingGemini(Close(1000, "idle timeout")))
+def test_gemini_cierra_por_limite_cierra_con_4001(monkeypatch):
+    code = _close_code_after_setup(monkeypatch, ClosingGemini(Close(1000, "session limit")))
     assert code == proxy_module.CLOSE_UPSTREAM_ENDED
 
 
@@ -203,3 +203,16 @@ def test_gemini_cierra_por_cuota_cierra_con_4003(monkeypatch, caplog):
 def test_gemini_cierra_con_error_cierra_con_4002(monkeypatch):
     code = _close_code_after_setup(monkeypatch, ClosingGemini(Close(1011, "internal error")))
     assert code == proxy_module.CLOSE_UPSTREAM_ERROR
+
+
+def test_duracion_maxima_cumplida_cierra_con_4001(monkeypatch, fake_gemini):
+    monkeypatch.setattr(settings, "gemini_live_max_session_s", 0.2)
+
+    with TestClient(app).websocket_connect("/ws/live") as ws:
+        ws.send_text(json.dumps({"type": "start"}))
+        ws.receive_text()  # setupComplete
+        with pytest.raises(WebSocketDisconnect) as exc:
+            ws.receive_text()
+
+    assert exc.value.code == proxy_module.CLOSE_UPSTREAM_ENDED
+    assert fake_gemini.closed

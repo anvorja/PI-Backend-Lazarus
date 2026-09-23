@@ -64,7 +64,7 @@ docker run --env-file .env -p 8000:8000 lazarus-backend
 | Código | Causa | Qué hace la app |
 | --- | --- | --- |
 | 1008 | No llegó el frame `start` a tiempo, o el primer frame no es `{"type":"start"}` | Error; aviso hablado |
-| 4001 | Gemini terminó la sesión (p. ej. por inactividad) | Pausa; al tocar la pantalla retoma con una confirmación corta |
+| 4001 | La sesión terminó: Gemini la cerró o se cumplió `GEMINI_LIVE_MAX_SESSION_S` | Pausa; al tocar la pantalla retoma con una confirmación corta |
 | 4002 | Falló la red o la conexión con Gemini | Reintenta sola hasta 3 veces (1 s, 2 s, 4 s) |
 | 4003 | Cuota de la API agotada | Aviso hablado; no reintenta |
 | 4004 | El servidor no tiene `GEMINI_API_KEY` | Aviso hablado; no reintenta |
@@ -91,6 +91,7 @@ El motivo de cierre nunca incluye la API key.
 | `GEMINI_LIVE_MODEL` | Modelo Live con audio nativo |
 | `GEMINI_LIVE_VOICE` | Voz por defecto |
 | `GEMINI_LIVE_LANGUAGE` | Idioma por defecto (`es`, `en`, `fr`, `pt`, `it`) |
+| `GEMINI_LIVE_MAX_SESSION_S` | Duración máxima de la sesión en segundos; `0` = sin límite propio (valor corto solo para pruebas) |
 | `HOST`, `PORT`, `DEBUG` | Servidor |
 | `CORS_ORIGINS` | Orígenes HTTP permitidos (lista JSON) |
 
