@@ -7,6 +7,8 @@ import logging
 import pytest
 from fastapi.testclient import TestClient
 from starlette.websockets import WebSocketDisconnect
+from websockets.exceptions import ConnectionClosed
+from websockets.frames import Close
 
 from app.core.config import settings
 from app.main import app
@@ -137,12 +139,12 @@ def test_error_upstream_no_expone_la_api_key(monkeypatch, caplog):
         with pytest.raises(WebSocketDisconnect) as exc:
             ws.receive_text()
 
-    assert exc.value.code == 1011
+    assert exc.value.code == proxy_module.CLOSE_UPSTREAM_ERROR
     assert key not in (exc.value.reason or "")
     assert key not in caplog.text
 
 
-def test_sin_api_key_configurada_cierra_con_1011(monkeypatch):
+def test_sin_api_key_configurada_cierra_con_codigo_de_configuracion(monkeypatch):
     monkeypatch.setattr(settings, "gemini_api_key", "")
 
     with TestClient(app).websocket_connect("/ws/live") as ws:
@@ -150,4 +152,54 @@ def test_sin_api_key_configurada_cierra_con_1011(monkeypatch):
         with pytest.raises(WebSocketDisconnect) as exc:
             ws.receive_text()
 
-    assert exc.value.code == 1011
+    assert exc.value.code == proxy_module.CLOSE_MISCONFIGURED
+
+
+class ClosingGemini(FakeGemini):
+    """Gemini que, tras el setupComplete, cierra la conexión con un código dado."""
+
+    def __init__(self, close: Close | None):
+        super().__init__(incoming=[json.dumps({"setupComplete": {}})])
+        self._close = close
+
+    async def __anext__(self):
+        if self._incoming:
+            return self._incoming.pop(0)
+        if self._close is None:
+            raise StopAsyncIteration  # cierre ordenado
+        raise ConnectionClosed(rcvd=self._close, sent=None)
+
+
+def _close_code_after_setup(monkeypatch, gemini: FakeGemini) -> int:
+    monkeypatch.setattr(proxy_module.websockets, "connect", lambda *a, **k: gemini)
+    with TestClient(app).websocket_connect("/ws/live") as ws:
+        ws.send_text(json.dumps({"type": "start"}))
+        ws.receive_text()  # setupComplete
+        with pytest.raises(WebSocketDisconnect) as exc:
+            ws.receive_text()
+    return exc.value.code
+
+
+def test_gemini_termina_la_sesion_cierra_con_4001(monkeypatch):
+    code = _close_code_after_setup(monkeypatch, ClosingGemini(close=None))
+    assert code == proxy_module.CLOSE_UPSTREAM_ENDED
+
+
+def test_gemini_cierra_por_inactividad_cierra_con_4001(monkeypatch):
+    code = _close_code_after_setup(monkeypatch, ClosingGemini(Close(1000, "idle timeout")))
+    assert code == proxy_module.CLOSE_UPSTREAM_ENDED
+
+
+def test_gemini_cierra_por_cuota_cierra_con_4003(monkeypatch, caplog):
+    caplog.set_level(logging.WARNING, logger="uvicorn.error")
+    gemini = ClosingGemini(Close(1011, "RESOURCE_EXHAUSTED: quota exceeded"))
+
+    code = _close_code_after_setup(monkeypatch, gemini)
+
+    assert code == proxy_module.CLOSE_QUOTA_EXCEEDED
+    assert "quota" in caplog.text  # la causa queda registrada
+
+
+def test_gemini_cierra_con_error_cierra_con_4002(monkeypatch):
+    code = _close_code_after_setup(monkeypatch, ClosingGemini(Close(1011, "internal error")))
+    assert code == proxy_module.CLOSE_UPSTREAM_ERROR

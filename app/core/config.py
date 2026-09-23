@@ -17,6 +17,8 @@ class Settings(BaseSettings):
     gemini_api_key: str = ""
     gemini_live_model: str = "gemini-2.5-flash-native-audio-latest"
     gemini_live_voice: str = "Charon"
+    # Idioma por defecto si la app no lo indica en el frame `start` (es/en/fr/pt/it).
+    gemini_live_language: str = "es"
     # v1alpha: necesario para `proactivity` (audio proactivo) y affective dialog.
     # v1beta rechaza el campo `proactivity` con close 1007.
     gemini_live_url: str = (
