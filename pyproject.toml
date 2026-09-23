@@ -1,0 +1,28 @@
+[project]
+name = "lazarus-backend"
+version = "1.0.0"
+description = "Lazarus - AI-powered backend for visual impairment assistance"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "python-dotenv>=1.0.0",
+    "pydantic-settings>=2.5.0",
+    "google-genai>=2.3.0",
+    "websockets>=13.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "httpx>=0.27.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
