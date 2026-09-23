@@ -25,6 +25,7 @@ from fastapi import WebSocket, WebSocketDisconnect
 from websockets.exceptions import ConnectionClosed
 
 from app.core.config import settings
+from app.prompts.companion import PROMPT_VERSION
 from app.services.live_service import build_setup_message, build_upstream_url
 
 # uvicorn.error sí tiene handler configurado, así que estos logs se ven en consola.
@@ -157,7 +158,9 @@ async def live_proxy(client: WebSocket) -> None:
             )
             await gemini.send(json.dumps(setup))
             logger.info(
-                "Live: sesión Gemini iniciada (idioma=%s, voz=%s, asistente=%s, usuario=%s)",
+                "Live: sesión Gemini iniciada (prompt=v%s, idioma=%s, voz=%s, asistente=%s, "
+                "usuario=%s)",
+                PROMPT_VERSION,
                 language,
                 voice or settings.gemini_live_voice,  # voz efectiva (default si None)
                 assistant_name or "Aria",
