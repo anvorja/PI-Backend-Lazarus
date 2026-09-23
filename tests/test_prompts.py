@@ -7,12 +7,13 @@ import pytest
 
 from app.prompts import companion as c
 
+# Regla de cierre: idioma fijo; solo cambia con pedido explícito (set_language).
 LANGUAGE_CLOSING = {
-    "es": "Habla siempre en español.",
-    "en": "Always speak in English.",
-    "fr": "Parle toujours en français.",
-    "pt": "Fale sempre em português.",
-    "it": "Parla sempre in italiano.",
+    "es": "Solo cambia de idioma si la persona lo pide de forma explícita (set_language).",
+    "en": "Only switch languages if the person explicitly asks (set_language).",
+    "fr": "Ne change de langue que si la personne le demande explicitement (set_language).",
+    "pt": "Só mude de idioma se a pessoa pedir explicitamente (set_language).",
+    "it": "Cambia lingua solo se la persona lo chiede esplicitamente (set_language).",
 }
 
 # Palabra con la que empieza la regla 1 (advertencias de seguridad, P1) en cada idioma.

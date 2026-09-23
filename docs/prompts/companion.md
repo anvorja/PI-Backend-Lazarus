@@ -2,6 +2,17 @@
 
 > Registro de versiones del prompt de sistema (`app/prompts/companion.py`). Cada cambio de comportamiento sube `PROMPT_VERSION` y agrega aquí un bloque `## vX.Y.Z — fecha — motivo`, del más reciente al más antiguo. El backend registra la versión en el log al iniciar cada sesión.
 
+## v1.1.0 — 2026-09-23 — Idioma fijo salvo pedido explícito (LAZA-31 · HU-005)
+
+**Motivo:** en la prueba en teléfono de HU-005, con ruido o frases cortas, la
+transcripción de la voz de la persona salió en otros idiomas (p. ej. italiano). Se
+refuerza la última regla base en los 5 idiomas: el asistente habla siempre en el idioma
+configurado (español por defecto), aunque el audio suene a otro idioma o tenga ruido, y
+solo lo cambia si la persona lo pide de forma explícita (función `set_language`).
+
+**Cambio:** regla final de las reglas base ("Habla siempre en español." y equivalentes).
+El resto del prompt no cambia.
+
 ## v1.0.0 — 2026-09-23 — Versión formal del copiloto de movilidad (LAZA-29 · HU-003)
 
 **Motivo:** fijar como versión 1.0.0 el prompt con el que se prueba el piloto, con
