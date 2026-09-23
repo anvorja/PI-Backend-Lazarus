@@ -250,9 +250,11 @@ def build_setup_message(
             # Proactividad: Gemini puede hablar sin esperar al usuario (describe
             # el entorno por su cuenta). Interrumpible por defecto.
             "proactivity": {"proactive_audio": True},
+            # Detección automática de voz: cuando la persona empieza a hablar, el
+            # asistente se interrumpe (barge-in).
             "realtime_input_config": {
-                "automatic_activity_detection": {},
-                "activity_handling": "ACTIVITY_HANDLING_UNSPECIFIED",
+                "automatic_activity_detection": {"disabled": False},
+                "activity_handling": "START_OF_ACTIVITY_INTERRUPTS",
             },
             # Transcripción de la voz del usuario (debug / logs de accesibilidad).
             "input_audio_transcription": {},

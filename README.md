@@ -59,12 +59,29 @@ docker run --env-file .env -p 8000:8000 lazarus-backend
    - Gemini → app: `serverContent` (audio 24 kHz, transcripciones, `interrupted`,
      `turnComplete`) y `toolCall`.
 
-**Códigos de cierre**
+**Códigos de cierre** (la app decide con ellos si reconecta sola o avisa a la persona)
 
-| Código | Causa |
+| Código | Causa | Qué hace la app |
+| --- | --- | --- |
+| 1008 | No llegó el frame `start` a tiempo, o el primer frame no es `{"type":"start"}` | Error; aviso hablado |
+| 4001 | Gemini terminó la sesión (p. ej. por inactividad) | Pausa; al tocar la pantalla retoma con una confirmación corta |
+| 4002 | Falló la red o la conexión con Gemini | Reintenta sola hasta 3 veces (1 s, 2 s, 4 s) |
+| 4003 | Cuota de la API agotada | Aviso hablado; no reintenta |
+| 4004 | El servidor no tiene `GEMINI_API_KEY` | Aviso hablado; no reintenta |
+
+El motivo de cierre nunca incluye la API key.
+
+## Configuración de la sesión con Gemini
+
+| Parámetro | Valor |
 | --- | --- |
-| 1008 | No llegó el frame `start` a tiempo, o el primer frame no es `{"type":"start"}` |
-| 1011 | Falta la API key en el servidor, falló la conexión con Gemini o Gemini cerró la sesión. El motivo nunca incluye la API key. |
+| Modelo | `GEMINI_LIVE_MODEL` (audio nativo) |
+| Voz por defecto | `GEMINI_LIVE_VOICE` (la app puede cambiarla por voz) |
+| Idioma por defecto | `GEMINI_LIVE_LANGUAGE` si la app no lo envía |
+| Respuesta | Solo audio, temperatura 0,3 |
+| Detección de voz | Automática; si la persona habla, el asistente se interrumpe (`START_OF_ACTIVITY_INTERRUPTS`) |
+| Audio proactivo | Activo: puede avisar de riesgos sin que se le pregunte |
+| Transcripción de entrada | Activa |
 
 ## Variables de entorno
 
@@ -73,6 +90,7 @@ docker run --env-file .env -p 8000:8000 lazarus-backend
 | `GEMINI_API_KEY` | API key de Gemini (Developer API). Solo en el servidor. |
 | `GEMINI_LIVE_MODEL` | Modelo Live con audio nativo |
 | `GEMINI_LIVE_VOICE` | Voz por defecto |
+| `GEMINI_LIVE_LANGUAGE` | Idioma por defecto (`es`, `en`, `fr`, `pt`, `it`) |
 | `HOST`, `PORT`, `DEBUG` | Servidor |
 | `CORS_ORIGINS` | Orígenes HTTP permitidos (lista JSON) |
 

@@ -33,6 +33,24 @@ logger = logging.getLogger("uvicorn.error")
 # Espera máxima por el primer frame `start` del cliente.
 START_TIMEOUT_S = 15.0
 
+# Códigos de cierre hacia la app (rango 4000-4999, reservado para la aplicación).
+# La app decide con ellos si reconecta sola o avisa a la persona.
+CLOSE_UPSTREAM_ENDED = 4001  # Gemini cerró la sesión (p. ej. por inactividad)
+CLOSE_UPSTREAM_ERROR = 4002  # fallo de red o de protocolo con Gemini
+CLOSE_QUOTA_EXCEEDED = 4003  # cuota de la API agotada
+CLOSE_MISCONFIGURED = 4004  # el servidor no tiene API key
+
+_QUOTA_MARKERS = ("quota", "exhausted", "resource_exhausted", "429", "rate limit")
+
+
+def _upstream_close_code(code: int, reason: str) -> int:
+    """Traduce el cierre de Gemini a un código de causa para la app."""
+    if any(marker in reason.lower() for marker in _QUOTA_MARKERS):
+        return CLOSE_QUOTA_EXCEEDED
+    if code in (1000, 1001):
+        return CLOSE_UPSTREAM_ENDED
+    return CLOSE_UPSTREAM_ERROR
+
 
 def _redact(text: str) -> str:
     """Oculta la API key si aparece en un texto (p. ej. la URL dentro de un error)."""
@@ -55,8 +73,13 @@ async def _client_to_gemini(client: WebSocket, gemini) -> None:
         pass
 
 
+async def _close_client(client: WebSocket, code: int, reason: str) -> None:
+    with contextlib.suppress(RuntimeError):
+        await client.close(code=code, reason=_redact(reason)[:120])
+
+
 async def _gemini_to_client(client: WebSocket, gemini) -> None:
-    """Reenvía frames de Gemini hacia la app y propaga su cierre con motivo."""
+    """Reenvía frames de Gemini hacia la app y propaga su cierre con un código de causa."""
     try:
         async for message in gemini:
             if isinstance(message, bytes):
@@ -69,15 +92,15 @@ async def _gemini_to_client(client: WebSocket, gemini) -> None:
                 return
     except ConnectionClosed as exc:
         rcvd = exc.rcvd
-        code = rcvd.code if rcvd else 1011
+        code = rcvd.code if rcvd else 1006
         reason = (rcvd.reason if rcvd else "") or "upstream closed"
-        if code != 1000:
-            logger.warning("Live: Gemini cerró la sesión (%s) — %s", code, reason)
-        # 1011 = internal error (código válido para cierre desde servidor).
-        try:
-            await client.close(code=1011, reason=reason[:120])
-        except RuntimeError:
-            pass
+        cause = _upstream_close_code(code, reason)
+        logger.warning("Live: Gemini cerró la sesión (%s → %s) — %s", code, cause, reason)
+        await _close_client(client, cause, reason)
+        return
+    # Gemini terminó la sesión de forma ordenada (p. ej. por inactividad).
+    logger.info("Live: Gemini finalizó la sesión")
+    await _close_client(client, CLOSE_UPSTREAM_ENDED, "upstream closed")
 
 
 async def live_proxy(client: WebSocket) -> None:
@@ -100,7 +123,7 @@ async def live_proxy(client: WebSocket) -> None:
         await client.close(code=1008, reason="Se esperaba {type:'start'}")
         return
 
-    language = start.get("language", "es")
+    language = start.get("language") or settings.gemini_live_language
     voice = start.get("voice")
     assistant_name = start.get("assistantName")
     user_name = start.get("userName")
@@ -112,7 +135,7 @@ async def live_proxy(client: WebSocket) -> None:
         upstream_url = build_upstream_url()
     except RuntimeError as exc:
         logger.error("Live: config inválida — %s", exc)
-        await client.close(code=1011, reason=str(exc)[:120])
+        await client.close(code=CLOSE_MISCONFIGURED, reason=str(exc)[:120])
         return
 
     try:
@@ -149,11 +172,10 @@ async def live_proxy(client: WebSocket) -> None:
                     await task
     except Exception as exc:  # noqa: BLE001 — superficie de error hacia el cliente
         # Sin traceback: el mensaje de la excepción puede incluir la URL con la key.
-        logger.error("Live: fallo en la sesión (%s): %s", type(exc).__name__, _redact(str(exc)))
-        try:
-            await client.close(code=1011, reason=_redact(f"Upstream error: {exc}")[:120])
-        except RuntimeError:
-            pass
+        text = _redact(str(exc))
+        cause = _upstream_close_code(1011, text)
+        logger.error("Live: fallo en la sesión (%s → %s): %s", type(exc).__name__, cause, text)
+        await _close_client(client, cause, f"Upstream error: {text}")
         return
 
     try:
