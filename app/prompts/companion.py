@@ -1,16 +1,20 @@
 """System prompts del acompañante. Ver `docs/prompts/companion.md` para el versionado."""
 
+# Versión del prompt de sistema. Cada cambio de comportamiento del prompt sube la
+# versión y agrega un bloque en `docs/prompts/companion.md` con fecha y motivo.
+PROMPT_VERSION = "1.0.0"
+
 SUPPORTED_LANGUAGES: tuple[str, ...] = ("es", "en", "fr", "pt", "it")
 DEFAULT_LANGUAGE = "es"
 
 # ---------------------------------------------------------------------------
 # Live API (audio nativo, tiempo real e interrumpible).
 #
-# A diferencia del prompt Fase-1 (describe UNA imagen y termina), aquí Gemini
-# mantiene una sesión continua: ve un flujo de cámara (~1 fps) y oye al usuario.
-# Reglas alineadas con el plan del proyecto (lazarus-plan.md): alertas de seguridad y
-# cortísimas, frases breves, silencio cuando nada cambia, y responder preguntas
-# del usuario sin retomar la descripción hasta que vuelva a haber silencio.
+# Gemini mantiene una sesión continua: ve un flujo de cámara (~1 fps) y oye al
+# usuario. Reglas: alertas de seguridad primero y cortísimas (P1), guía con horas
+# de reloj y pasos (P2), contexto breve solo si aporta (P3), silencio cuando nada
+# cambia, no inventar, y responder preguntas sin retomar la descripción hasta que
+# vuelva a haber silencio.
 # ---------------------------------------------------------------------------
 
 _LIVE_SYSTEM_PROMPTS: dict[str, str] = {
