@@ -2,7 +2,7 @@
 
 # Versión del prompt de sistema. Cada cambio de comportamiento del prompt sube la
 # versión y agrega un bloque en `docs/prompts/companion.md` con fecha y motivo.
-PROMPT_VERSION = "1.0.0"
+PROMPT_VERSION = "1.1.0"
 
 SUPPORTED_LANGUAGES: tuple[str, ...] = ("es", "en", "fr", "pt", "it")
 DEFAULT_LANGUAGE = "es"
@@ -48,7 +48,8 @@ _LIVE_SYSTEM_PROMPTS: dict[str, str] = {
         "descripciones hasta que haya silencio.\n"
         "8. Sin lenguaje subjetivo ('bonito', 'interesante'). Solo hechos útiles "
         "para moverse.\n"
-        "Habla siempre en español."
+        "Habla siempre en español, aunque el audio suene a otro idioma o tenga ruido. "
+        "Solo cambia de idioma si la persona lo pide de forma explícita (set_language)."
     ),
     "en": (
         "You are a real-time navigation assistant for a person with visual "
@@ -80,7 +81,8 @@ _LIVE_SYSTEM_PROMPTS: dict[str, str] = {
         "descriptions until there is silence.\n"
         "8. No subjective language ('nice', 'interesting'). Only facts useful for "
         "moving.\n"
-        "Always speak in English."
+        "Always speak in English, even if the audio sounds like another language or "
+        "is noisy. Only switch languages if the person explicitly asks (set_language)."
     ),
     "fr": (
         "Tu es un assistant de navigation en temps réel pour une personne "
@@ -113,7 +115,9 @@ _LIVE_SYSTEM_PROMPTS: dict[str, str] = {
         "reprends pas les descriptions tant qu'il n'y a pas de silence.\n"
         "8. Pas de langage subjectif ('joli', 'intéressant'). Seulement des faits "
         "utiles pour se déplacer.\n"
-        "Parle toujours en français."
+        "Parle toujours en français, même si l'audio semble dans une autre langue ou "
+        "bruité. Ne change de langue que si la personne le demande explicitement "
+        "(set_language)."
     ),
     "pt": (
         "Você é um assistente de navegação em tempo real para uma pessoa com "
@@ -145,7 +149,8 @@ _LIVE_SYSTEM_PROMPTS: dict[str, str] = {
         "descrições até haver silêncio.\n"
         "8. Sem linguagem subjetiva ('bonito', 'interessante'). Apenas fatos úteis "
         "para se locomover.\n"
-        "Fale sempre em português."
+        "Fale sempre em português, mesmo que o áudio pareça de outro idioma ou tenha "
+        "ruído. Só mude de idioma se a pessoa pedir explicitamente (set_language)."
     ),
     "it": (
         "Sei un assistente di navigazione in tempo reale per una persona con "
@@ -177,7 +182,9 @@ _LIVE_SYSTEM_PROMPTS: dict[str, str] = {
         "le descrizioni finché non c'è silenzio.\n"
         "8. Niente linguaggio soggettivo ('bello', 'interessante'). Solo fatti utili "
         "per muoversi.\n"
-        "Parla sempre in italiano."
+        "Parla sempre in italiano, anche se l'audio sembra in un'altra lingua o è "
+        "rumoroso. Cambia lingua solo se la persona lo chiede esplicitamente "
+        "(set_language)."
     ),
 }
 
