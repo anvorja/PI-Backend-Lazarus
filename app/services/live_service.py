@@ -146,8 +146,10 @@ _FUNCTION_DECLARATIONS = [
     {
         "name": "set_system_cues",
         "description": (
-            "Silencia o activa los sonidos de aviso de la aplicación (earcons de "
-            "conexión/error). Útil si la persona usa lector de pantalla. Persiste."
+            "Silencia o activa los avisos hablados informativos de la aplicación "
+            "(p. ej. 'Asistente detenido' o 'Reintentando'). Los avisos que explican "
+            "cómo recuperarse de un error suenan siempre. Útil si la persona usa "
+            "lector de pantalla. Persiste."
         ),
         "parameters": {
             "type": "object",
