@@ -31,11 +31,12 @@ en el teléfono); los demás son conversacionales. Cada cambio se confirma en un
 | **Modo reunión** (escucha y recuerda, callado) | "Estoy en una reunión, escucha pero no hables", "Cállate hasta que te llame"              | `set_meeting_mode` · de sesión (no persiste) · el mic sigue abierto: oye y recuerda, pero solo responde si lo llamas **por su nombre**. Sal con "ya puedes hablar" / "salimos de la reunión" |
 | **Silencio total** (privacidad)          | "Silencio total", "Mútate", "Déjame en paz"                                                     | `set_microphone` · de sesión · la app **corta el envío de mic y cámara**; se reactiva **tocando la pantalla** (no por voz). Confirma con una frase corta al reactivar |
 | **Silenciar / activar avisos de la app** | "Silencia los avisos", "Quita los sonidos de la app", "Activa los avisos"                       | `set_system_cues` · persistente (`lazarus_system_cues_muted`) · calla los avisos informativos ("Asistente detenido", "Reintentando"); los que explican cómo recuperarse de un error suenan siempre |
-| **Repetir lo último**                    | "Repite", "¿Qué dijiste?"                                                                       | conversacional (sin tool)                                                                                                        |
+| **Repetir lo último**                    | "Repite", "¿Qué dijiste?"                                                                       | conversacional (sin tool) · repite su última respuesta con las mismas palabras |
 | **Ayuda / lista de comandos**            | "Ayuda", "¿Qué puedes hacer?", "¿Qué comandos hay?"                                             | conversacional (sin tool)                                                                                                        |
 
 > En **pausa de descripciones**, Aria deja de narrar el entorno por su cuenta: solo
-> responde preguntas y emite **alertas de seguridad** críticas.
+> responde preguntas y emite **siempre** las **alertas de seguridad**. La pausa persiste:
+> al abrir la app de nuevo, Aria avisa al saludar que las descripciones siguen en pausa.
 
 ### Los tres grados de silencio (cuándo usar cada uno)
 
@@ -97,9 +98,10 @@ Simplemente **pregúntale**, en voz alta, con la sesión activa:
 - *"¿Qué puedes hacer?"*
 - *"¿Qué comandos hay?"*
 
-Aria enumera en voz alta lo que puedes pedirle (cambiar su nombre, cambiar el idioma,
-más o menos detalle, pausar/reanudar descripciones, ponerla en modo reunión, pedir
-silencio total, silenciar/activar avisos y repetir lo último) con un ejemplo de frase
+Aria enumera en voz alta lo que puedes pedirle (leer un texto, describir dónde estás,
+buscar un objeto, cambiar su nombre, cambiar el idioma, más o menos detalle,
+pausar/reanudar descripciones, ponerla en modo reunión, pedir silencio total,
+silenciar/activar avisos, cambiar su voz y repetir lo último) con un ejemplo de frase
 para cada uno. No hace falta recordar las palabras exactas: cualquier frase parecida
 funciona.
 
