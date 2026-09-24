@@ -2,6 +2,48 @@
 
 > Registro de versiones del prompt de sistema (`app/prompts/companion.py`). Cada cambio de comportamiento sube `PROMPT_VERSION` y agrega aquí un bloque `## vX.Y.Z — fecha — motivo`, del más reciente al más antiguo. El backend registra la versión en el log al iniciar cada sesión.
 
+## v1.8.0 — 2026-09-24 — Pausar descripciones exige set_descriptions y buscar sugiere girar (LAZA-36 · HU-010)
+
+**Motivo:** en la prueba CP-LAZA-36 (v1.7.0), a "deja de describir" el asistente
+respondió "Entendido. Pauso las descripciones." sin llamar a `set_descriptions`, así que
+la pausa no se guardó. Al reabrir, el saludo no la mencionó y "vuelve a describir"
+tampoco llamó a la función. Es la misma falla de v1.5.0, en una función que no estaba
+nombrada en la identidad. Además, al buscar un objeto que no estaba a la vista dijo
+"No veo ninguna bicicleta" sin sugerir girar el teléfono.
+
+**Cambio (5 idiomas):**
+
+- Identidad: nombra `set_descriptions` (dejar de describir o volver a describir) y
+  añade "descripciones" a la lista de ajustes que no se pueden confirmar sin llamar a
+  su función.
+- Buscar un objeto: si no está a la vista, en la misma respuesta sugiere siempre
+  girar despacio el teléfono.
+
+El resto del prompt es igual al de v1.7.0.
+
+## v1.7.0 — 2026-09-24 — Ayuda completa, repetir tal cual y pausa con alertas de seguridad (LAZA-36 · HU-010)
+
+**Motivo:** HU-010 pide que la ayuda enumere los comandos disponibles, que "repite"
+repita la última respuesta y que, con las descripciones en pausa, las alertas P1 se
+den siempre. La ayuda no mencionaba las tareas a petición y "repetir" pedía hacerlo
+"de forma breve". La pausa pedida en mitad de una sesión no recordaba las alertas de
+seguridad: eso solo estaba en el modificador `_DESCRIPTIONS_PAUSED`, que se aplica al
+abrir la sesión siguiente.
+
+**Cambio (5 idiomas):**
+
+- Comandos: "repetir" repite la última respuesta con las mismas palabras, como
+  excepción explícita a la regla de no repetir.
+- Pausa de descripciones: mientras dure la pausa no describe por iniciativa propia,
+  pero responde lo que se le pregunte y da siempre las advertencias de seguridad de la
+  regla 1.
+- Ayuda: enumera también las tareas a petición (leer un texto, describir dónde está,
+  buscar un objeto).
+- `_DESCRIPTIONS_PAUSED`: al presentarse con `[INICIO]` avisa que las descripciones
+  están en pausa y que se pueden reanudar.
+
+El resto del prompt es igual al de v1.6.0.
+
 ## v1.6.0 — 2026-09-24 — Cada ajuste por voz exige su función (LAZA-35 · HU-009)
 
 **Motivo:** en la prueba CP-LAZA-35 (v1.5.0), el asistente dijo "Ajusto el nivel de

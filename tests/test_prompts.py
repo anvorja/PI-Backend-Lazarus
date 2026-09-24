@@ -141,5 +141,56 @@ def test_cada_ajuste_por_voz_nombra_su_funcion(language):
         "set_language",
         "set_verbosity",
         "set_system_cues",
+        "set_descriptions",
     ):
         assert function in identity
+
+
+# HU-010: la ayuda nombra las tareas a petición (leer, describir, buscar).
+HELP_TASKS = {
+    "es": ("leer un texto", "describir dónde está", "buscar un objeto"),
+    "en": ("read a text", "describe where they are", "find an object"),
+    "fr": ("lire un texte", "décrire où elle se trouve", "chercher un objet"),
+    "pt": ("ler um texto", "descrever onde está", "procurar um objeto"),
+    "it": ("leggere un testo", "descrivere dove si trova", "cercare un oggetto"),
+}
+
+# HU-010: repetir es literal y la pausa mantiene la regla 1 (advertencias).
+REPEAT_SAME_WORDS = {
+    "es": "con las mismas palabras",
+    "en": "with the same words",
+    "fr": "avec les mêmes mots",
+    "pt": "com as mesmas palavras",
+    "it": "con le stesse parole",
+}
+RULE_1 = {"es": "regla 1", "en": "rule 1", "fr": "règle 1", "pt": "regra 1", "it": "regola 1"}
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+def test_la_ayuda_incluye_las_tareas_a_peticion(language):
+    for task in HELP_TASKS[language]:
+        assert task in c._COMMANDS_EXTRA[language]
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+def test_repetir_repite_la_ultima_respuesta_tal_cual(language):
+    assert REPEAT_SAME_WORDS[language] in c._COMMANDS_EXTRA[language]
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+def test_en_pausa_mantiene_las_advertencias_de_seguridad(language):
+    # Pausa pedida en mitad de la sesión: el modificador aún no está en el prompt.
+    assert RULE_1[language] in c._COMMANDS_EXTRA[language]
+    # Sesión que arranca en pausa: lo avisa al saludar.
+    assert "'[INICIO]'" in c._DESCRIPTIONS_PAUSED[language]
+    paused = c.get_live_system_prompt(language, describing=False)
+    assert paused.endswith(c._DESCRIPTIONS_PAUSED[language])
+
+
+ALWAYS = {"es": "SIEMPRE", "en": "ALWAYS", "fr": "TOUJOURS", "pt": "SEMPRE", "it": "SEMPRE"}
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+def test_buscar_un_objeto_que_no_esta_sugiere_girar(language):
+    # En la prueba dijo "No veo ninguna bicicleta" sin sugerir girar el teléfono.
+    assert ALWAYS[language] in c._TASK_INTENTS[language]
