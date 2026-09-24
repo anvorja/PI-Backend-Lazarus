@@ -12,6 +12,7 @@ from websockets.frames import Close
 
 from app.core.config import settings
 from app.main import app
+from app.prompts import companion
 from app.sockets import live_proxy as proxy_module
 
 
@@ -216,3 +217,12 @@ def test_duracion_maxima_cumplida_cierra_con_4001(monkeypatch, fake_gemini):
 
     assert exc.value.code == proxy_module.CLOSE_UPSTREAM_ENDED
     assert fake_gemini.closed
+
+
+def test_sin_permiso_de_camara_el_setup_pide_modo_solo_audio(fake_gemini):
+    with TestClient(app).websocket_connect("/ws/live") as ws:
+        ws.send_text(json.dumps({"type": "start", "language": "es", "camera": False}))
+        ws.receive_text()
+
+    prompt = json.loads(fake_gemini.sent[0])["setup"]["system_instruction"]["parts"][0]["text"]
+    assert prompt.endswith(companion._CAMERA_OFF["es"])

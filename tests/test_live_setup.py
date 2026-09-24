@@ -27,11 +27,12 @@ def test_deteccion_de_voz_con_interrupcion_del_asistente():
     assert realtime["activity_handling"] == "START_OF_ACTIVITY_INTERRUPTS"
 
 
-def test_audio_proactivo_y_transcripcion_de_entrada_activos():
+def test_audio_proactivo_y_transcripciones_de_entrada_y_salida_activos():
     setup = build_setup_message()["setup"]
 
     assert setup["proactivity"] == {"proactive_audio": True}
     assert "input_audio_transcription" in setup
+    assert "output_audio_transcription" in setup
 
 
 def test_idioma_por_defecto_de_la_configuracion_si_la_app_no_lo_envia(monkeypatch):
