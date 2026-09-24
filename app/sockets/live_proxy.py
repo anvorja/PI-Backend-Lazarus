@@ -137,6 +137,7 @@ async def live_proxy(client: WebSocket) -> None:
     user_name = start.get("userName")
     verbosity = start.get("verbosity", "concise")
     describing = start.get("describing", True)
+    camera = start.get("camera", True)  # False: sin permiso de cámara, solo audio
 
     # 2. Abrir upstream a Gemini y enviar el setup.
     try:
@@ -155,6 +156,7 @@ async def live_proxy(client: WebSocket) -> None:
                 user_name=user_name,
                 verbosity=verbosity,
                 describing=describing,
+                camera=camera,
             )
             await gemini.send(json.dumps(setup))
             logger.info(

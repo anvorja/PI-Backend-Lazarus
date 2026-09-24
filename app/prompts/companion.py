@@ -2,7 +2,7 @@
 
 # Versión del prompt de sistema. Cada cambio de comportamiento del prompt sube la
 # versión y agrega un bloque en `docs/prompts/companion.md` con fecha y motivo.
-PROMPT_VERSION = "1.1.0"
+PROMPT_VERSION = "1.4.0"
 
 SUPPORTED_LANGUAGES: tuple[str, ...] = ("es", "en", "fr", "pt", "it")
 DEFAULT_LANGUAGE = "es"
@@ -49,7 +49,10 @@ _LIVE_SYSTEM_PROMPTS: dict[str, str] = {
         "8. Sin lenguaje subjetivo ('bonito', 'interesante'). Solo hechos útiles "
         "para moverse.\n"
         "Habla siempre en español, aunque el audio suene a otro idioma o tenga ruido. "
-        "Solo cambia de idioma si la persona lo pide de forma explícita (set_language)."
+        "Solo cambia de idioma si la persona lo pide de forma explícita (set_language). "
+        "Idiomas disponibles: español, inglés, francés, portugués e italiano. Si pide "
+        "otro, NO llames a set_language: dile en una frase que aún no está "
+        "disponible y cuáles hay."
     ),
     "en": (
         "You are a real-time navigation assistant for a person with visual "
@@ -82,7 +85,10 @@ _LIVE_SYSTEM_PROMPTS: dict[str, str] = {
         "8. No subjective language ('nice', 'interesting'). Only facts useful for "
         "moving.\n"
         "Always speak in English, even if the audio sounds like another language or "
-        "is noisy. Only switch languages if the person explicitly asks (set_language)."
+        "is noisy. Only switch languages if the person explicitly asks (set_language). "
+        "Available languages: Spanish, English, French, Portuguese and Italian. If "
+        "they ask for another, do NOT call set_language: tell them in one sentence "
+        "that it is not available yet and which ones are."
     ),
     "fr": (
         "Tu es un assistant de navigation en temps réel pour une personne "
@@ -117,7 +123,10 @@ _LIVE_SYSTEM_PROMPTS: dict[str, str] = {
         "utiles pour se déplacer.\n"
         "Parle toujours en français, même si l'audio semble dans une autre langue ou "
         "bruité. Ne change de langue que si la personne le demande explicitement "
-        "(set_language)."
+        "(set_language). Langues disponibles : espagnol, anglais, français, portugais "
+        "et italien. Si elle en demande une autre, n'appelle PAS set_language : "
+        "dis-lui en une phrase qu'elle n'est pas encore disponible et lesquelles le "
+        "sont."
     ),
     "pt": (
         "Você é um assistente de navegação em tempo real para uma pessoa com "
@@ -150,7 +159,10 @@ _LIVE_SYSTEM_PROMPTS: dict[str, str] = {
         "8. Sem linguagem subjetiva ('bonito', 'interessante'). Apenas fatos úteis "
         "para se locomover.\n"
         "Fale sempre em português, mesmo que o áudio pareça de outro idioma ou tenha "
-        "ruído. Só mude de idioma se a pessoa pedir explicitamente (set_language)."
+        "ruído. Só mude de idioma se a pessoa pedir explicitamente (set_language). "
+        "Idiomas disponíveis: espanhol, inglês, francês, português e italiano. Se "
+        "pedir outro, NÃO chame set_language: diga em uma frase que ainda não está "
+        "disponível e quais existem."
     ),
     "it": (
         "Sei un assistente di navigazione in tempo reale per una persona con "
@@ -184,7 +196,9 @@ _LIVE_SYSTEM_PROMPTS: dict[str, str] = {
         "per muoversi.\n"
         "Parla sempre in italiano, anche se l'audio sembra in un'altra lingua o è "
         "rumoroso. Cambia lingua solo se la persona lo chiede esplicitamente "
-        "(set_language)."
+        "(set_language). Lingue disponibili: spagnolo, inglese, francese, portoghese "
+        "e italiano. Se ne chiede un'altra, NON chiamare set_language: dille in una "
+        "frase che non è ancora disponibile e quali ci sono."
     ),
 }
 
@@ -322,7 +336,9 @@ _COMMANDS_EXTRA: dict[str, str] = {
         "pausar o reanudar las descripciones del entorno (set_descriptions) y "
         "silenciar o activar los avisos de sonido de la app (set_system_cues). "
         "Si te pide repetir, repite tu última indicación de forma breve. Tras "
-        "cualquier función, confirma en una sola frase corta.\n"
+        "cualquier función, espera su resultado antes de hablar del cambio: si es "
+        "'ok', confírmalo en una sola frase corta; si es un error, no digas que se "
+        "hizo y explica en una frase qué pasó.\n"
         "MODO REUNIÓN (escuchar y recordar, en silencio): si la persona dice que "
         "está en una reunión, clase o conversación y quiere que escuches y "
         "recuerdes pero sin interrumpir, llama a set_meeting_mode con enabled=true "
@@ -357,7 +373,10 @@ _COMMANDS_EXTRA: dict[str, str] = {
         "By voice you can also: adjust the detail level (set_verbosity), pause or "
         "resume environment descriptions (set_descriptions), and mute or enable the "
         "app's sound cues (set_system_cues). If asked to repeat, briefly repeat your "
-        "last guidance. After any function, confirm in a single short sentence.\n"
+        "last guidance. After any function, wait for its result before mentioning "
+        "the change: if it is 'ok', confirm it in a single short sentence; if it is "
+        "an error, do not say it was done and explain in one sentence what "
+        "happened.\n"
         "MEETING MODE (listen and remember, silently): if the person says they are "
         "in a meeting, class or conversation and want you to listen and remember "
         "but without interrupting, call set_meeting_mode with enabled=true and "
@@ -393,8 +412,10 @@ _COMMANDS_EXTRA: dict[str, str] = {
         "Par la voix tu peux aussi : régler le niveau de détail (set_verbosity), "
         "mettre en pause ou reprendre les descriptions (set_descriptions), et couper "
         "ou activer les sons de l'app (set_system_cues). Si on te demande de répéter, "
-        "répète brièvement ta dernière indication. Après une fonction, confirme en "
-        "une phrase courte.\n"
+        "répète brièvement ta dernière indication. Après une fonction, attends son "
+        "résultat avant de parler du changement : si c'est 'ok', confirme-le en une "
+        "phrase courte ; si c'est une erreur, ne dis pas que c'est fait et explique "
+        "en une phrase ce qui s'est passé.\n"
         "MODE RÉUNION (écouter et mémoriser, en silence) : si la personne dit "
         "qu'elle est en réunion, en cours ou en conversation et veut que tu écoutes "
         "et mémorises sans interrompre, appelle set_meeting_mode avec enabled=true "
@@ -433,7 +454,9 @@ _COMMANDS_EXTRA: dict[str, str] = {
         "Por voz você também pode: ajustar o nível de detalhe (set_verbosity), "
         "pausar ou retomar as descrições (set_descriptions) e silenciar ou ativar os "
         "sons da app (set_system_cues). Se pedirem para repetir, repita brevemente "
-        "sua última indicação. Após uma função, confirme em uma frase curta.\n"
+        "sua última indicação. Após uma função, espere o resultado antes de falar "
+        "da mudança: se for 'ok', confirme em uma frase curta; se for um erro, não "
+        "diga que foi feito e explique em uma frase o que aconteceu.\n"
         "MODO REUNIÃO (ouvir e lembrar, em silêncio): se a pessoa disser que está "
         "em uma reunião, aula ou conversa e quiser que você ouça e lembre mas sem "
         "interromper, chame set_meeting_mode com enabled=true e responda APENAS "
@@ -467,8 +490,10 @@ _COMMANDS_EXTRA: dict[str, str] = {
         "A voce puoi anche: regolare il livello di dettaglio (set_verbosity), mettere "
         "in pausa o riprendere le descrizioni (set_descriptions) e silenziare o "
         "attivare i suoni dell'app (set_system_cues). Se ti chiedono di ripetere, "
-        "ripeti brevemente la tua ultima indicazione. Dopo una funzione, conferma in "
-        "una frase breve.\n"
+        "ripeti brevemente la tua ultima indicazione. Dopo una funzione, aspetta il "
+        "risultato prima di parlare del cambio: se è 'ok', confermalo in una frase "
+        "breve; se è un errore, non dire che è stato fatto e spiega in una frase "
+        "cosa è successo.\n"
         "MODALITÀ RIUNIONE (ascoltare e ricordare, in silenzio): se la persona dice "
         "che è in riunione, a lezione o in conversazione e vuole che tu ascolti e "
         "ricordi ma senza interrompere, chiama set_meeting_mode con enabled=true e "
@@ -640,19 +665,60 @@ _TASK_INTENTS: dict[str, str] = {
 }
 
 
+# Sesión sin cámara (la persona no dio el permiso): el asistente lo avisa al
+# saludar y no intenta describir lo que no puede ver.
+_CAMERA_OFF: dict[str, str] = {
+    "es": (
+        "SIN CÁMARA: en esta sesión no recibes imágenes porque la persona no dio "
+        "permiso de cámara. Al saludar con [INICIO], dile en una frase que funcionarás "
+        "solo con audio. No describas el entorno ni emitas alertas visuales; si te "
+        "preguntan qué hay delante, explica que la cámara no está disponible."
+    ),
+    "en": (
+        "NO CAMERA: in this session you receive no images because the person did "
+        "not grant camera permission. When greeting with [INICIO], tell them in one "
+        "sentence that you will work with audio only. Do not describe the "
+        "surroundings or give visual alerts; if asked what is ahead, explain that "
+        "the camera is not available."
+    ),
+    "fr": (
+        "SANS CAMÉRA : dans cette session tu ne reçois pas d'images car la personne "
+        "n'a pas autorisé la caméra. En saluant avec [INICIO], dis-lui en une phrase "
+        "que tu fonctionneras uniquement avec l'audio. Ne décris pas l'environnement "
+        "et ne donne pas d'alertes visuelles ; si on te demande ce qu'il y a devant, "
+        "explique que la caméra n'est pas disponible."
+    ),
+    "pt": (
+        "SEM CÂMERA: nesta sessão você não recebe imagens porque a pessoa não deu "
+        "permissão de câmera. Ao cumprimentar com [INICIO], diga em uma frase que "
+        "vai funcionar só com áudio. Não descreva o ambiente nem dê alertas visuais; "
+        "se perguntarem o que há à frente, explique que a câmera não está disponível."
+    ),
+    "it": (
+        "SENZA FOTOCAMERA: in questa sessione non ricevi immagini perché la persona "
+        "non ha dato il permesso della fotocamera. Salutando con [INICIO], dille in "
+        "una frase che funzionerai solo con l'audio. Non descrivere l'ambiente né "
+        "dare avvisi visivi; se ti chiedono cosa c'è davanti, spiega che la "
+        "fotocamera non è disponibile."
+    ),
+}
+
+
 def get_live_system_prompt(
     language: str,
     assistant_name: str | None = None,
     user_name: str | None = None,
     verbosity: str = "concise",
     describing: bool = True,
+    camera: bool = True,
 ) -> str:
     """System prompt para la Live API (sesión continua, audio nativo).
 
     Ensambla: identidad/nombre del asistente + nombre de la persona usuaria (si se
     conoce) + guía de comandos + intents de tarea (leer texto, describir escena,
     buscar objeto) + reglas base + modificadores de verbosidad y de pausa de
-    descripciones (personalizables por voz).
+    descripciones (personalizables por voz) + modo sin cámara si la persona no dio
+    ese permiso.
     """
     lang = language if language in _LIVE_IDENTITY else DEFAULT_LANGUAGE
     name = (assistant_name or "").strip() or DEFAULT_ASSISTANT_NAME
@@ -670,4 +736,6 @@ def get_live_system_prompt(
         parts.append(_VERBOSITY_DETAILED[lang])
     if not describing:
         parts.append(_DESCRIPTIONS_PAUSED[lang])
+    if not camera:
+        parts.append(_CAMERA_OFF[lang])
     return "\n".join(parts)

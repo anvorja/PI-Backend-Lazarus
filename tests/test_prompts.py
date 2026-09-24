@@ -7,13 +7,14 @@ import pytest
 
 from app.prompts import companion as c
 
-# Regla de cierre: idioma fijo; solo cambia con pedido explícito (set_language).
+# Regla de cierre: idioma fijo; solo cambia con pedido explícito a uno de los 5
+# idiomas; si pide otro, no llama a set_language.
 LANGUAGE_CLOSING = {
-    "es": "Solo cambia de idioma si la persona lo pide de forma explícita (set_language).",
-    "en": "Only switch languages if the person explicitly asks (set_language).",
-    "fr": "Ne change de langue que si la personne le demande explicitement (set_language).",
-    "pt": "Só mude de idioma se a pessoa pedir explicitamente (set_language).",
-    "it": "Cambia lingua solo se la persona lo chiede esplicitamente (set_language).",
+    "es": "dile en una frase que aún no está disponible y cuáles hay.",
+    "en": "tell them in one sentence that it is not available yet and which ones are.",
+    "fr": "dis-lui en une phrase qu'elle n'est pas encore disponible et lesquelles le sont.",
+    "pt": "diga em uma frase que ainda não está disponível e quais existem.",
+    "it": "dille in una frase che non è ancora disponibile e quali ci sono.",
 }
 
 # Palabra con la que empieza la regla 1 (advertencias de seguridad, P1) en cada idioma.
@@ -41,6 +42,7 @@ def test_los_cinco_idiomas_tienen_todas_las_partes():
         c._LIVE_SYSTEM_PROMPTS,
         c._VERBOSITY_DETAILED,
         c._DESCRIPTIONS_PAUSED,
+        c._CAMERA_OFF,
     ]
     for table in tables:
         assert set(table) == set(c.SUPPORTED_LANGUAGES)
@@ -94,5 +96,22 @@ def test_modificadores_de_detalle_y_pausa():
     assert pausado.endswith(c._DESCRIPTIONS_PAUSED["es"])
 
 
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+def test_sin_camara_avisa_solo_audio(language):
+    con_camara = c.get_live_system_prompt(language)
+    sin_camara = c.get_live_system_prompt(language, camera=False)
+
+    assert c._CAMERA_OFF[language] not in con_camara
+    assert sin_camara.endswith(c._CAMERA_OFF[language])
+    assert "[INICIO]" in c._CAMERA_OFF[language]  # lo avisa en el saludo
+
+
 def test_idioma_no_soportado_usa_espanol():
     assert c.get_live_system_prompt("de") == c.get_live_system_prompt("es")
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+def test_confirma_un_cambio_solo_si_la_funcion_respondio_ok(language):
+    # Gemini habla mientras llama a la función: debe esperar el resultado y no
+    # confirmar un cambio que falló (p. ej. un idioma no soportado).
+    assert "'ok'" in c._COMMANDS_EXTRA[language]

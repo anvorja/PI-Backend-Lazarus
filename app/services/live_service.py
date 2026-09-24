@@ -215,6 +215,7 @@ def build_setup_message(
     user_name: str | None = None,
     verbosity: str = "concise",
     describing: bool = True,
+    camera: bool = True,
 ) -> dict:
     """Construye el primer mensaje `setup` (BidiGenerateContentSetup) para Gemini.
 
@@ -229,6 +230,7 @@ def build_setup_message(
         user_name=user_name,
         verbosity=verbosity,
         describing=describing,
+        camera=camera,
     )
 
     return {
@@ -256,7 +258,9 @@ def build_setup_message(
                 "automatic_activity_detection": {"disabled": False},
                 "activity_handling": "START_OF_ACTIVITY_INTERRUPTS",
             },
-            # Transcripción de la voz del usuario (debug / logs de accesibilidad).
+            # Transcripción de la voz del usuario y del asistente: la app las
+            # registra en su log como evidencia de lo que se dijo en cada turno.
             "input_audio_transcription": {},
+            "output_audio_transcription": {},
         }
     }
