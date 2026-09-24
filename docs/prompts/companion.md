@@ -2,6 +2,40 @@
 
 > Registro de versiones del prompt de sistema (`app/prompts/companion.py`). Cada cambio de comportamiento sube `PROMPT_VERSION` y agrega aquí un bloque `## vX.Y.Z — fecha — motivo`, del más reciente al más antiguo. El backend registra la versión en el log al iniciar cada sesión.
 
+## v1.6.0 — 2026-09-24 — Cada ajuste por voz exige su función (LAZA-35 · HU-009)
+
+**Motivo:** en la prueba CP-LAZA-35 (v1.5.0), el asistente dijo "Ajusto el nivel de
+detalle" y "Cambio a descripciones detalladas" sin llamar a `set_verbosity`, así que
+el ajuste no se guardó. En una sesión en inglés, a "Speak Spanish" respondió en
+español sin llamar a `set_language`. Tras `[IDIOMA]` dijo "I will speak in English
+now" y luego, en español, que hablaría en español.
+
+**Cambio (5 idiomas):**
+
+- Identidad: nombra `set_verbosity` (más breve o más detalle) y `set_system_cues`
+  (silenciar o activar avisos) junto a las demás funciones. Prohíbe decir que se
+  cambió un ajuste sin haber llamado a su función, porque sin ella el cambio no se
+  aplica ni se guarda.
+- `[IDIOMA]`: decir solo la frase de confirmación, sin mencionar otro idioma.
+
+El resto del prompt es igual al de v1.5.0.
+
+## v1.5.0 — 2026-09-24 — Saludo por nombre y confirmación corta al cambiar de idioma (LAZA-35 · HU-009)
+
+**Motivo:** HU-009 pide que el asistente salude a la persona por su nombre al abrir la
+app (criterio 4) y que cada cambio se confirme en una frase corta (regla 4). Al cambiar
+de idioma la sesión se reconecta y el asistente repetía la presentación completa.
+
+**Cambio:**
+
+- Identidad (5 idiomas): nuevo sentinela `[IDIOMA]`. La app lo envía al reconectar tras
+  `set_language`; el asistente no repite la presentación y confirma en una sola frase
+  corta, en el idioma nuevo, que ahora hablará en él.
+- Nombre de la persona (5 idiomas): al presentarse con `[INICIO]` la saluda por su
+  nombre. Se corrige "Diríjete" → "Dirígete".
+
+El resto del prompt es igual al de v1.4.0.
+
 ## v1.4.0 — 2026-09-23 — Lista cerrada de idiomas: sin función para uno no soportado (LAZA-32 · HU-006)
 
 **Motivo:** con v1.3.0 el asistente siguió diciendo "Idioma cambiado a ruso" antes de

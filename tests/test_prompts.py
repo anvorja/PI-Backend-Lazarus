@@ -115,3 +115,31 @@ def test_confirma_un_cambio_solo_si_la_funcion_respondio_ok(language):
     # Gemini habla mientras llama a la función: debe esperar el resultado y no
     # confirmar un cambio que falló (p. ej. un idioma no soportado).
     assert "'ok'" in c._COMMANDS_EXTRA[language]
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+def test_tras_cambiar_de_idioma_confirma_sin_repetir_la_presentacion(language):
+    # La app reconecta en el idioma nuevo y envía '[IDIOMA]' en lugar de '[INICIO]'.
+    assert "'[IDIOMA]'" in c._LIVE_IDENTITY[language]
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+def test_saluda_por_su_nombre_a_la_persona_conocida(language):
+    prompt = c.get_live_system_prompt(language, user_name="Andrés")
+    assert "Andrés" in prompt
+    assert "'[INICIO]'" in c._USER_NAME_KNOWN[language]
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+def test_cada_ajuste_por_voz_nombra_su_funcion(language):
+    # En la prueba el asistente dijo que cambió el detalle sin llamar a la función.
+    identity = c._LIVE_IDENTITY[language]
+    for function in (
+        "set_assistant_name",
+        "set_user_name",
+        "set_voice",
+        "set_language",
+        "set_verbosity",
+        "set_system_cues",
+    ):
+        assert function in identity
