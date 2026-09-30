@@ -142,6 +142,8 @@ def test_cada_ajuste_por_voz_nombra_su_funcion(language):
         "set_verbosity",
         "set_system_cues",
         "set_descriptions",
+        "set_meeting_mode",
+        "set_microphone",
     ):
         assert function in identity
 
@@ -194,3 +196,11 @@ ALWAYS = {"es": "SIEMPRE", "en": "ALWAYS", "fr": "TOUJOURS", "pt": "SEMPRE", "it
 def test_buscar_un_objeto_que_no_esta_sugiere_girar(language):
     # En la prueba dijo "No veo ninguna bicicleta" sin sugerir girar el teléfono.
     assert ALWAYS[language] in c._TASK_INTENTS[language]
+
+
+SUMMARY = {"es": "resume", "en": "summarize", "fr": "résume", "pt": "resuma", "it": "riassumi"}
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+def test_en_modo_reunion_resume_lo_escuchado(language):
+    assert SUMMARY[language] in c._COMMANDS_EXTRA[language]

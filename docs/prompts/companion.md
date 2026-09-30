@@ -2,6 +2,28 @@
 
 > Registro de versiones del prompt de sistema (`app/prompts/companion.py`). Cada cambio de comportamiento sube `PROMPT_VERSION` y agrega aquí un bloque `## vX.Y.Z — fecha — motivo`, del más reciente al más antiguo. El backend registra la versión en el log al iniciar cada sesión.
 
+## v1.9.0 — 2026-09-24 — Modo reunión y silencio total nombrados en la identidad; resumen de lo escuchado (LAZA-37 · HU-011)
+
+**Motivo:** HU-011 depende de que el asistente llame a `set_meeting_mode` y a
+`set_microphone`. Las dos funciones solo aparecían en la sección de comandos. Los
+hallazgos 11 y 12 mostraron que una función que no está nombrada en la identidad
+puede "aplicarse" solo de palabra. HU-011 pide además que en modo reunión pueda
+resumir lo que se dijo.
+
+**Cambio (5 idiomas):**
+
+- Identidad: nombra `set_meeting_mode` (entrar o salir del modo reunión) y
+  `set_microphone` (silencio total). Añade ambos a la lista de ajustes que no se
+  pueden confirmar sin llamar a su función.
+- Modo reunión: si lo llaman por su nombre y preguntan qué se dijo, resume lo
+  escuchado en 2 a 4 frases.
+
+La app añade una red de seguridad: en modo reunión retiene el audio del asistente y
+solo lo deja sonar si en la transcripción aparece su nombre o si el turno entra o sale
+del modo.
+
+El resto del prompt es igual al de v1.8.0.
+
 ## v1.8.0 — 2026-09-24 — Pausar descripciones exige set_descriptions y buscar sugiere girar (LAZA-36 · HU-010)
 
 **Motivo:** en la prueba CP-LAZA-36 (v1.7.0), a "deja de describir" el asistente
