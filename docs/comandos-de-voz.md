@@ -124,7 +124,11 @@ funciona.
 - Cambiar **voz** o **idioma** exige una sesión nueva (ambos se fijan en el `setup`): la
   app responde a la función, reconecta y envía el sentinela `[VOZ]` (muestra corta de la
   voz) o `[IDIOMA]` (confirmación corta en el idioma nuevo) en lugar de `[INICIO]`.
-- **Modo reunión** y **silencio total** son de **sesión** (no persisten): son estados
+- En **modo reunión** la app retiene el audio del asistente y solo lo deja sonar si en
+  la transcripción de los últimos 10 s aparece su nombre, o si ese turno entra o sale
+  del modo. Si no, lo descarta (`modo reunión: respuesta descartada` en el log). Así el
+  silencio no depende solo del prompt.
+- **Modo reunión** y **silencio total** son de **sesión** (no persisten; Detener los termina): son estados
   de la conversación, no ajustes. El silencio total se implementa en el cliente
   (corta el envío de mic/cámara) y se sale **tocando la pantalla**; si la sesión murió
   por inactividad, el toque **reconecta** con un saludo breve (sentinel `[MIC_ON]`).
