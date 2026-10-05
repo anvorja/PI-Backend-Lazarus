@@ -35,6 +35,13 @@ def test_audio_proactivo_y_transcripciones_de_entrada_y_salida_activos():
     assert "output_audio_transcription" in setup
 
 
+def test_get_location_declarada_sin_parametros():
+    # HU-013: la ubicación solo viaja cuando el asistente la pide (regla 4).
+    tools = build_setup_message()["setup"]["tools"][0]["function_declarations"]
+    get_location = next(t for t in tools if t["name"] == "get_location")
+    assert get_location["parameters"] == {"type": "object", "properties": {}}
+
+
 def test_idioma_por_defecto_de_la_configuracion_si_la_app_no_lo_envia(monkeypatch):
     monkeypatch.setattr(settings, "gemini_live_language", "en")
     captured = {}

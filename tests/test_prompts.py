@@ -144,6 +144,7 @@ def test_cada_ajuste_por_voz_nombra_su_funcion(language):
         "set_descriptions",
         "set_meeting_mode",
         "set_microphone",
+        "get_location",
     ):
         assert function in identity
 
@@ -204,3 +205,27 @@ SUMMARY = {"es": "resume", "en": "summarize", "fr": "résume", "pt": "resuma", "
 @pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
 def test_en_modo_reunion_resume_lo_escuchado(language):
     assert SUMMARY[language] in c._COMMANDS_EXTRA[language]
+
+
+WHERE_AM_I = {
+    "es": "dónde estoy",
+    "en": "where am i",
+    "fr": "où suis-je",
+    "pt": "onde estou",
+    "it": "dove sono",
+}
+LOCATION_EVERY_TIME = {
+    "es": "cada vez",
+    "en": "every time",
+    "fr": "à chaque fois",
+    "pt": "toda vez",
+    "it": "ogni volta",
+}
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+def test_donde_estoy_pide_la_ubicacion_cada_vez(language):
+    # En la prueba de CP-LAZA-39, bajo techo respondió "¿dónde estoy?" con la
+    # descripción de la sala (la tarea de escena) sin llamar a get_location.
+    assert WHERE_AM_I[language] not in c._TASK_INTENTS[language].lower()
+    assert LOCATION_EVERY_TIME[language] in c._LIVE_IDENTITY[language]

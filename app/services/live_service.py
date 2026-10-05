@@ -207,6 +207,17 @@ _FUNCTION_DECLARATIONS = [
             "required": ["active"],
         },
     },
+    {
+        "name": "get_location",
+        "description": (
+            "Obtiene la ubicación actual de la persona por GPS: dirección "
+            "aproximada (calle y barrio), precisión en metros y si el GPS es "
+            "confiable en este momento. Úsalo cuando pregunte dónde está, en qué "
+            "calle o lugar se encuentra. Si el resultado no es 'ok', la ubicación "
+            "no es confiable o no está disponible y debes decírselo."
+        ),
+        "parameters": {"type": "object", "properties": {}},
+    },
 ]
 
 
