@@ -201,6 +201,23 @@ def test_gemini_cierra_por_cuota_cierra_con_4003(monkeypatch, caplog):
     assert "quota" in caplog.text  # la causa queda registrada
 
 
+def test_gemini_sin_saldo_cierra_con_4005(monkeypatch, caplog):
+    # Texto real de la prueba de CP-LAZA-39: no es un fallo de red, falta saldo.
+    caplog.set_level(logging.WARNING, logger="uvicorn.error")
+    gemini = ClosingGemini(
+        Close(
+            1011,
+            "Your prepayment credits are depleted. Please go to AI Studio at "
+            "https://ai.studio/projects to manage your project and billing.",
+        )
+    )
+
+    code = _close_code_after_setup(monkeypatch, gemini)
+
+    assert code == proxy_module.CLOSE_BILLING
+    assert "credits" in caplog.text
+
+
 def test_gemini_cierra_con_error_cierra_con_4002(monkeypatch):
     code = _close_code_after_setup(monkeypatch, ClosingGemini(Close(1011, "internal error")))
     assert code == proxy_module.CLOSE_UPSTREAM_ERROR

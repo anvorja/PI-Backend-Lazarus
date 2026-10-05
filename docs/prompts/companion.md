@@ -2,6 +2,27 @@
 
 > Registro de versiones del prompt de sistema (`app/prompts/companion.py`). Cada cambio de comportamiento sube `PROMPT_VERSION` y agrega aquí un bloque `## vX.Y.Z — fecha — motivo`, del más reciente al más antiguo. El backend registra la versión en el log al iniciar cada sesión.
 
+## v1.10.0 — 2026-09-30 — Ubicación por GPS con get_location (LAZA-39 · HU-013)
+
+**Motivo:** HU-013 pide que, a "¿dónde estoy?", el asistente use la posición si el
+GPS es confiable y lo diga si no lo es (criterio 3). La posición solo se envía cuando
+se pide (regla 4), para no saturar la sesión.
+
+**Cambio (5 idiomas):** la identidad nombra la nueva función `get_location`. Si la
+persona pregunta dónde está o en qué calle, la llama y responde con la calle y el
+barrio junto con lo que ve. Si el resultado no es `ok` (sin permiso, sin señal o GPS
+no confiable), le dice que ahora no puede saber su ubicación con seguridad. La app
+responde a la función con la dirección aproximada, la precisión y el estado de
+confiabilidad.
+
+**Ajuste tras la prueba en el teléfono (2026-10-05):** bajo techo, a "¿dónde estoy?"
+el asistente describió la sala sin llamar a `get_location`, porque la tarea de
+describir la escena usaba la misma frase. Ahora esa tarea se pide con "¿qué hay a mi
+alrededor?", y `get_location` se llama **cada vez** que la persona pregunta dónde
+está, aunque ya la haya usado y aunque esté bajo techo.
+
+El resto del prompt es igual al de v1.9.0.
+
 ## v1.9.0 — 2026-09-24 — Modo reunión y silencio total nombrados en la identidad; resumen de lo escuchado (LAZA-37 · HU-011)
 
 **Motivo:** HU-011 depende de que el asistente llame a `set_meeting_mode` y a

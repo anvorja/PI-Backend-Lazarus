@@ -68,6 +68,7 @@ docker run --env-file .env -p 8000:8000 lazarus-backend
 | 4002 | Falló la red o la conexión con Gemini | Reintenta sola hasta 3 veces (1 s, 2 s, 4 s) |
 | 4003 | Cuota de la API agotada | Aviso hablado; no reintenta |
 | 4004 | El servidor no tiene `GEMINI_API_KEY` | Aviso hablado; no reintenta |
+| 4005 | La cuenta de Gemini se quedó sin saldo (créditos o facturación) | Aviso hablado ("se quedó sin saldo"); no reintenta |
 
 El motivo de cierre nunca incluye la API key.
 

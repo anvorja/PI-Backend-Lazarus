@@ -69,8 +69,9 @@ A diferencia de los comandos de arriba (que *cambian ajustes*), estas son tareas
 
 | Tarea                   | Cómo pedirla (ejemplos)                          | Qué hace                                                                                                                                                 |
 | ----------------------- | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **¿Dónde estoy? (calle y barrio)** | "¿En qué calle estoy?", "¿Dónde estoy?" | `get_location` (sin parámetros, cada vez que lo pregunta, también bajo techo): la app responde con la dirección aproximada, la precisión y si el GPS es confiable; si no lo es, el asistente lo dice. La ubicación solo se envía cuando se pide |
 | **Leer texto**          | "¿Qué dice esto?", "Lee la etiqueta", "Lee esto" | Lee en voz alta el texto que ve la cámara, tal cual (carteles, billetes, medicinas, pantallas, menús). Si no hay texto legible, pide acercar/estabilizar |
-| **Describir la escena** | "¿Dónde estoy?", "Descríbeme todo"               | Barrido completo del entorno (2-4 frases): primero riesgos, luego disposición general, luego objetos y personas                                          |
+| **Describir la escena** | "¿Qué hay a mi alrededor?", "Descríbeme todo"    | Barrido completo del entorno (2-4 frases): primero riesgos, luego disposición general, luego objetos y personas                                          |
 | **Buscar un objeto**    | "¿Dónde está la puerta?", "Busca una silla"      | Localiza el objeto y guía paso a paso con horas de reloj y pasos ("a las 2, dos pasos"). Si no está a la vista, sugiere girar despacio para escanear     |
 
 ---
