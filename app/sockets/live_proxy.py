@@ -40,12 +40,18 @@ CLOSE_UPSTREAM_ENDED = 4001  # Gemini cerró la sesión (p. ej. límite de durac
 CLOSE_UPSTREAM_ERROR = 4002  # fallo de red o de protocolo con Gemini
 CLOSE_QUOTA_EXCEEDED = 4003  # cuota de la API agotada
 CLOSE_MISCONFIGURED = 4004  # el servidor no tiene API key
+CLOSE_BILLING = 4005  # sin saldo o facturación del proyecto (no se resuelve esperando)
 
 _QUOTA_MARKERS = ("quota", "exhausted", "resource_exhausted", "429", "rate limit")
+# Antes que la cuota: "credits are depleted" no se arregla reintentando más tarde;
+# alguien tiene que recargar el saldo (visto en la prueba de CP-LAZA-39).
+_BILLING_MARKERS = ("credits", "billing", "prepayment", "payment", "depleted")
 
 
 def _upstream_close_code(code: int, reason: str) -> int:
     """Traduce el cierre de Gemini a un código de causa para la app."""
+    if any(marker in reason.lower() for marker in _BILLING_MARKERS):
+        return CLOSE_BILLING
     if any(marker in reason.lower() for marker in _QUOTA_MARKERS):
         return CLOSE_QUOTA_EXCEEDED
     if code in (1000, 1001):
