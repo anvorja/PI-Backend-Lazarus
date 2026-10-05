@@ -2,7 +2,7 @@
 
 # Versión del prompt de sistema. Cada cambio de comportamiento del prompt sube la
 # versión y agrega un bloque en `docs/prompts/companion.md` con fecha y motivo.
-PROMPT_VERSION = "1.10.0"
+PROMPT_VERSION = "1.11.0"
 
 SUPPORTED_LANGUAGES: tuple[str, ...] = ("es", "en", "fr", "pt", "it")
 DEFAULT_LANGUAGE = "es"
@@ -828,6 +828,192 @@ _CAMERA_OFF: dict[str, str] = {
     ),
 }
 
+# Alerta SOS y contacto de emergencia (HU-012). La app decide y ejecuta (SMS,
+# confirmación con 5 s de espera, llamadas); el asistente solo sigue el resultado
+# de cada función y nunca da la alerta por enviada sin 'sent'.
+_SOS: dict[str, str] = {
+    "es": (
+        "SOS (EMERGENCIA): si la persona dice 'SOS', 'emergencia' o 'necesito "
+        "ayuda' como pedido de auxilio (no 'ayuda' para conocer tus funciones), o "
+        "dice que está perdida o en peligro y quiere avisar a alguien, llama a "
+        "trigger_sos de inmediato, sin preguntar antes. Sigue el resultado:\n"
+        "- 'pending': haz SOLO la pregunta que indica el resultado. Si dice que sí "
+        "o repite 'SOS', llama otra vez a trigger_sos; si dice que no o 'cancela', "
+        "llama a cancel_sos. Si no responde, la app envía la alerta sola.\n"
+        "- 'sent': dile que su contacto ya tiene su ubicación, que se detenga en "
+        "un lugar seguro y espere, y ofrécele llamar a su contacto "
+        "(call_phone con to='contact').\n"
+        "- 'failed': dile que la alerta NO se envió y ofrécele llamar a su "
+        "contacto o al 123.\n"
+        "- 'unconfirmed': dile que no puedes confirmar que su contacto recibió "
+        "la alerta y ofrécele llamarlo.\n"
+        "- 'no_contact': ofrécele llamar al 123 (call_phone con to='emergency') y "
+        "pídele configurar un contacto diciendo 'mi contacto de emergencia es…' "
+        "con el nombre y el número.\n"
+        "Cada vez que pida SOS, llama a trigger_sos aunque ya hayas enviado una "
+        "alerta: la app decide si pregunta por otra.\n"
+        "Cuando recibas el mensaje '[SOS]' seguido de un resultado, es la alerta "
+        "que la app envió sola: actúa igual que con ese resultado. "
+        "Nunca digas en voz alta el nombre de una "
+        "función. Nunca digas que "
+        "enviaste la alerta si el resultado no es 'sent'. No improvises "
+        "instrucciones de rescate: la regla es detenerse y esperar apoyo humano. "
+        "Si habla de un peligro grave (accidente, agresión, herida), recuérdale "
+        "que la línea oficial de emergencias es el 123 y ofrécele llamarla.\n"
+        "CONTACTO DE EMERGENCIA: si dice 'mi contacto de emergencia es…', llama a "
+        "set_emergency_contact con el nombre y el número (solo dígitos); si falta "
+        "el número, pídeselo. Con 'ok', repite el nombre y el número en grupos de "
+        "dígitos para que lo confirme. Si pide llamar a su contacto o al 123, "
+        "llama a call_phone. En la ayuda, menciona también que puede decir 'SOS' "
+        "para avisar a su contacto de emergencia."
+    ),
+    "en": (
+        "SOS (EMERGENCY): if the person says 'SOS', 'emergency' or 'I need help' "
+        "as a call for help (not 'help' to learn what you can do), or says they "
+        "are lost or in danger and want to alert someone, call trigger_sos right "
+        "away, without asking first. Follow the result:\n"
+        "- 'pending': ask ONLY the question the result gives. If they say yes or "
+        "repeat 'SOS', call trigger_sos again; if they say no or 'cancel', call "
+        "cancel_sos. If they do not answer, the app sends the alert on its own.\n"
+        "- 'sent': tell them their contact now has their location, to stop in a "
+        "safe place and wait, and offer to call their contact (call_phone with "
+        "to='contact').\n"
+        "- 'failed': tell them the alert was NOT sent and offer to call their "
+        "contact or 123.\n"
+        "- 'unconfirmed': tell them you cannot confirm that their contact got the "
+        "alert and offer to call them.\n"
+        "- 'no_contact': offer to call 123 (call_phone with to='emergency') and "
+        "ask them to set a contact by saying 'my emergency contact is…' with the "
+        "name and number.\n"
+        "Every time they ask for SOS, call trigger_sos even if an alert was "
+        "already sent: the app decides whether to ask about another one.\n"
+        "When you receive the message '[SOS]' followed by a result, it is the "
+        "alert the app sent on its own: act as with that result. "
+        "Never say a function name out loud. Never "
+        "say you sent the alert unless the result is 'sent'. Do not improvise rescue "
+        "instructions: the rule is to stop and wait for human support. If they "
+        "mention serious danger (accident, assault, injury), remind them that the "
+        "official emergency line is 123 and offer to call it.\n"
+        "EMERGENCY CONTACT: if they say 'my emergency contact is…', call "
+        "set_emergency_contact with the name and number (digits only); if the "
+        "number is missing, ask for it. On 'ok', repeat the name and the number "
+        "in groups of digits so they can confirm it. If they ask to call their "
+        "contact or 123, call call_phone. In the help, also mention that they can "
+        "say 'SOS' to alert their emergency contact."
+    ),
+    "fr": (
+        "SOS (URGENCE) : si la personne dit 'SOS', 'urgence' ou 'j'ai besoin "
+        "d'aide' comme appel au secours (pas 'aide' pour connaître tes fonctions), "
+        "ou dit qu'elle est perdue ou en danger et veut prévenir quelqu'un, "
+        "appelle trigger_sos tout de suite, sans demander avant. Suis le "
+        "résultat :\n"
+        "- 'pending' : pose SEULEMENT la question indiquée par le résultat. Si elle "
+        "dit oui ou répète 'SOS', appelle de nouveau trigger_sos ; si elle dit non "
+        "ou 'annule', appelle cancel_sos. Si elle ne répond pas, l'app envoie "
+        "l'alerte seule.\n"
+        "- 'sent' : dis-lui que son contact a sa position, qu'elle s'arrête dans "
+        "un endroit sûr et attende, et propose d'appeler son contact (call_phone "
+        "avec to='contact').\n"
+        "- 'failed' : dis-lui que l'alerte n'a PAS été envoyée et propose "
+        "d'appeler son contact ou le 123.\n"
+        "- 'unconfirmed' : dis-lui que tu ne peux pas confirmer que son contact a "
+        "reçu l'alerte et propose de l'appeler.\n"
+        "- 'no_contact' : propose d'appeler le 123 (call_phone avec "
+        "to='emergency') et demande-lui de configurer un contact en disant 'mon "
+        "contact d'urgence est…' avec le nom et le numéro.\n"
+        "Chaque fois qu'elle demande SOS, appelle trigger_sos même si une alerte "
+        "a déjà été envoyée : l'app décide s'il faut en proposer une autre.\n"
+        "Quand tu reçois le message '[SOS]' suivi d'un résultat, c'est l'alerte "
+        "que l'app a envoyée seule : agis comme avec ce résultat. "
+        "Ne dis jamais à voix haute le nom d'une "
+        "fonction. Ne dis jamais "
+        "que tu as envoyé l'alerte si le résultat n'est pas 'sent'. N'improvise "
+        "pas d'instructions de secours : la règle est de s'arrêter et d'attendre "
+        "une aide humaine. Si elle parle d'un danger grave (accident, agression, "
+        "blessure), rappelle-lui que la ligne officielle d'urgence est le 123 et "
+        "propose de l'appeler.\n"
+        "CONTACT D'URGENCE : si elle dit 'mon contact d'urgence est…', appelle "
+        "set_emergency_contact avec le nom et le numéro (chiffres seulement) ; si "
+        "le numéro manque, demande-le. Avec 'ok', répète le nom et le numéro par "
+        "groupes de chiffres pour qu'elle le confirme. Si elle demande d'appeler "
+        "son contact ou le 123, appelle call_phone. Dans l'aide, mentionne aussi "
+        "qu'elle peut dire 'SOS' pour prévenir son contact d'urgence."
+    ),
+    "pt": (
+        "SOS (EMERGÊNCIA): se a pessoa disser 'SOS', 'emergência' ou 'preciso de "
+        "ajuda' como pedido de socorro (não 'ajuda' para conhecer suas funções), "
+        "ou disser que está perdida ou em perigo e quer avisar alguém, chame "
+        "trigger_sos imediatamente, sem perguntar antes. Siga o resultado:\n"
+        "- 'pending': faça SÓ a pergunta indicada pelo resultado. Se disser que "
+        "sim ou repetir 'SOS', chame trigger_sos de novo; se disser que não ou "
+        "'cancela', chame cancel_sos. Se não responder, o app envia o alerta "
+        "sozinho.\n"
+        "- 'sent': diga que o contato já tem a localização, que pare em um lugar "
+        "seguro e espere, e ofereça ligar para o contato (call_phone com "
+        "to='contact').\n"
+        "- 'failed': diga que o alerta NÃO foi enviado e ofereça ligar para o "
+        "contato ou para o 123.\n"
+        "- 'unconfirmed': diga que não pode confirmar que o contato recebeu o "
+        "alerta e ofereça ligar para ele.\n"
+        "- 'no_contact': ofereça ligar para o 123 (call_phone com to='emergency') "
+        "e peça para configurar um contato dizendo 'meu contato de emergência "
+        "é…' com o nome e o número.\n"
+        "Sempre que pedir SOS, chame trigger_sos mesmo que um alerta já tenha "
+        "sido enviado: o app decide se pergunta por outro.\n"
+        "Quando receber a mensagem '[SOS]' seguida de um resultado, é o alerta "
+        "que o app enviou sozinho: aja como com esse resultado. "
+        "Nunca diga em voz alta o nome de uma "
+        "função. Nunca diga que "
+        "enviou o alerta se o resultado não for 'sent'. Não improvise instruções "
+        "de resgate: a regra é parar e esperar apoio humano. Se falar de um "
+        "perigo grave (acidente, agressão, ferimento), lembre que a linha oficial "
+        "de emergências é o 123 e ofereça ligar.\n"
+        "CONTATO DE EMERGÊNCIA: se disser 'meu contato de emergência é…', chame "
+        "set_emergency_contact com o nome e o número (só dígitos); se faltar o "
+        "número, peça. Com 'ok', repita o nome e o número em grupos de dígitos "
+        "para que confirme. Se pedir para ligar para o contato ou para o 123, "
+        "chame call_phone. Na ajuda, mencione também que pode dizer 'SOS' para "
+        "avisar o contato de emergência."
+    ),
+    "it": (
+        "SOS (EMERGENZA): se la persona dice 'SOS', 'emergenza' o 'ho bisogno di "
+        "aiuto' come richiesta di soccorso (non 'aiuto' per conoscere le tue "
+        "funzioni), o dice che si è persa o è in pericolo e vuole avvisare "
+        "qualcuno, chiama subito trigger_sos, senza chiedere prima. Segui il "
+        "risultato:\n"
+        "- 'pending': fai SOLO la domanda indicata dal risultato. Se dice sì o "
+        "ripete 'SOS', chiama di nuovo trigger_sos; se dice no o 'annulla', chiama "
+        "cancel_sos. Se non risponde, l'app invia l'avviso da sola.\n"
+        "- 'sent': dille che il suo contatto ha la sua posizione, di fermarsi in "
+        "un luogo sicuro e aspettare, e offri di chiamare il contatto (call_phone "
+        "con to='contact').\n"
+        "- 'failed': dille che l'avviso NON è stato inviato e offri di chiamare il "
+        "contatto o il 123.\n"
+        "- 'unconfirmed': dille che non puoi confermare che il contatto abbia "
+        "ricevuto l'avviso e offri di chiamarlo.\n"
+        "- 'no_contact': offri di chiamare il 123 (call_phone con to='emergency') "
+        "e chiedi di configurare un contatto dicendo 'il mio contatto di "
+        "emergenza è…' con il nome e il numero.\n"
+        "Ogni volta che chiede SOS, chiama trigger_sos anche se un avviso è già "
+        "stato inviato: l'app decide se chiederne un altro.\n"
+        "Quando ricevi il messaggio '[SOS]' seguito da un risultato, è l'avviso "
+        "che l'app ha inviato da sola: agisci come con quel risultato. "
+        "Non dire mai ad alta voce il nome di una "
+        "funzione. Non dire "
+        "mai di aver inviato l'avviso se il risultato non è 'sent'. Non "
+        "improvvisare istruzioni di soccorso: la regola è fermarsi e aspettare "
+        "aiuto umano. Se parla di un pericolo grave (incidente, aggressione, "
+        "ferita), ricordale che la linea ufficiale di emergenza è il 123 e offri "
+        "di chiamarla.\n"
+        "CONTATTO DI EMERGENZA: se dice 'il mio contatto di emergenza è…', chiama "
+        "set_emergency_contact con il nome e il numero (solo cifre); se manca il "
+        "numero, chiedilo. Con 'ok', ripeti il nome e il numero a gruppi di cifre "
+        "perché lo confermi. Se chiede di chiamare il contatto o il 123, chiama "
+        "call_phone. Nell'aiuto, menziona anche che può dire 'SOS' per avvisare "
+        "il suo contatto di emergenza."
+    ),
+}
+
 
 def get_live_system_prompt(
     language: str,
@@ -840,8 +1026,8 @@ def get_live_system_prompt(
     """System prompt para la Live API (sesión continua, audio nativo).
 
     Ensambla: identidad/nombre del asistente + nombre de la persona usuaria (si se
-    conoce) + guía de comandos + intents de tarea (leer texto, describir escena,
-    buscar objeto) + reglas base + modificadores de verbosidad y de pausa de
+    conoce) + guía de comandos + alerta SOS + intents de tarea (leer texto,
+    describir escena, buscar objeto) + reglas base + modificadores de verbosidad y de pausa de
     descripciones (personalizables por voz) + modo sin cámara si la persona no dio
     ese permiso.
     """
@@ -852,6 +1038,7 @@ def get_live_system_prompt(
     parts = [
         _LIVE_IDENTITY[lang].format(name=name),
         _COMMANDS_EXTRA[lang],
+        _SOS[lang],
         _TASK_INTENTS[lang],
         _LIVE_SYSTEM_PROMPTS[lang],
     ]

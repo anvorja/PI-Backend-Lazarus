@@ -2,6 +2,37 @@
 
 > Registro de versiones del prompt de sistema (`app/prompts/companion.py`). Cada cambio de comportamiento sube `PROMPT_VERSION` y agrega aquí un bloque `## vX.Y.Z — fecha — motivo`, del más reciente al más antiguo. El backend registra la versión en el log al iniciar cada sesión.
 
+## v1.11.0 — 2026-09-30 — Alerta SOS con ubicación y contacto de emergencia (LAZA-38 · HU-012)
+
+**Motivo:** HU-012 pide que la persona pueda pedir ayuda humana por voz y que su
+contacto de emergencia reciba la ubicación. La regla es detenerse y esperar apoyo
+humano, no que el asistente improvise.
+
+**Cambio (5 idiomas):** nuevo bloque SOS, entre los comandos y las tareas:
+
+- "SOS", "emergencia" o "necesito ayuda" como pedido de auxilio → `trigger_sos` de
+  inmediato. El asistente sigue el resultado de la app:
+  - `pending`: hace la pregunta de confirmación ("¿Envío la alerta a…?"). Sí o "SOS"
+    → `trigger_sos` otra vez; no → `cancel_sos`. Sin respuesta, la app la envía sola
+    a los 5 s y avisa con el mensaje `[SOS]` seguido del resultado.
+  - `sent`: dice que el contacto ya tiene la ubicación, le pide detenerse en un lugar
+    seguro y ofrece llamar al contacto.
+  - `unconfirmed`: la red no confirmó el envío a tiempo; dice que no puede
+    confirmar que llegó y ofrece llamar al contacto.
+  - `failed`: dice que no se envió y ofrece llamar al contacto o al 123.
+  - `no_contact`: ofrece llamar al 123 y pide configurar un contacto.
+- Nunca da la alerta por enviada sin `sent`, no dice en voz alta el nombre de las
+  funciones y no improvisa instrucciones de rescate.
+  Ante un peligro grave recuerda la línea oficial 123.
+- "Mi contacto de emergencia es…" → `set_emergency_contact` (nombre y número); lo
+  repite en grupos de dígitos para confirmarlo.
+- Llamar al contacto o al 123 → `call_phone`.
+- Cada SOS llama a `trigger_sos` aunque ya se haya enviado una alerta: la app decide
+  (si se envió hace menos de 60 s, pregunta "¿Envío otra?" y no la envía sola).
+- La ayuda menciona el comando "SOS".
+
+El resto del prompt es igual al de v1.10.0.
+
 ## v1.10.0 — 2026-09-30 — Ubicación por GPS con get_location (LAZA-39 · HU-013)
 
 **Motivo:** HU-013 pide que, a "¿dónde estoy?", el asistente use la posición si el

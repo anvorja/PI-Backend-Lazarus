@@ -218,6 +218,65 @@ _FUNCTION_DECLARATIONS = [
         ),
         "parameters": {"type": "object", "properties": {}},
     },
+    {
+        "name": "set_emergency_contact",
+        "description": (
+            "Guarda el CONTACTO DE EMERGENCIA que recibirá la alerta SOS. Úsalo "
+            "cuando la persona diga 'mi contacto de emergencia es…' con un nombre "
+            "y un número de teléfono. Si falta el número, pídeselo antes de llamar."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Nombre del contacto, p. ej. 'Mamá' o 'Laura'.",
+                },
+                "phone": {
+                    "type": "string",
+                    "description": "Número de teléfono, solo dígitos (p. ej. '3151234567').",
+                },
+            },
+            "required": ["name", "phone"],
+        },
+    },
+    {
+        "name": "trigger_sos",
+        "description": (
+            "Alerta SOS: la app envía un SMS al contacto de emergencia con la "
+            "ubicación. Llámala de inmediato cuando la persona diga 'SOS' o pida "
+            "ayuda urgente, y otra vez si confirma el envío. Sigue lo que diga el "
+            "resultado ('pending', 'sent', 'failed' o 'no_contact')."
+        ),
+        "parameters": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "cancel_sos",
+        "description": (
+            "Cancela la alerta SOS pendiente de confirmación. Úsalo solo si la "
+            "persona dice que no la envíes."
+        ),
+        "parameters": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "call_phone",
+        "description": (
+            "Hace una llamada telefónica: al contacto de emergencia (to='contact') "
+            "o a la línea oficial de emergencias 123 (to='emergency'). Durante la "
+            "llamada el asistente se pausa."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "to": {
+                    "type": "string",
+                    "enum": ["contact", "emergency"],
+                    "description": "'contact' = contacto de emergencia; 'emergency' = línea 123.",
+                },
+            },
+            "required": ["to"],
+        },
+    },
 ]
 
 

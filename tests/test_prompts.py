@@ -43,6 +43,7 @@ def test_los_cinco_idiomas_tienen_todas_las_partes():
         c._VERBOSITY_DETAILED,
         c._DESCRIPTIONS_PAUSED,
         c._CAMERA_OFF,
+        c._SOS,
     ]
     for table in tables:
         assert set(table) == set(c.SUPPORTED_LANGUAGES)
@@ -205,6 +206,46 @@ SUMMARY = {"es": "resume", "en": "summarize", "fr": "résume", "pt": "resuma", "
 @pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
 def test_en_modo_reunion_resume_lo_escuchado(language):
     assert SUMMARY[language] in c._COMMANDS_EXTRA[language]
+
+
+# HU-012: la alerta SOS nombra sus funciones, sigue el resultado de la app y
+# recuerda la línea oficial 123.
+SOS_FUNCTIONS = ("trigger_sos", "cancel_sos", "set_emergency_contact", "call_phone")
+SOS_RESULTS = ("'pending'", "'sent'", "'unconfirmed'", "'failed'", "'no_contact'")
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+def test_sos_nombra_sus_funciones_y_resultados(language):
+    sos = c._SOS[language]
+    for name in SOS_FUNCTIONS + SOS_RESULTS:
+        assert name in sos
+    assert "[SOS]" in sos  # alerta enviada por la app sin confirmación
+    assert "123" in sos
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+def test_sos_va_tras_los_comandos_y_antes_de_las_tareas(language):
+    prompt = c.get_live_system_prompt(language)
+    commands = prompt.index(c._COMMANDS_EXTRA[language])
+    sos = prompt.index(c._SOS[language])
+    tasks = prompt.index(c._TASK_INTENTS[language])
+    assert commands < sos < tasks
+
+
+# HU-012: un SOS nuevo siempre pasa por la app, que decide si pregunta por otra
+# alerta (en la prueba el modelo se negó por su cuenta a enviar una segunda).
+SOS_ALWAYS = {
+    "es": "aunque ya hayas enviado una",
+    "en": "even if an alert was already sent",
+    "fr": "même si une alerte a déjà été envoyée",
+    "pt": "mesmo que um alerta já tenha sido enviado",
+    "it": "anche se un avviso è già stato inviato",
+}
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+def test_cada_sos_llama_a_la_funcion_aunque_ya_se_haya_enviado(language):
+    assert SOS_ALWAYS[language] in " ".join(c._SOS[language].split())
 
 
 WHERE_AM_I = {
