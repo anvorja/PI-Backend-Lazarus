@@ -42,6 +42,19 @@ def test_get_location_declarada_sin_parametros():
     assert get_location["parameters"] == {"type": "object", "properties": {}}
 
 
+def test_funciones_de_sos_declaradas():
+    # HU-012: contacto por voz, alerta con confirmación y llamadas.
+    tools = {
+        t["name"]: t for t in build_setup_message()["setup"]["tools"][0]["function_declarations"]
+    }
+    assert tools["set_emergency_contact"]["parameters"]["required"] == ["name", "phone"]
+    assert tools["trigger_sos"]["parameters"] == {"type": "object", "properties": {}}
+    assert tools["cancel_sos"]["parameters"] == {"type": "object", "properties": {}}
+    call = tools["call_phone"]["parameters"]
+    assert call["properties"]["to"]["enum"] == ["contact", "emergency"]
+    assert call["required"] == ["to"]
+
+
 def test_idioma_por_defecto_de_la_configuracion_si_la_app_no_lo_envia(monkeypatch):
     monkeypatch.setattr(settings, "gemini_live_language", "en")
     captured = {}
