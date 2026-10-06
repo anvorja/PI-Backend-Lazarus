@@ -2,6 +2,34 @@
 
 > Registro de versiones del prompt de sistema (`app/prompts/companion.py`). Cada cambio de comportamiento sube `PROMPT_VERSION` y agrega aquí un bloque `## vX.Y.Z — fecha — motivo`, del más reciente al más antiguo. El backend registra la versión en el log al iniciar cada sesión.
 
+## v1.12.0 — 2026-10-05 — Lados según la imagen más reciente (LAZA-109 · HU-041)
+
+**Motivo:** en la prueba de CP-LAZA-39 el asistente confundió izquierda y derecha
+durante un recorrido. El spike de HU-041 (`scripts/spike_lateralidad.py`, 47 preguntas
+sobre fotos reales de las pruebas) mostró que, viendo la foto, el modelo acierta el
+lado el 98 % de las veces con el prompt actual, y que ni un marco de referencia más
+largo ni franjas IZQ/DER en la imagen lo mejoran. La confusión viene de la
+conversación en vivo: responder con una imagen anterior o repetir un lado ya dicho.
+
+**Cambio (5 idiomas):** nueva tarea LADOS. Izquierda, derecha o al frente se dicen
+según la imagen más reciente, no según lo dicho antes; si el objeto ya no está a la
+vista, se dice en vez de repetir un lado; y si un lado anterior era otro, se corrige
+en voz alta ("Corrijo: está a tu derecha").
+Si la persona corrige un lado, el asistente vuelve a mirar la imagen y solo le da la
+razón si la imagen lo confirma: en CP-LAZA-109 aceptó cada corrección sin mirar.
+Si no reconoce con claridad el objeto que le piden, lo dice aunque le pregunten varias
+veces, sin cambiarlo por otro parecido ni dar un lado al azar. En CP-LAZA-109 dijo dos
+veces "no veo un piano" y a la tercera inventó "un mueble similar a un piano, a la
+derecha". Con las mismas fotos en una sesión nueva respondía bien: los errores venían de
+la insistencia en la conversación, no de la imagen (ni de la resolución, ni de dar las
+dos opciones en la pregunta, según el spike).
+Si le preguntan por algo que ya no está en la imagen, dice dónde lo vio por última vez
+("Hace un momento estaba a tu izquierda; ahora no lo veo"), y si lo corrigen sobre algo
+que no ve, no acepta ni niega: dice que ahora no lo ve. En la tercera prueba respondió
+por una persona que ya no estaba en la imagen y aceptó la corrección sin verla.
+
+El resto del prompt es igual al de v1.11.0.
+
 ## v1.11.0 — 2026-09-30 — Alerta SOS con ubicación y contacto de emergencia (LAZA-38 · HU-012)
 
 **Motivo:** HU-012 pide que la persona pueda pedir ayuda humana por voz y que su
