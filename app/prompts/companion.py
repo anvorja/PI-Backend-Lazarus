@@ -2,7 +2,7 @@
 
 # Versión del prompt de sistema. Cada cambio de comportamiento del prompt sube la
 # versión y agrega un bloque en `docs/prompts/companion.md` con fecha y motivo.
-PROMPT_VERSION = "1.11.0"
+PROMPT_VERSION = "1.12.0"
 
 SUPPORTED_LANGUAGES: tuple[str, ...] = ("es", "en", "fr", "pt", "it")
 DEFAULT_LANGUAGE = "es"
@@ -720,7 +720,18 @@ _TASK_INTENTS: dict[str, str] = {
         "- BUSCAR UN OBJETO: si pide 'busca…', '¿dónde está…?', localízalo y guía "
         "paso a paso con horas de reloj y pasos ('a las 2, un poco a tu derecha, "
         "dos pasos'). Si no está a la vista, dilo y en la misma respuesta sugiere "
-        "SIEMPRE girar despacio el teléfono para escanear el entorno."
+        "SIEMPRE girar despacio el teléfono para escanear el entorno.\n"
+        "- LADOS: di izquierda, derecha o al frente según dónde está el objeto en la "
+        "imagen MÁS RECIENTE, no según lo que dijiste antes. Si ya no está a la vista, "
+        "dilo en vez de repetir un lado; si lo viste hace poco, di dónde estaba ('Hace un momento "
+        "estaba a tu izquierda; ahora no lo veo'). Si ahora ves que un lado que dijiste era "
+        "otro, corrígelo explícitamente ('Corrijo: está a tu derecha'). Si la persona "
+        "te corrige un lado, vuelve a mirar la imagen: dale la razón solo si la "
+        "imagen lo confirma; si no, dile con calma lo que ves y sugiere girar el "
+        "teléfono hacia el objeto. Si no reconoces con claridad el objeto que te piden, "
+        "dilo aunque te lo pregunten varias veces: no lo cambies por otro objeto "
+        "parecido ni des un lado al azar. Si te corrigen sobre algo que ahora no ves, no lo "
+        "aceptes ni lo niegues: di que ahora no lo ves."
     ),
     "en": (
         "ON-DEMAND TASKS (one-off; return to normal mode when done):\n"
@@ -735,7 +746,19 @@ _TASK_INTENTS: dict[str, str] = {
         "- FIND AN OBJECT: if asked 'find…', 'where is…?', locate it and guide step "
         "by step with clock positions and paces ('2 o'clock, slightly to your "
         "right, two paces'). If it is not in view, say so and in the same answer "
-        "ALWAYS suggest turning the phone slowly to scan the surroundings."
+        "ALWAYS suggest turning the phone slowly to scan the surroundings.\n"
+        "- SIDES: say left, right or ahead according to where the object is in the "
+        "MOST RECENT image, not according to what you said before. If it is no "
+        "longer in view, say so instead of repeating a side; if you saw it a moment ago, say "
+        "where it was ('A moment ago it was on your left; I do not see it now'). If you now see "
+        "that a "
+        "side you gave was wrong, correct it explicitly ('Correction: it is on your "
+        "right'). If the person corrects a side, look at the image again: agree only "
+        "if the image confirms it; if not, calmly say what you see and suggest "
+        "turning the phone towards the object. If you cannot clearly recognize the "
+        "object they ask about, say so even if they ask several times: do not swap "
+        "it for a similar-looking object or give a side at random. If they correct you about "
+        "something you do not see now, neither accept nor deny it: say you do not see it now."
     ),
     "fr": (
         "TÂCHES À LA DEMANDE (ponctuelles ; reviens au mode normal une fois "
@@ -753,7 +776,21 @@ _TASK_INTENTS: dict[str, str] = {
         "guide pas à pas avec des positions d'horloge et des pas ('à 2 heures, un "
         "peu à ta droite, deux pas'). S'il n'est pas visible, dis-le et dans la même "
         "réponse propose TOUJOURS de tourner lentement le téléphone pour balayer "
-        "l'environnement."
+        "l'environnement.\n"
+        "- CÔTÉS : dis gauche, droite ou devant selon la position de l'objet dans "
+        "l'image LA PLUS RÉCENTE, pas selon ce que tu as dit avant. S'il n'est plus "
+        "visible, dis-le au lieu de répéter un côté ; si tu l'as vu il y a peu, dis où il était "
+        "('Il y a un instant il était à ta gauche ; je ne le vois plus'). Si tu vois maintenant "
+        "qu'un côté "
+        "que tu as donné était faux, corrige-le explicitement ('Je corrige : il est à "
+        "ta droite'). Si la personne corrige un côté, regarde à nouveau l'image : "
+        "donne-lui raison seulement si l'image le confirme ; sinon, dis calmement ce "
+        "que tu vois et propose de tourner le téléphone vers l'objet. Si tu ne "
+        "reconnais pas clairement l'objet "
+        "demandé, dis-le même si on te le demande plusieurs fois : ne le remplace pas "
+        "par un objet ressemblant et ne donne pas un côté au hasard. Si on te corrige sur quelque "
+        "chose que tu ne vois pas maintenant, ne l'accepte pas et ne le nie pas : dis que tu ne "
+        "le vois pas maintenant."
     ),
     "pt": (
         "TAREFAS SOB DEMANDA (pontuais; volte ao modo normal ao terminar):\n"
@@ -768,7 +805,18 @@ _TASK_INTENTS: dict[str, str] = {
         "- PROCURAR UM OBJETO: se pedir 'procure…', 'onde está…?', localize-o e "
         "guie passo a passo com horas de relógio e passos ('às 2 horas, um pouco à "
         "sua direita, dois passos'). Se não estiver à vista, diga e na mesma "
-        "resposta sugira SEMPRE girar o telefone devagar para varrer o ambiente."
+        "resposta sugira SEMPRE girar o telefone devagar para varrer o ambiente.\n"
+        "- LADOS: diga esquerda, direita ou à frente conforme onde o objeto está na "
+        "imagem MAIS RECENTE, não conforme o que você disse antes. Se ele não estiver "
+        "mais à vista, diga isso em vez de repetir um lado; se você o viu há pouco, diga onde "
+        "estava ('Há pouco estava à sua esquerda; agora não o vejo'). Se agora você vê que um "
+        "lado que disse estava errado, corrija explicitamente ('Corrijo: está à sua "
+        "direita'). Se a pessoa corrigir um lado, olhe a imagem de novo: dê razão "
+        "só se a imagem confirmar; se não, diga com calma o que você vê e sugira "
+        "girar o telefone para o objeto. Se você não reconhecer com clareza o objeto "
+        "pedido, diga isso mesmo que perguntem várias vezes: não o troque por outro "
+        "objeto parecido nem diga um lado ao acaso. Se corrigirem você sobre algo que agora não "
+        "vê, não aceite nem negue: diga que agora não o vê."
     ),
     "it": (
         "COMPITI SU RICHIESTA (puntuali; torna al modo normale al termine):\n"
@@ -785,7 +833,18 @@ _TASK_INTENTS: dict[str, str] = {
         "passo passo con posizioni dell'orologio e passi ('alle 2, un po' alla tua "
         "destra, due passi'). Se non è in vista, dillo e nella stessa risposta "
         "suggerisci SEMPRE di girare lentamente il telefono per scansionare "
-        "l'ambiente."
+        "l'ambiente.\n"
+        "- LATI: di' sinistra, destra o davanti secondo dove si trova l'oggetto "
+        "nell'immagine PIÙ RECENTE, non secondo quello che hai detto prima. Se non è "
+        "più in vista, dillo invece di ripetere un lato; se l'hai visto poco fa, di' dov'era "
+        "('Poco fa era alla tua sinistra; ora non lo vedo'). Se ora vedi che un lato che "
+        "hai detto era sbagliato, correggilo esplicitamente ('Correggo: è alla tua "
+        "destra'). Se la persona corregge un lato, guarda di nuovo l'immagine: dalle "
+        "ragione solo se l'immagine lo conferma; altrimenti di' con calma cosa vedi e "
+        "suggerisci di girare il telefono verso l'oggetto. Se non riconosci chiaramente l'oggetto "
+        "richiesto, dillo anche se te lo chiedono più volte: non sostituirlo con un "
+        "oggetto simile e non dire un lato a caso. Se ti correggono su qualcosa che ora non vedi, "
+        "non accettarlo né negarlo: di' che ora non lo vedi."
     ),
 }
 

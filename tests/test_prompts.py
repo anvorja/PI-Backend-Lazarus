@@ -270,3 +270,76 @@ def test_donde_estoy_pide_la_ubicacion_cada_vez(language):
     # descripción de la sala (la tarea de escena) sin llamar a get_location.
     assert WHERE_AM_I[language] not in c._TASK_INTENTS[language].lower()
     assert LOCATION_EVERY_TIME[language] in c._LIVE_IDENTITY[language]
+
+
+# HU-041: los lados se dicen según la imagen más reciente y se corrigen en voz
+# alta (en el spike, viendo la foto, acertó el 98 %; la confusión venía de la
+# conversación en vivo).
+SIDES_RECENT = {
+    "es": "MÁS RECIENTE",
+    "en": "MOST RECENT",
+    "fr": "LA PLUS RÉCENTE",
+    "pt": "MAIS RECENTE",
+    "it": "PIÙ RECENTE",
+}
+SIDES_CORRECT = {
+    "es": "Corrijo",
+    "en": "Correction",
+    "fr": "Je corrige",
+    "pt": "Corrijo",
+    "it": "Correggo",
+}
+
+
+# En CP-LAZA-109 el asistente aceptó cada corrección de la persona sin mirar.
+SIDES_CHECK = {
+    "es": "solo si la imagen lo confirma",
+    "en": "only if the image confirms it",
+    "fr": "seulement si l'image le confirme",
+    "pt": "só se a imagem confirmar",
+    "it": "solo se l'immagine lo conferma",
+}
+
+
+# En CP-LAZA-109, tras "no veo un piano" dos veces, a la tercera pregunta dijo
+# "mueble similar a un piano, a la derecha" (estaba a la izquierda).
+NOT_SEEN = {
+    "es": "aunque te lo pregunten varias veces",
+    "en": "even if they ask several times",
+    "fr": "même si on te le demande plusieurs fois",
+    "pt": "mesmo que perguntem várias vezes",
+    "it": "anche se te lo chiedono più volte",
+}
+
+
+# En CP-LAZA-109 respondió "Señora, a tu izquierda" cuando ya no estaba en la
+# imagen, y aceptó "está a la derecha" sin verla.
+LAST_SEEN = {
+    "es": "ahora no lo veo",
+    "en": "I do not see it now",
+    "fr": "je ne le vois plus",
+    "pt": "agora não o vejo",
+    "it": "ora non lo vedo",
+}
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+def test_lo_que_ya_no_ve_lo_dice_y_no_acepta_correcciones_sin_verlo(language):
+    assert LAST_SEEN[language] in " ".join(c._TASK_INTENTS[language].split())
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+def test_si_no_reconoce_el_objeto_no_lo_inventa_aunque_insistan(language):
+    assert NOT_SEEN[language] in " ".join(c._TASK_INTENTS[language].split())
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+def test_una_correccion_de_la_persona_se_comprueba_en_la_imagen(language):
+    assert SIDES_CHECK[language] in " ".join(c._TASK_INTENTS[language].split())
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+def test_los_lados_salen_de_la_imagen_mas_reciente_y_se_corrigen(language):
+    tasks = c._TASK_INTENTS[language]
+    assert SIDES_RECENT[language] in tasks
+    assert SIDES_CORRECT[language] in tasks
