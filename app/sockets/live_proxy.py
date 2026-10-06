@@ -18,6 +18,7 @@ import asyncio
 import contextlib
 import json
 import logging
+import time
 from urllib.parse import quote
 
 import websockets
@@ -25,6 +26,7 @@ from fastapi import WebSocket, WebSocketDisconnect
 from websockets.exceptions import ConnectionClosed
 
 from app.core.config import settings
+from app.core.telemetry import new_session_id, session_event
 from app.prompts.companion import PROMPT_VERSION
 from app.services.live_service import build_setup_message, build_upstream_url
 
@@ -45,7 +47,16 @@ CLOSE_BILLING = 4005  # sin saldo o facturación del proyecto (no se resuelve es
 _QUOTA_MARKERS = ("quota", "exhausted", "resource_exhausted", "429", "rate limit")
 # Antes que la cuota: "credits are depleted" no se arregla reintentando más tarde;
 # alguien tiene que recargar el saldo (visto en la prueba de CP-LAZA-39).
-_BILLING_MARKERS = ("credits", "billing", "prepayment", "payment", "depleted")
+# "Spending cap": el proyecto llegó a su tope de gasto mensual (visto el 6 de
+# octubre); también se arregla solo desde AI Studio.
+_BILLING_MARKERS = (
+    "credits",
+    "billing",
+    "prepayment",
+    "payment",
+    "depleted",
+    "spending cap",
+)
 
 
 def _upstream_close_code(code: int, reason: str) -> int:
@@ -67,11 +78,13 @@ def _redact(text: str) -> str:
     return text.replace(quote(key), "***").replace(key, "***")
 
 
-async def _client_to_gemini(client: WebSocket, gemini) -> None:
+async def _client_to_gemini(client: WebSocket, gemini, stats: dict | None = None) -> None:
     """Reenvía frames de la app hacia Gemini."""
     try:
         while True:
             message = await client.receive_text()
+            if stats is not None:
+                stats["from_app"] += 1
             await gemini.send(message)
     except WebSocketDisconnect:
         logger.info("Live: cliente desconectado")
@@ -92,10 +105,12 @@ async def _close_client(client: WebSocket, code: int, reason: str) -> None:
         await client.close(code=code, reason=_redact(reason)[:120])
 
 
-async def _gemini_to_client(client: WebSocket, gemini) -> None:
+async def _gemini_to_client(client: WebSocket, gemini, stats: dict | None = None) -> None:
     """Reenvía frames de Gemini hacia la app y propaga su cierre con un código de causa."""
     try:
         async for message in gemini:
+            if stats is not None:
+                stats["from_gemini"] += 1
             if isinstance(message, bytes):
                 message = message.decode("utf-8")
             try:
@@ -110,11 +125,25 @@ async def _gemini_to_client(client: WebSocket, gemini) -> None:
         reason = (rcvd.reason if rcvd else "") or "upstream closed"
         cause = _upstream_close_code(code, reason)
         logger.warning("Live: Gemini cerró la sesión (%s → %s) — %s", code, cause, reason)
+        if stats is not None:
+            stats["close_code"] = cause
         await _close_client(client, cause, reason)
         return
     # Gemini terminó la sesión de forma ordenada (p. ej. límite de duración).
     logger.info("Live: Gemini finalizó la sesión")
+    if stats is not None:
+        stats["close_code"] = CLOSE_UPSTREAM_ENDED
     await _close_client(client, CLOSE_UPSTREAM_ENDED, "upstream closed")
+
+
+def _end(session_id: str, started: float, stats: dict) -> None:
+    """Evento de fin de sesión con su duración, cierre y conteo de mensajes."""
+    session_event(
+        "session_end",
+        session_id,
+        duration_s=round(time.monotonic() - started, 1),
+        **stats,
+    )
 
 
 async def live_proxy(client: WebSocket) -> None:
@@ -145,6 +174,10 @@ async def live_proxy(client: WebSocket) -> None:
     describing = start.get("describing", True)
     camera = start.get("camera", True)  # False: sin permiso de cámara, solo audio
 
+    session_id = new_session_id()
+    started = time.monotonic()
+    stats: dict = {"from_app": 0, "from_gemini": 0, "close_code": None}
+
     # 2. Abrir upstream a Gemini y enviar el setup.
     try:
         upstream_url = build_upstream_url()
@@ -167,19 +200,29 @@ async def live_proxy(client: WebSocket) -> None:
             await gemini.send(json.dumps(setup))
             logger.info(
                 "Live: sesión Gemini iniciada (prompt=v%s, idioma=%s, voz=%s, asistente=%s, "
-                "usuario=%s)",
+                "nombre de la persona: %s)",
                 PROMPT_VERSION,
                 language,
                 voice or settings.gemini_live_voice,  # voz efectiva (default si None)
                 assistant_name or "Aria",
-                user_name or "—",  # — = aún no ha dicho su nombre
+                "conocido" if user_name else "—",  # el nombre no va al log (privacidad)
+            )
+            session_event(
+                "session_start",
+                session_id,
+                prompt=PROMPT_VERSION,
+                language=language,
+                voice=voice or settings.gemini_live_voice,
+                describing=bool(describing),
+                camera=bool(camera),
+                user_name_known=bool(user_name),
             )
 
             # 3. Pipe bidireccional hasta que cualquier lado cierre.
             limit = asyncio.create_task(_session_limit(settings.gemini_live_max_session_s))
             tasks = [
-                asyncio.create_task(_client_to_gemini(client, gemini)),
-                asyncio.create_task(_gemini_to_client(client, gemini)),
+                asyncio.create_task(_client_to_gemini(client, gemini, stats)),
+                asyncio.create_task(_gemini_to_client(client, gemini, stats)),
                 limit,
             ]
             done, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
@@ -193,6 +236,8 @@ async def live_proxy(client: WebSocket) -> None:
             if limit in done:
                 # Mismo aviso que cuando Gemini termina la sesión por su cuenta.
                 logger.info("Live: se cumplió la duración máxima de la sesión")
+                stats["close_code"] = CLOSE_UPSTREAM_ENDED
+                _end(session_id, started, stats)
                 await gemini.close()
                 await _close_client(client, CLOSE_UPSTREAM_ENDED, "session time limit")
                 return
@@ -201,9 +246,13 @@ async def live_proxy(client: WebSocket) -> None:
         text = _redact(str(exc))
         cause = _upstream_close_code(1011, text)
         logger.error("Live: fallo en la sesión (%s → %s): %s", type(exc).__name__, cause, text)
+        stats["close_code"] = cause
+        stats["error"] = type(exc).__name__
+        _end(session_id, started, stats)
         await _close_client(client, cause, f"Upstream error: {text}")
         return
 
+    _end(session_id, started, stats)
     try:
         await client.close()
     except RuntimeError:

@@ -343,3 +343,30 @@ def test_los_lados_salen_de_la_imagen_mas_reciente_y_se_corrigen(language):
     tasks = c._TASK_INTENTS[language]
     assert SIDES_RECENT[language] in tasks
     assert SIDES_CORRECT[language] in tasks
+
+
+# HU-040: ciclo de observación. El asistente atiende '[OBSERVA]' en los 5 idiomas,
+# habla solo ante un riesgo o algo nuevo, y en pausa solo ante un riesgo.
+SAY_NOTHING = {
+    "es": "NO DIGAS NADA",
+    "en": "SAY NOTHING",
+    "fr": "NE DIS RIEN",
+    "pt": "NÃO DIGA NADA",
+    "it": "NON DIRE NULLA",
+}
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+def test_observa_avisa_solo_de_riesgos_o_algo_nuevo(language):
+    observe = c._OBSERVE[language]
+    assert "'[OBSERVA]'" in observe
+    assert SAY_NOTHING[language] in observe
+    assert " 8 " in " ".join(observe.split())  # lo nuevo, en 8 palabras como máximo
+    # En pausa la app envía '[OBSERVA_RIESGOS]' (el modelo olvidaba la pausa).
+    assert "'[OBSERVA_RIESGOS]'" in observe
+    assert observe in c.get_live_system_prompt(language)
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+def test_en_pausa_observa_solo_por_riesgos(language):
+    assert "'[OBSERVA]'" in c._DESCRIPTIONS_PAUSED[language]

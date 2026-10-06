@@ -3,10 +3,12 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1.router import router
 from app.core.config import settings
+from app.core.telemetry import configure_telemetry_logging
 from app.sockets.live_proxy import live_proxy
 
 
 def create_fastapi_app() -> FastAPI:
+    configure_telemetry_logging()
     app = FastAPI(
         title=settings.app_name,
         version=settings.app_version,
