@@ -2,6 +2,39 @@
 
 > Registro de versiones del prompt de sistema (`app/prompts/companion.py`). Cada cambio de comportamiento sube `PROMPT_VERSION` y agrega aquí un bloque `## vX.Y.Z — fecha — motivo`, del más reciente al más antiguo. El backend registra la versión en el log al iniciar cada sesión.
 
+## v1.13.0 — 2026-10-06 — Ciclo de observación con '[OBSERVA]' (LAZA-107 · HU-040)
+
+**Motivo:** Gemini Live no habla si nadie le habla (CP-LAZA-36): la imagen de la cámara
+no abre un turno. Sin eso, las alertas de seguridad (regla 1) no llegan mientras la
+persona camina en silencio.
+
+**Spike (`scripts/spike_observa.py`, 6 de octubre):** recorridos reales de las pruebas
+(escalera con un gato, parque y calle, parqueadero de un centro comercial y una escena
+quieta) reproducidos a 1 foto por segundo, con `[OBSERVA]` cada 3 s por el flujo de la
+cámara. El asistente avisó sin que nadie hablara ("Gato, abajo, un paso", "Escaleras,
+al frente, un paso", "Bordillo, al frente, un paso"), con una latencia mediana de 1,6 s
+(percentil 90: 2,3 s), y habló en el 33 % de los sentinelas con descripciones activas.
+Con las descripciones en pausa habló más (54 %), describiendo flechas y pisos: la regla
+se endureció.
+
+**Cambio (5 idiomas):** nuevo bloque OBSERVACIÓN. '[OBSERVA]' no lo dice la persona:
+no se menciona ni se responde como pregunta. Al recibirlo, el asistente mira la imagen
+más reciente y habla solo si (a) hay un riesgo para caminar a pocos pasos (alerta de 6
+palabras como máximo, con tipo, dirección y distancia) o (b) con descripciones activas,
+apareció algo nuevo que sirve para orientarse. Si no, no dice nada. Con las
+descripciones en pausa, solo (a).
+
+**Ajuste tras la prueba en el teléfono (CP-LAZA-107, 6 de octubre):** con descripciones
+activas dio una descripción larga de un pasillo; lo nuevo se dice en una frase de 8
+palabras como máximo. La app baja el periodo de `[OBSERVA]` de 3 a 2 s: con 3 s más la
+respuesta, un aviso llegaba hasta 7 s después de que el obstáculo apareció.
+Con las descripciones pausadas a mitad de la sesión, el asistente seguía describiendo
+("Pasillo estrecho al frente"): no recordaba la pausa. La app envía ahora
+`[OBSERVA_RIESGOS]` cuando están en pausa, y el prompt lo trata como `[OBSERVA]` solo
+para riesgos.
+
+El resto del prompt es igual al de v1.12.0.
+
 ## v1.12.0 — 2026-10-05 — Lados según la imagen más reciente (LAZA-109 · HU-041)
 
 **Motivo:** en la prueba de CP-LAZA-39 el asistente confundió izquierda y derecha

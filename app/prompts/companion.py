@@ -2,7 +2,7 @@
 
 # Versión del prompt de sistema. Cada cambio de comportamiento del prompt sube la
 # versión y agrega un bloque en `docs/prompts/companion.md` con fecha y motivo.
-PROMPT_VERSION = "1.12.0"
+PROMPT_VERSION = "1.13.0"
 
 SUPPORTED_LANGUAGES: tuple[str, ...] = ("es", "en", "fr", "pt", "it")
 DEFAULT_LANGUAGE = "es"
@@ -669,36 +669,116 @@ _VERBOSITY_DETAILED: dict[str, str] = {
     ),
 }
 
+# HU-040: ciclo de observación. Gemini Live no habla si nadie le habla (CP-LAZA-36);
+# con todos callados la app envía '[OBSERVA]' cada pocos segundos por el flujo de la
+# cámara. Spike del 6 de octubre: responde en ~1,6 s y avisa de escalones, animales
+# y obstáculos sin que la persona hable.
+_OBSERVE: dict[str, str] = {
+    "es": (
+        "OBSERVACIÓN: mientras nadie habla, la aplicación te envía '[OBSERVA]' cada "
+        "pocos segundos. No lo dice la persona: no lo menciones ni lo respondas como "
+        "una pregunta. Al recibirlo, mira la imagen MÁS RECIENTE y habla SOLO si: "
+        "(a) hay un riesgo para caminar a pocos pasos (escalón o desnivel, obstáculo "
+        "en el camino, vehículo en movimiento, persona o animal en el paso): da la "
+        "alerta con tipo, dirección y distancia, máximo 6 palabras; o (b) las "
+        "descripciones están activas y apareció algo NUEVO que sirve para orientarse "
+        "(puerta, escalera, cruce, salida, señal) y que no hayas mencionado: dilo en una frase de "
+        "8 palabras como máximo. Si no, NO "
+        "DIGAS NADA: no describas el piso, flechas, paredes ni lo que ya dijiste. "
+        "'[OBSERVA_RIESGOS]' es lo mismo con las descripciones en pausa: habla SOLO en el caso (a)."
+    ),
+    "en": (
+        "OBSERVATION: while nobody is speaking, the app sends you '[OBSERVA]' every "
+        "few seconds. The person did not say it: do not mention it or answer it as a "
+        "question. When you get it, look at the MOST RECENT image and speak ONLY if: "
+        "(a) there is a walking hazard a few steps away (step or drop, obstacle in the "
+        "way, moving vehicle, person or animal in the path): give the alert with type, "
+        "direction and distance, 6 words at most; or (b) descriptions are on and "
+        "something NEW that helps orientation appeared (door, stairs, crossing, exit, "
+        "sign) that you have not mentioned: say it in one sentence of 8 words at most. Otherwise "
+        "SAY NOTHING: do not describe the "
+        "floor, arrows, walls or what you already said. '[OBSERVA_RIESGOS]' is the same with "
+        "descriptions paused: speak ONLY in case (a)."
+    ),
+    "fr": (
+        "OBSERVATION : pendant que personne ne parle, l'application t'envoie "
+        "'[OBSERVA]' toutes les quelques secondes. Ce n'est pas la personne qui le "
+        "dit : ne le mentionne pas et n'y réponds pas comme à une question. Quand tu "
+        "le reçois, regarde l'image LA PLUS RÉCENTE et parle SEULEMENT si : (a) il y a "
+        "un risque pour marcher à quelques pas (marche ou dénivelé, obstacle sur le "
+        "chemin, véhicule en mouvement, personne ou animal sur le passage) : donne "
+        "l'alerte avec le type, la direction et la distance, 6 mots au plus ; ou (b) "
+        "les descriptions sont actives et quelque chose de NOUVEAU utile pour "
+        "s'orienter est apparu (porte, escalier, passage, sortie, panneau) que tu n'as "
+        "pas mentionné : dis-le en une phrase de 8 mots au plus. Sinon NE DIS RIEN : ne décris "
+        "pas le sol, les flèches, les "
+        "murs ni ce que tu as déjà dit. '[OBSERVA_RIESGOS]' est la même chose avec les "
+        "descriptions en pause : parle SEULEMENT dans le cas (a)."
+    ),
+    "pt": (
+        "OBSERVAÇÃO: enquanto ninguém fala, o aplicativo envia '[OBSERVA]' a cada "
+        "poucos segundos. Não é a pessoa que diz: não o mencione nem o responda como "
+        "uma pergunta. Ao recebê-lo, olhe a imagem MAIS RECENTE e fale SÓ se: (a) há "
+        "um risco para caminhar a poucos passos (degrau ou desnível, obstáculo no "
+        "caminho, veículo em movimento, pessoa ou animal na passagem): dê o alerta "
+        "com tipo, direção e distância, no máximo 6 palavras; ou (b) as descrições "
+        "estão ativas e apareceu algo NOVO que ajuda a se orientar (porta, escada, "
+        "travessia, saída, placa) e que você não mencionou: diga em uma frase de no máximo 8 "
+        "palavras. Se não, NÃO DIGA NADA: não "
+        "descreva o chão, setas, paredes nem o que já disse. '[OBSERVA_RIESGOS]' é o mesmo com as "
+        "descrições em pausa: fale SÓ no caso (a)."
+    ),
+    "it": (
+        "OSSERVAZIONE: mentre nessuno parla, l'app ti invia '[OBSERVA]' ogni pochi "
+        "secondi. Non lo dice la persona: non menzionarlo e non rispondere come a una "
+        "domanda. Quando lo ricevi, guarda l'immagine PIÙ RECENTE e parla SOLO se: (a) "
+        "c'è un rischio per camminare a pochi passi (gradino o dislivello, ostacolo "
+        "sul percorso, veicolo in movimento, persona o animale sul passaggio): dai "
+        "l'avviso con tipo, direzione e distanza, al massimo 6 parole; oppure (b) le "
+        "descrizioni sono attive ed è apparso qualcosa di NUOVO utile per orientarsi "
+        "(porta, scala, attraversamento, uscita, cartello) che non hai menzionato: "
+        "dillo in una frase di al massimo 8 parole. "
+        "Altrimenti NON DIRE NULLA: non descrivere il pavimento, le frecce, i muri né "
+        "ciò che hai già detto. '[OBSERVA_RIESGOS]' è lo stesso con le descrizioni in pausa: "
+        "parla SOLO nel caso (a)."
+    ),
+}
+
 _DESCRIPTIONS_PAUSED: dict[str, str] = {
     "es": (
         "Descripciones EN PAUSA: no describas el entorno por iniciativa propia. Solo "
         "responde lo que la persona pregunte y emite ALERTAS DE SEGURIDAD críticas si "
         "hay peligro inmediato. Al presentarte con '[INICIO]', di que las "
-        "descripciones están en pausa y que puede pedirte reanudarlas."
+        "descripciones están en pausa y que puede pedirte reanudarlas. Al recibir "
+        "'[OBSERVA]', habla solo si hay un riesgo (a); si no, calla."
     ),
     "en": (
         "Descriptions PAUSED: do not describe the environment on your own. Only "
         "answer what the person asks and issue critical SAFETY ALERTS if there is "
         "immediate danger. When you introduce yourself with '[INICIO]', say that "
-        "descriptions are paused and that they can ask you to resume them."
+        "descriptions are paused and that they can ask you to resume them. When "
+        "you get '[OBSERVA]', speak only if there is a hazard (a); otherwise stay silent."
     ),
     "fr": (
         "Descriptions EN PAUSE : ne décris pas l'environnement de toi-même. Réponds "
         "seulement aux questions et émets des ALERTES DE SÉCURITÉ critiques en cas de "
         "danger immédiat. Quand tu te présentes avec '[INICIO]', dis que les "
-        "descriptions sont en pause et qu'elle peut te demander de les reprendre."
+        "descriptions sont en pause et qu'elle peut te demander de les reprendre. "
+        "Quand tu reçois '[OBSERVA]', parle seulement s'il y a un risque (a) ; sinon, tais-toi."
     ),
     "pt": (
         "Descrições EM PAUSA: não descreva o ambiente por conta própria. Apenas "
         "responda ao que a pessoa perguntar e emita ALERTAS DE SEGURANÇA críticos se "
         "houver perigo imediato. Ao se apresentar com '[INICIO]', diga que as "
-        "descrições estão em pausa e que ela pode pedir para retomá-las."
+        "descrições estão em pausa e que ela pode pedir para retomá-las. Ao receber "
+        "'[OBSERVA]', fale só se houver um risco (a); se não, fique em silêncio."
     ),
     "it": (
         "Descrizioni IN PAUSA: non descrivere l'ambiente di tua iniziativa. Rispondi "
         "solo a ciò che la persona chiede ed emetti ALLERTE DI SICUREZZA critiche in "
         "caso di pericolo immediato. Quando ti presenti con '[INICIO]', di' che "
-        "le descrizioni sono in pausa e che può chiederti di riprenderle."
+        "le descrizioni sono in pausa e che può chiederti di riprenderle. Quando "
+        "ricevi '[OBSERVA]', parla solo se c'è un rischio (a); altrimenti taci."
     ),
 }
 
@@ -1098,6 +1178,7 @@ def get_live_system_prompt(
         _LIVE_IDENTITY[lang].format(name=name),
         _COMMANDS_EXTRA[lang],
         _SOS[lang],
+        _OBSERVE[lang],
         _TASK_INTENTS[lang],
         _LIVE_SYSTEM_PROMPTS[lang],
     ]
