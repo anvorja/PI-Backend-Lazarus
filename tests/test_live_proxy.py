@@ -1,6 +1,7 @@
 """Pruebas del proxy `/ws/live` con un Gemini Live simulado (sin red ni API key real)."""
 
 import asyncio
+import contextlib
 import json
 import logging
 
@@ -218,6 +219,19 @@ def test_gemini_sin_saldo_cierra_con_4005(monkeypatch, caplog):
     assert "credits" in caplog.text
 
 
+def test_gemini_con_el_tope_de_gasto_cierra_con_4005(monkeypatch):
+    # Texto real del 6 de octubre: tampoco se arregla reintentando.
+    gemini = ClosingGemini(
+        Close(
+            1011,
+            "Your project has exceeded its monthly spending cap. Please go to AI "
+            "Studio at https://ai.studio/spend to manage your project.",
+        )
+    )
+
+    assert _close_code_after_setup(monkeypatch, gemini) == proxy_module.CLOSE_BILLING
+
+
 def test_gemini_cierra_con_error_cierra_con_4002(monkeypatch):
     code = _close_code_after_setup(monkeypatch, ClosingGemini(Close(1011, "internal error")))
     assert code == proxy_module.CLOSE_UPSTREAM_ERROR
@@ -243,3 +257,29 @@ def test_sin_permiso_de_camara_el_setup_pide_modo_solo_audio(fake_gemini):
 
     prompt = json.loads(fake_gemini.sent[0])["setup"]["system_instruction"]["parts"][0]["text"]
     assert prompt.endswith(companion._CAMERA_OFF["es"])
+
+
+def test_eventos_de_sesion_sin_datos_de_la_persona(monkeypatch):
+    # HU-015: inicio y fin de sesión en JSON, sin el nombre de la persona ni la key.
+    events: list[tuple[str, dict]] = []
+    monkeypatch.setattr(
+        proxy_module, "session_event", lambda e, s, **f: events.append((e, {"session": s, **f}))
+    )
+    gemini = ClosingGemini(Close(1011, "internal error"))
+    monkeypatch.setattr(proxy_module.websockets, "connect", lambda *a, **k: gemini)
+    with TestClient(app).websocket_connect("/ws/live") as ws:
+        ws.send_text(json.dumps({"type": "start", "userName": "Andrés", "language": "es"}))
+        with contextlib.suppress(WebSocketDisconnect):
+            while True:
+                ws.receive_text()
+
+    names = [e for e, _ in events]
+    assert names == ["session_start", "session_end"]
+    start, end = events[0][1], events[1][1]
+    assert start["user_name_known"] is True
+    assert start["session"] == end["session"]
+    assert end["close_code"] == proxy_module.CLOSE_UPSTREAM_ERROR
+    text = json.dumps(events, ensure_ascii=False)
+    assert "Andrés" not in text
+    if settings.gemini_api_key:  # en CI no hay key
+        assert settings.gemini_api_key not in text
