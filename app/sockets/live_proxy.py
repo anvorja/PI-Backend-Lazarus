@@ -173,6 +173,8 @@ async def live_proxy(client: WebSocket) -> None:
     verbosity = start.get("verbosity", "concise")
     describing = start.get("describing", True)
     camera = start.get("camera", True)  # False: sin permiso de cámara, solo audio
+    # True: sesión abierta con la pantalla bloqueada, sin imágenes (HU-017).
+    screen_locked = start.get("screenLocked", False)
 
     session_id = new_session_id()
     started = time.monotonic()
@@ -196,6 +198,7 @@ async def live_proxy(client: WebSocket) -> None:
                 verbosity=verbosity,
                 describing=describing,
                 camera=camera,
+                screen_locked=bool(screen_locked),
             )
             await gemini.send(json.dumps(setup))
             logger.info(
@@ -215,6 +218,7 @@ async def live_proxy(client: WebSocket) -> None:
                 voice=voice or settings.gemini_live_voice,
                 describing=bool(describing),
                 camera=bool(camera),
+                screen_locked=bool(screen_locked),
                 user_name_known=bool(user_name),
             )
 

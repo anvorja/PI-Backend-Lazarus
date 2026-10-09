@@ -44,6 +44,8 @@ def test_los_cinco_idiomas_tienen_todas_las_partes():
         c._DESCRIPTIONS_PAUSED,
         c._CAMERA_OFF,
         c._SOS,
+        c._OBSERVE,
+        c._SCREEN_LOCKED,
     ]
     for table in tables:
         assert set(table) == set(c.SUPPORTED_LANGUAGES)
@@ -370,3 +372,85 @@ def test_observa_avisa_solo_de_riesgos_o_algo_nuevo(language):
 @pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
 def test_en_pausa_observa_solo_por_riesgos(language):
     assert "'[OBSERVA]'" in c._DESCRIPTIONS_PAUSED[language]
+
+
+# Lo que dice el asistente al bloquear y al desbloquear la pantalla (HU-017).
+SCREEN_LOCKED_SAYS = {
+    "es": ("'Sigo contigo, pero sin ver.'", "'Vuelvo a ver.'"),
+    "en": ("'I'm still with you, but I can't see.'", "'I can see again.'"),
+    "fr": ("'Je suis toujours là, mais je ne vois plus.'", "'Je vois de nouveau.'"),
+    "pt": ("'Continuo com você, mas sem ver.'", "'Voltei a ver.'"),
+    "it": ("'Sono ancora con te, ma non vedo.'", "'Vedo di nuovo.'"),
+}
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+def test_pantalla_bloqueada_avisa_que_sigue_sin_ver(language):
+    locked = c._SCREEN_LOCKED[language]
+    off, on = SCREEN_LOCKED_SAYS[language]
+    assert "'[SIN_CAMARA]'" in locked and off in locked
+    assert "'[CAMARA]'" in locked and on in locked
+    # Va junto a la observación, siempre (la pantalla se bloquea en cualquier sesión).
+    prompt = c.get_live_system_prompt(language)
+    assert prompt.index(c._OBSERVE[language]) < prompt.index(locked)
+
+
+# Lo que inventó en la caminata de CP-LAZA-45 con la pantalla bloqueada.
+INVENTED = {
+    "es": ("obstáculos", "por dónde caminar"),
+    "en": ("obstacles", "which way to walk"),
+    "fr": ("obstacles", "par où marcher"),
+    "pt": ("obstáculos", "por onde andar"),
+    "it": ("ostacoli", "dove camminare"),
+}
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+def test_pantalla_bloqueada_prohibe_decir_las_marcas(language):
+    # En la caminata dijo "[CAMARA] Vuelvo a ver." sin que la app lo enviara.
+    locked = c._SCREEN_LOCKED[language]
+    assert "'[CAMARA]'" in locked
+    assert locked.count("'[CAMARA]'") >= 3  # quién lo envía, qué decir, cuándo no
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+def test_sesion_con_pantalla_bloqueada_no_describe_y_si_da_la_ubicacion(language):
+    base = c.get_live_system_prompt(language)
+    blind = c.get_live_system_prompt(language, screen_locked=True)
+    block = c._SCREEN_LOCKED_SESSION[language]
+
+    assert block not in base
+    assert blind.endswith(block)
+    for word in INVENTED[language]:
+        assert word in block
+    # Después de reconectarse se negó a dar la ubicación "porque la cámara está
+    # bloqueada": el GPS no depende de la cámara.
+    assert "get_location" in block and "GPS" in block
+    # Sin imágenes no hay ciclo de observación (la app no envía '[OBSERVA]').
+    assert c._OBSERVE[language] not in blind
+    assert c._SCREEN_LOCKED[language] in blind  # '[SIN_CAMARA]' sigue siendo el saludo
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+def test_sin_permiso_de_camara_manda_el_modo_solo_audio(language):
+    prompt = c.get_live_system_prompt(language, camera=False, screen_locked=True)
+    assert prompt.endswith(c._CAMERA_OFF[language])
+    assert c._SCREEN_LOCKED_SESSION[language] not in prompt
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+@pytest.mark.parametrize("screen_locked", [False, True])
+def test_sin_rutas_no_inventa_como_llegar(language, screen_locked):
+    # En la caminata inventó giros hacia una dirección y dijo que ya había llegado.
+    prompt = c.get_live_system_prompt(language, screen_locked=screen_locked)
+    rule = c._NO_ROUTES[language]
+    assert rule in prompt
+    assert "get_location" in rule
+
+
+def test_el_setup_lleva_la_sesion_sin_imagenes():
+    from app.services.live_service import build_setup_message
+
+    setup = build_setup_message("es", screen_locked=True)
+    text = setup["setup"]["system_instruction"]["parts"][0]["text"]
+    assert text.endswith(c._SCREEN_LOCKED_SESSION["es"])
