@@ -2,6 +2,50 @@
 
 > Registro de versiones del prompt de sistema (`app/prompts/companion.py`). Cada cambio de comportamiento sube `PROMPT_VERSION` y agrega aquí un bloque `## vX.Y.Z — fecha — motivo`, del más reciente al más antiguo. El backend registra la versión en el log al iniciar cada sesión.
 
+## v1.15.0 — 2026-10-08 — Sesión sin imágenes con la pantalla bloqueada y sin rutas (LAZA-45 · HU-017)
+
+**Motivo:** en la caminata de 10 minutos con la pantalla bloqueada (CP-LAZA-45, 8 de
+octubre) la sesión siguió viva, pero el aviso '[SIN_CAMARA]' a mitad de sesión no
+bastó. A los pocos segundos el asistente dijo "[CAMARA] Vuelvo a ver." sin que la app
+lo enviara y siguió describiendo la última foto (charcos, carros, un desnivel) como si
+fuera lo que la persona tenía delante, mientras ella caminaba. Además le pidió llegar a
+una dirección e inventó giros ("en unos 10 pasos giras a la izquierda") hasta decir
+"¡Has llegado a tu destino!". Tras una reconexión por un corte de los datos móviles, se
+negó a dar la ubicación "porque la cámara está bloqueada".
+
+**Cambio en la app:** al bloquear la pantalla se abre una sesión nueva con
+`screenLocked: true` en el frame `start`, sin ninguna imagen en su historial; al
+desbloquear (tras 1,5 s, por si fue sin querer) se abre otra con cámara. '[SIN_CAMARA]'
+y '[CAMARA]' son ahora el primer mensaje de cada sesión.
+
+**Cambio en el prompt (5 idiomas):**
+- PANTALLA BLOQUEADA: las marcas las envía la app al empezar una sesión; el asistente
+  nunca las dice ni las inventa, y no dice que vuelve a ver sin recibir '[CAMARA]'.
+- Nuevo bloque SESIÓN CON LA PANTALLA BLOQUEADA (solo en esas sesiones, en lugar de
+  OBSERVACIÓN): no tiene ninguna imagen, todo lo que diga del entorno sería inventado;
+  no describe ni da indicaciones aunque se lo pidan; la ubicación no depende de la
+  cámara y debe llamar a get_location cada vez.
+- Nuevo bloque SIN RUTAS (en todas las sesiones): no tiene mapas ni rutas; si piden
+  llegar a un lugar, dice dónde está ahora y que todavía no puede guiar hasta allá; no
+  inventa giros, cuadras ni distancias ni dice que ya llegó.
+
+El resto del prompt es igual al de v1.14.0.
+
+## v1.14.0 — 2026-10-07 — Pantalla bloqueada: '[SIN_CAMARA]' y '[CAMARA]' (LAZA-45 · HU-017)
+
+**Motivo:** con HU-017 la sesión sigue con la pantalla bloqueada (servicio en primer
+plano de Android), pero Android detiene la cámara mientras la app no está visible. Sin
+aviso, el asistente seguiría describiendo la última imagen como si fuera lo que la
+persona tiene delante.
+
+**Cambio (5 idiomas):** nuevo bloque PANTALLA BLOQUEADA. Con '[SIN_CAMARA]' el asistente
+dice solo "Sigo contigo, pero sin ver.", deja de describir y de dar alertas visuales, y
+si le preguntan qué hay explica que la cámara está en pausa. Con '[CAMARA]' dice solo
+"Vuelvo a ver." y sigue normal. La app deja de enviar '[OBSERVA]' mientras la cámara
+está en pausa.
+
+El resto del prompt es igual al de v1.13.0.
+
 ## v1.13.0 — 2026-10-06 — Ciclo de observación con '[OBSERVA]' (LAZA-107 · HU-040)
 
 **Motivo:** Gemini Live no habla si nadie le habla (CP-LAZA-36): la imagen de la cámara
