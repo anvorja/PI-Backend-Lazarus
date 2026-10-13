@@ -251,6 +251,35 @@ _FUNCTION_DECLARATIONS = [
         },
     },
     {
+        "name": "get_unicentro_route",
+        "description": (
+            "Dice si ahora se puede pasar por Unicentro (Ruta A) o si hay que ir por "
+            "fuera (Ruta B). Lo decide la app con la hora de Colombia y el horario de "
+            "Unicentro; la respuesta no se puede cambiar. Úsalo antes de sugerir o "
+            "aceptar la ruta por Unicentro."
+        ),
+        "parameters": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "set_route_disturbance",
+        "description": (
+            "Reporta (active=true) o levanta (active=false) disturbios en la "
+            "universidad: tropel, disturbios o encapuchados. Con el reporte, la "
+            "salida a Pasoancho por Unicentro (Ruta A) queda inhabilitada el resto "
+            "del día, a cualquier hora."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean",
+                    "description": "true si hay disturbios; false si ya terminaron.",
+                }
+            },
+            "required": ["active"],
+        },
+    },
+    {
         "name": "get_time",
         "description": (
             "Obtiene la hora y la fecha locales del teléfono de la persona (su zona "

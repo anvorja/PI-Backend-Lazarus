@@ -2,6 +2,32 @@
 
 > Registro de versiones del prompt de sistema (`app/prompts/companion.py`). Cada cambio de comportamiento sube `PROMPT_VERSION` y agrega aquí un bloque `## vX.Y.Z — fecha — motivo`, del más reciente al más antiguo. El backend registra la versión en el log al iniciar cada sesión.
 
+## v1.19.0 — 2026-10-13 — Regla horaria de Unicentro (LAZA-47 · HU-019)
+
+**Motivo:** la Ruta A atraviesa el centro comercial Unicentro. Llevar a la persona a un
+centro comercial que está cerrando es un riesgo evitable, así que la ruta se desactiva
+antes del cierre. Es una regla dura: la decide la app, no el modelo.
+
+**Cambio en la app y el backend:** nueva función `get_unicentro_route()`. La app evalúa
+el horario con la hora de Colombia (UTC-5, sin depender de la zona del teléfono): lunes a
+sábado de 8:00 a 21:00, domingos y festivos de 8:00 a 20:00, y la Ruta A se desactiva
+45 minutos antes del cierre (configurable entre 30 y 60). Si la persona consultó la
+Ruta A y se desactiva durante la sesión, la app envía `[UNICENTRO]` con el aviso.
+
+**Regla de disturbios:** en la universidad hay días con tropel (disturbios y
+encapuchados) en los que la salida a Pasoancho–Unicentro queda inhabilitada a cualquier
+hora. Nueva función `set_route_disturbance(active)`: con el reporte por voz de la persona
+o de su acompañante, la app inhabilita la Ruta A el resto del día (vence sola a la
+medianoche de Colombia, aunque se cierre la app); "ya pasó el tropel" la levanta.
+
+**Cambio en el prompt (5 idiomas):**
+- Nuevo bloque UNICENTRO: antes de sugerir o aceptar la ruta por Unicentro, llamar a
+  `get_unicentro_route`; si responde `unavailable`, explicar por qué y ofrecer ir por
+  fuera, por la calle, sin ceder aunque la persona insista; con `[UNICENTRO]`, avisar
+  sin que pregunten; con "hay tropel", "hay disturbios" o "hay encapuchados", llamar a
+  `set_route_disturbance(true)`, y con "ya terminó", a `set_route_disturbance(false)`.
+  No cambia SIN RUTAS.
+
 ## v1.18.0 — 2026-10-13 — Notas de campo con "anota que…" (LAZA-52 · HU-024)
 
 **Motivo:** la bitácora de las pruebas de campo necesita que la persona pueda dejar una

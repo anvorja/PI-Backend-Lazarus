@@ -525,3 +525,23 @@ def test_anota_que_guarda_la_nota_y_la_ayuda_lo_ensena(language, screen_locked):
     help_word = {"es": "AYUDA", "en": "HELP", "fr": "AIDE", "pt": "AJUDA", "it": "AIUTO"}
     extra = c._COMMANDS_EXTRA[language]
     assert NOTE_WORD[language] in extra[extra.index(help_word[language]) :]
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+@pytest.mark.parametrize("screen_locked", [False, True])
+def test_unicentro_consulta_la_regla_de_la_app(language, screen_locked):
+    # HU-019: la Ruta A por Unicentro se decide en la app (regla 5) y el aviso
+    # '[UNICENTRO]' lo envía la app cuando se desactiva durante la sesión (regla 3).
+    prompt = c.get_live_system_prompt(language, screen_locked=screen_locked)
+    rule = c._UNICENTRO[language]
+    assert rule in prompt
+    assert "get_unicentro_route" in rule
+    assert "'unavailable'" in rule
+    assert "[UNICENTRO]" in rule
+    # Regla 6: con tropel la Ruta A se cierra todo el día, y se levanta por voz.
+    assert "set_route_disturbance" in rule
+    assert "tropel" in rule
+    assert "active=true" in rule and "active=false" in rule
+    # Remite al bloque sin rutas con su mismo nombre.
+    no_routes = c._NO_ROUTES[language].split(":")[0].strip()
+    assert no_routes in rule
