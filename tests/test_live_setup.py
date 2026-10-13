@@ -87,3 +87,10 @@ def test_get_heading_declarada_sin_parametros():
     get_heading = next(t for t in tools if t["name"] == "get_heading")
     assert get_heading["parameters"] == {"type": "object", "properties": {}}
     assert "needs_calibration" in get_heading["description"]
+
+
+def test_add_note_declarada_con_el_texto():
+    # HU-024: "anota que la rampa está bloqueada".
+    tools = build_setup_message()["setup"]["tools"][0]["function_declarations"]
+    add_note = next(t for t in tools if t["name"] == "add_note")
+    assert add_note["parameters"]["required"] == ["text"]
