@@ -2,7 +2,7 @@
 
 # Versión del prompt de sistema. Cada cambio de comportamiento del prompt sube la
 # versión y agrega un bloque en `docs/prompts/companion.md` con fecha y motivo.
-PROMPT_VERSION = "1.17.0"
+PROMPT_VERSION = "1.17.1"
 
 SUPPORTED_LANGUAGES: tuple[str, ...] = ("es", "en", "fr", "pt", "it")
 DEFAULT_LANGUAGE = "es"
@@ -866,40 +866,50 @@ _TIME: dict[str, str] = {
 # camina, el rumbo del GPS. Si está descalibrada, se pide calibrar antes de orientar.
 _HEADING: dict[str, str] = {
     "es": (
-        "ORIENTACIÓN: si la persona pregunta hacia dónde está mirando o en qué "
-        "dirección va (norte, sur, oriente, occidente), llama a get_heading cada vez, "
+        "ORIENTACIÓN: si la persona pregunta hacia dónde está mirando, hacia dónde "
+        "va, en qué dirección camina o hacia qué punto cardinal (norte, sur, oriente, "
+        "occidente), es una pregunta de orientación y no del camino que ves: llama a "
+        "get_heading cada vez, "
         "aunque la pantalla esté bloqueada, y díselo en una frase corta. Si el "
         "resultado es 'needs_calibration', pídele que mueva el teléfono en forma de "
         "ocho unas veces y que vuelva a preguntar, y no le des ninguna dirección "
         "todavía. Nunca adivines el punto cardinal por lo que ves en la cámara."
     ),
     "en": (
-        "ORIENTATION: if the person asks which way they are facing or which "
-        "direction they are going (north, south, east, west), call get_heading every "
-        "time, even with the screen locked, and tell them in one short sentence. If "
+        "ORIENTATION: if the person asks which way they are facing, where they are "
+        "going, which direction they are walking or which cardinal direction (north, "
+        "south, east, west), it is an orientation question, not about the path you "
+        "see: call get_heading every time, even with the screen locked, and tell them "
+        "in one short sentence. If "
         "the result is 'needs_calibration', ask them to move the phone in a figure "
         "eight a few times and to ask again, and do not give any direction yet. Never "
         "guess the cardinal direction from what you see on the camera."
     ),
     "fr": (
-        "ORIENTATION : si la personne demande dans quelle direction elle regarde ou "
-        "elle va (nord, sud, est, ouest), appelle get_heading à chaque fois, même "
+        "ORIENTATION : si la personne demande dans quelle direction elle regarde, où "
+        "elle va, dans quelle direction elle marche ou vers quel point cardinal (nord, "
+        "sud, est, ouest), c'est une question d'orientation et non du chemin que tu "
+        "vois : appelle get_heading à chaque fois, même "
         "écran verrouillé, et dis-le-lui en une phrase courte. Si le résultat est "
         "'needs_calibration', demande-lui de bouger le téléphone en forme de huit "
         "quelques fois puis de redemander, et ne donne encore aucune direction. Ne "
         "devine jamais le point cardinal d'après ce que tu vois à la caméra."
     ),
     "pt": (
-        "ORIENTAÇÃO: se a pessoa perguntar para onde está olhando ou em que direção "
-        "vai (norte, sul, leste, oeste), chame get_heading toda vez, mesmo com a tela "
+        "ORIENTAÇÃO: se a pessoa perguntar para onde está olhando, para onde vai, em "
+        "que direção caminha ou para qual ponto cardeal (norte, sul, leste, oeste), é "
+        "uma pergunta de orientação e não do caminho que você vê: chame get_heading "
+        "toda vez, mesmo com a tela "
         "bloqueada, e diga em uma frase curta. Se o resultado for "
         "'needs_calibration', peça que mova o telefone em forma de oito algumas vezes "
         "e pergunte de novo, e não dê nenhuma direção ainda. Nunca adivinhe o ponto "
         "cardeal pelo que você vê na câmera."
     ),
     "it": (
-        "ORIENTAMENTO: se la persona chiede verso dove sta guardando o in che "
-        "direzione va (nord, sud, est, ovest), chiama get_heading ogni volta, anche "
+        "ORIENTAMENTO: se la persona chiede verso dove sta guardando, dove sta "
+        "andando, in che direzione cammina o verso quale punto cardinale (nord, sud, "
+        "est, ovest), è una domanda di orientamento e non sul percorso che vedi: "
+        "chiama get_heading ogni volta, anche "
         "con lo schermo bloccato, e diglielo in una frase breve. Se il risultato è "
         "'needs_calibration', chiedile di muovere il telefono a forma di otto qualche "
         "volta e di chiedere di nuovo, e non dare ancora nessuna direzione. Non "

@@ -2,6 +2,18 @@
 
 > Registro de versiones del prompt de sistema (`app/prompts/companion.py`). Cada cambio de comportamiento sube `PROMPT_VERSION` y agrega aquí un bloque `## vX.Y.Z — fecha — motivo`, del más reciente al más antiguo. El backend registra la versión en el log al iniciar cada sesión.
 
+## v1.17.1 — 2026-10-13 — "¿Hacia dónde voy?" también es orientación (LAZA-44 · HU-016)
+
+**Motivo:** en la prueba de HU-016, "¿Hacia dónde estoy mirando?" llamó a `get_heading`
+las dos veces, pero con "¿Hacia dónde voy?" el asistente contestó por la cámara ("No
+veo ningún camino o dirección clara para seguir").
+
+**Cambio en el prompt (5 idiomas):** el bloque ORIENTACIÓN nombra también "hacia dónde
+va", "en qué dirección camina" y "hacia qué punto cardinal", y aclara que es una
+pregunta de orientación y no del camino que ve.
+
+El resto del prompt es igual al de v1.17.0.
+
 ## v1.17.0 — 2026-10-13 — Orientación con la brújula (LAZA-44 · HU-016)
 
 **Motivo:** las indicaciones en horas de reloj solo sirven si "las 12" es hacia donde

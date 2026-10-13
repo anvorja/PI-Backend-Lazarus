@@ -476,3 +476,18 @@ def test_la_orientacion_la_da_la_brujula(language, screen_locked):
     assert rule in prompt
     assert "get_heading" in rule
     assert "needs_calibration" in rule
+
+
+ORIENTATION_QUESTIONS = {
+    "es": "hacia dónde va",
+    "en": "where they are going",
+    "fr": "où elle va",
+    "pt": "para onde vai",
+    "it": "dove sta andando",
+}
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+def test_hacia_donde_voy_es_orientacion(language):
+    # HU-016: con "¿Hacia dónde voy?" contestó por la cámara sin llamar a get_heading.
+    assert ORIENTATION_QUESTIONS[language] in c._HEADING[language]
