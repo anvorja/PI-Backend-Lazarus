@@ -2,6 +2,23 @@
 
 > Registro de versiones del prompt de sistema (`app/prompts/companion.py`). Cada cambio de comportamiento sube `PROMPT_VERSION` y agrega aquí un bloque `## vX.Y.Z — fecha — motivo`, del más reciente al más antiguo. El backend registra la versión en el log al iniciar cada sesión.
 
+## v1.18.0 — 2026-10-13 — Notas de campo con "anota que…" (LAZA-52 · HU-024)
+
+**Motivo:** la bitácora de las pruebas de campo necesita que la persona pueda dejar una
+nota de voz con la hora y la posición ("anota que la rampa está bloqueada"), para el
+informe del piloto y para registrar casi-incidentes en el momento.
+
+**Cambio en la app y el backend:** nueva función `add_note(text)`. La app guarda la nota
+con la hora y la última posición conocida en `notas_campo.csv` (solo en las versiones con
+evidencia de campo) y, al Detener, registra cuántas notas hubo en la sesión.
+
+**Cambio en el prompt (5 idiomas):**
+- Nuevo bloque NOTAS: con "anota que…", "apunta que…" o "toma nota de…", llamar a
+  `add_note` con lo que pidió anotar, con sus palabras, y responder solo "Anotado.".
+- La AYUDA enseña el comando: "anotar algo diciendo 'anota que…'".
+
+El resto del prompt es igual al de v1.17.1.
+
 ## v1.17.1 — 2026-10-13 — Comando "brújula", respuestas cortas y oriente/occidente (LAZA-44 · HU-016)
 
 **Motivo:** en la prueba de HU-016, "¿Hacia dónde estoy mirando?" llamó a `get_heading`

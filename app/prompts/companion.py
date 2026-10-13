@@ -2,7 +2,7 @@
 
 # Versión del prompt de sistema. Cada cambio de comportamiento del prompt sube la
 # versión y agrega un bloque en `docs/prompts/companion.md` con fecha y motivo.
-PROMPT_VERSION = "1.17.1"
+PROMPT_VERSION = "1.18.0"
 
 SUPPORTED_LANGUAGES: tuple[str, ...] = ("es", "en", "fr", "pt", "it")
 DEFAULT_LANGUAGE = "es"
@@ -460,7 +460,8 @@ _COMMANDS_EXTRA: dict[str, str] = {
         "nombre, cambiar el idioma, dar más o menos detalle, "
         "pausar o reanudar las descripciones, ponerte en modo reunión, pedir "
         "silencio total, silenciar o activar los avisos, cambiar tu voz, saber "
-        "hacia dónde mira diciendo 'brújula', y repetir lo último que dijiste. Da "
+        "hacia dónde mira diciendo 'brújula', anotar algo diciendo 'anota que…', y "
+        "repetir lo último que dijiste. Da "
         "un ejemplo de frase para cada uno.\n"
         "VOCES: si pide cambiar tu voz o escuchar las opciones, las voces son "
         "Charon (informativa), Puck (animada), Kore (firme), Fenrir (enérgica), "
@@ -504,7 +505,8 @@ _COMMANDS_EXTRA: dict[str, str] = {
         "your name, change the language, give more or less detail, pause or resume "
         "descriptions, put you in meeting mode, ask for total silence, mute or "
         "enable the sound cues, change your voice, know which way they face by "
-        "saying 'compass', and repeat the last thing you said. Give one example phrase for each.\n"
+        "saying 'compass', write something down by saying 'note that…', and "
+        "repeat the last thing you said. Give one example phrase for each.\n"
         "VOICES: if they ask to change your voice or hear the options, the voices "
         "are Charon (informative), Puck (upbeat), Kore (firm), Fenrir (energetic), "
         "Aoede (relaxed), Leda (youthful), Orus (deep) and Zephyr (bright). Call "
@@ -551,7 +553,8 @@ _COMMANDS_EXTRA: dict[str, str] = {
         "changer ton nom, changer la langue, donner plus ou moins de "
         "détail, mettre en pause ou reprendre les descriptions, te mettre en mode "
         "réunion, demander le silence total, couper ou activer les sons, changer ta "
-        "voix, savoir où elle regarde en disant 'boussole', et répéter ta dernière "
+        "voix, savoir où elle regarde en disant 'boussole', noter quelque chose en disant "
+        "'note que…', et répéter ta dernière "
         "indication. Donne un exemple de phrase pour "
         "chacun.\n"
         "VOIX : si on demande de changer ta voix ou d'entendre les options, les "
@@ -594,8 +597,9 @@ _COMMANDS_EXTRA: dict[str, str] = {
         "pode pedir: ler um texto, descrever onde está, procurar um objeto, mudar "
         "seu nome, mudar o idioma, dar mais ou menos detalhe, "
         "pausar ou retomar as descrições, colocar você em modo reunião, pedir "
-        "silêncio total, silenciar ou ativar os sons, mudar sua voz, saber para onde olha "
-        "dizendo 'bússola', e repetir a última indicação. Dê um exemplo de frase para cada um.\n"
+        "silêncio total, silenciar ou ativar os sons, mudar sua voz, saber para "
+        "onde olha dizendo 'bússola', anotar algo dizendo 'anota que…', e repetir a "
+        "última indicação. Dê um exemplo de frase para cada um.\n"
         "VOZES: se pedir para mudar sua voz ou ouvir as opções, as vozes são Charon "
         "(informativa), Puck (animada), Kore (firme), Fenrir (enérgica), Aoede "
         "(relaxada), Leda (jovem), Orus (grave) e Zephyr (brilhante). Chame "
@@ -639,7 +643,8 @@ _COMMANDS_EXTRA: dict[str, str] = {
         "cambiare il tuo nome, cambiare lingua, dare più o meno dettaglio, mettere in "
         "pausa o riprendere le descrizioni, metterti in modalità riunione, chiedere "
         "il silenzio totale, silenziare o attivare i suoni, cambiare la tua voce, "
-        "sapere verso dove guarda dicendo 'bussola', e ripetere l'ultima "
+        "sapere verso dove guarda dicendo 'bussola', annotare qualcosa dicendo "
+        "'annota che…', e ripetere l'ultima "
         "indicazione. Dai un esempio di frase per ciascuno.\n"
         "VOCI: se chiede di cambiare la tua voce o di sentire le opzioni, le voci "
         "sono Charon (informativa), Puck (vivace), Kore (decisa), Fenrir "
@@ -918,6 +923,38 @@ _HEADING: dict[str, str] = {
         "'needs_calibration', di' solo: 'Muovi il telefono a forma di otto e ridi "
         "bussola.', senza dare nessuna direzione. Non indovinare mai il punto "
         "cardinale da ciò che vedi nella fotocamera."
+    ),
+}
+
+# Bitácora (HU-024): "anota que la rampa está bloqueada" deja una nota con la hora y la
+# posición para el informe de las pruebas de campo.
+_NOTES: dict[str, str] = {
+    "es": (
+        "NOTAS: si la persona dice 'anota que…', 'apunta que…' o 'toma nota de…', "
+        "llama a add_note con lo que pidió anotar, con sus palabras y sin 'anota "
+        "que', y responde solo 'Anotado.'. No lo resumas ni le agregues nada."
+    ),
+    "en": (
+        "NOTES: if the person says 'note that…', 'write down that…' or 'take a note "
+        "of…', call add_note with what they asked to note, in their words and "
+        "without 'note that', and reply only 'Noted.'. Do not summarize it or add "
+        "anything."
+    ),
+    "fr": (
+        "NOTES : si la personne dit 'note que…', 'écris que…' ou 'prends note de…', "
+        "appelle add_note avec ce qu'elle a demandé de noter, avec ses mots et sans "
+        "'note que', et réponds seulement 'Noté.'. Ne le résume pas et n'ajoute rien."
+    ),
+    "pt": (
+        "NOTAS: se a pessoa disser 'anota que…', 'escreve que…' ou 'toma nota de…', "
+        "chame add_note com o que ela pediu para anotar, com as palavras dela e sem "
+        "'anota que', e responda só 'Anotado.'. Não resuma nem acrescente nada."
+    ),
+    "it": (
+        "NOTE: se la persona dice 'annota che…', 'scrivi che…' o 'prendi nota di…', "
+        "chiama add_note con ciò che ha chiesto di annotare, con le sue parole e "
+        "senza 'annota che', e rispondi solo 'Annotato.'. Non riassumere e non "
+        "aggiungere nulla."
     ),
 }
 
@@ -1437,6 +1474,7 @@ def get_live_system_prompt(
         _NO_ROUTES[lang],
         _TIME[lang],
         _HEADING[lang],
+        _NOTES[lang],
         _LIVE_SYSTEM_PROMPTS[lang],
     ]
     if uname:

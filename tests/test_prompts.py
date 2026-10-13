@@ -503,3 +503,25 @@ def test_en_espanol_dice_oriente_y_occidente():
     rule = c._HEADING["es"]
     assert "oriente y occidente" in rule
     assert "Miras al norte." in rule and "Vas hacia el norte." in rule
+
+
+NOTE_WORD = {
+    "es": "'anota que…'",
+    "en": "'note that…'",
+    "fr": "'note que…'",
+    "pt": "'anota que…'",
+    "it": "'annota che…'",
+}
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+@pytest.mark.parametrize("screen_locked", [False, True])
+def test_anota_que_guarda_la_nota_y_la_ayuda_lo_ensena(language, screen_locked):
+    # HU-024, criterio 3: la nota queda con hora y posición (add_note).
+    prompt = c.get_live_system_prompt(language, screen_locked=screen_locked)
+    rule = c._NOTES[language]
+    assert rule in prompt
+    assert "add_note" in rule
+    help_word = {"es": "AYUDA", "en": "HELP", "fr": "AIDE", "pt": "AJUDA", "it": "AIUTO"}
+    extra = c._COMMANDS_EXTRA[language]
+    assert NOTE_WORD[language] in extra[extra.index(help_word[language]) :]

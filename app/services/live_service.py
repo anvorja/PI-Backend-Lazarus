@@ -230,6 +230,27 @@ _FUNCTION_DECLARATIONS = [
         "parameters": {"type": "object", "properties": {}},
     },
     {
+        "name": "add_note",
+        "description": (
+            "Guarda una nota de campo con la hora y la posición actuales, para la "
+            "bitácora de las pruebas. Úsalo cuando la persona diga 'anota que…', "
+            "'apunta que…' o 'toma nota de…'."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "text": {
+                    "type": "string",
+                    "description": (
+                        "Lo que pidió anotar, con sus palabras y sin 'anota que' "
+                        "(p. ej. 'la rampa está bloqueada')."
+                    ),
+                }
+            },
+            "required": ["text"],
+        },
+    },
+    {
         "name": "get_time",
         "description": (
             "Obtiene la hora y la fecha locales del teléfono de la persona (su zona "
