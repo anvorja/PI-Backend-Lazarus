@@ -544,6 +544,8 @@ def test_unicentro_consulta_la_regla_de_la_app(language, screen_locked):
     assert "active=true" in rule and "active=false" in rule
     # Levantarlo pide doble confirmación: la app responde 'pending' la primera vez.
     assert "'pending'" in rule
+    # La alternativa es otra portería, no "ir por la calle".
+    assert "Calle 16" in rule and "Carrera 86" in rule
     # Remite al bloque sin rutas con su mismo nombre.
     no_routes = c._NO_ROUTES[language].split(":")[0].strip()
     assert no_routes in rule

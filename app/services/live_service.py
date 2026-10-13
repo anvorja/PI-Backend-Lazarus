@@ -253,8 +253,9 @@ _FUNCTION_DECLARATIONS = [
     {
         "name": "get_unicentro_route",
         "description": (
-            "Dice si ahora se puede pasar por Unicentro (Ruta A) o si hay que ir por "
-            "fuera (Ruta B). Lo decide la app con la hora de Colombia y el horario de "
+            "Dice si ahora se puede pasar por Unicentro (Ruta A) o si hay que buscar "
+            "una salida alterna, por la Calle 16 o la Carrera 86 (Ruta B). "
+            "Lo decide la app con la hora de Colombia y el horario de "
             "Unicentro; la respuesta no se puede cambiar. Úsalo antes de sugerir o "
             "aceptar la ruta por Unicentro."
         ),

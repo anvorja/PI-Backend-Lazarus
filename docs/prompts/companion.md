@@ -2,6 +2,28 @@
 
 > Registro de versiones del prompt de sistema (`app/prompts/companion.py`). Cada cambio de comportamiento sube `PROMPT_VERSION` y agrega aquí un bloque `## vX.Y.Z — fecha — motivo`, del más reciente al más antiguo. El backend registra la versión en el log al iniciar cada sesión.
 
+## v1.22.0 — 2026-10-13 — Salidas alternas por la Calle 16 o la Carrera 86 (LAZA-47 · HU-019)
+
+**Motivo:** con la Ruta A inhabilitada, el asistente decía "puedes ir por la calle".
+Para una persona ciega dentro del campus esa indicación no sirve: lo que necesita saber
+es por qué otra portería salir. Además, en una prueba el asistente pidió confirmación por
+su cuenta antes de llamar a la función, y como la app también la pide, la persona tuvo
+que confirmar dos veces.
+
+**Cambio en el prompt (5 idiomas), bloque UNICENTRO:**
+- La Ruta A sale por las porterías peatonales de la Calle 13 (Avenida Pasoancho) y
+  atraviesa Unicentro. La Ruta B es salir por otra portería: la de la Calle 16 (junto a
+  la escultura La Chalaca) o la de la Carrera 86 (El Ingenio), según el mapa de accesos
+  de la universidad.
+- Si la Ruta A no está disponible, el asistente dice que busque una salida alterna, por
+  la Calle 16 o por la Carrera 86. Nunca dice solo "ve por la calle".
+- Con "ya pasó el tropel", el asistente llama a la función de inmediato, sin preguntar
+  antes: la confirmación la decide la app (`pending`).
+- Sigue vigente SIN RUTAS: no da giros ni distancias.
+
+**Cambio en la app:** las respuestas de `get_unicentro_route` y `set_route_disturbance`
+nombran las mismas salidas alternas.
+
 ## v1.21.0 — 2026-10-13 — Las funciones no se narran
 
 **Motivo:** en la prueba de HU-019 en el teléfono, el asistente anunciaba en voz alta lo
