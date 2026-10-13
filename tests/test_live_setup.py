@@ -72,3 +72,10 @@ def test_idioma_por_defecto_de_la_configuracion_si_la_app_no_lo_envia(monkeypatc
         ws.receive_text()
 
     assert captured["language"] == "en"
+
+
+def test_get_time_declarada_sin_parametros():
+    # LAZA-115: la hora la da el teléfono; el asistente no la conoce.
+    tools = build_setup_message()["setup"]["tools"][0]["function_declarations"]
+    get_time = next(t for t in tools if t["name"] == "get_time")
+    assert get_time["parameters"] == {"type": "object", "properties": {}}

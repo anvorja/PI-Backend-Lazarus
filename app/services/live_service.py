@@ -219,6 +219,16 @@ _FUNCTION_DECLARATIONS = [
         "parameters": {"type": "object", "properties": {}},
     },
     {
+        "name": "get_time",
+        "description": (
+            "Obtiene la hora y la fecha locales del teléfono de la persona (su zona "
+            "horaria). Úsalo cada vez que pregunte qué hora es, qué día o qué fecha "
+            "es hoy. No conoces la hora por tu cuenta: sin esta función la dirías "
+            "mal."
+        ),
+        "parameters": {"type": "object", "properties": {}},
+    },
+    {
         "name": "set_emergency_contact",
         "description": (
             "Guarda el CONTACTO DE EMERGENCIA que recibirá la alerta SOS. Úsalo "
