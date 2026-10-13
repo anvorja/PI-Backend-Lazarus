@@ -454,3 +454,14 @@ def test_el_setup_lleva_la_sesion_sin_imagenes():
     setup = build_setup_message("es", screen_locked=True)
     text = setup["setup"]["system_instruction"]["parts"][0]["text"]
     assert text.endswith(c._SCREEN_LOCKED_SESSION["es"])
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+@pytest.mark.parametrize("screen_locked", [False, True])
+def test_la_hora_la_da_el_telefono(language, screen_locked):
+    # LAZA-115: dijo "Son las 4:58 de la tarde UTC" a las 11:58 de Colombia.
+    prompt = c.get_live_system_prompt(language, screen_locked=screen_locked)
+    rule = c._TIME[language]
+    assert rule in prompt
+    assert "get_time" in rule
+    assert "UTC" in rule  # para prohibir decirla

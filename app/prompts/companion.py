@@ -2,7 +2,7 @@
 
 # Versión del prompt de sistema. Cada cambio de comportamiento del prompt sube la
 # versión y agrega un bloque en `docs/prompts/companion.md` con fecha y motivo.
-PROMPT_VERSION = "1.15.0"
+PROMPT_VERSION = "1.16.0"
 
 SUPPORTED_LANGUAGES: tuple[str, ...] = ("es", "en", "fr", "pt", "it")
 DEFAULT_LANGUAGE = "es"
@@ -822,6 +822,46 @@ _NO_ROUTES: dict[str, str] = {
 }
 
 
+# Hora y fecha (LAZA-115): el asistente no conoce la hora del teléfono y decía la del
+# servidor ("Son las 4:58 de la tarde UTC" a las 11:58 en Colombia). La da el teléfono.
+_TIME: dict[str, str] = {
+    "es": (
+        "HORA Y FECHA: no sabes qué hora es. Si la persona pregunta la hora, el día o "
+        "la fecha, llama a get_time cada vez y di lo que responda, como lo diría una "
+        "persona ('son las doce y veintitrés'). Nunca la calcules ni la adivines, ni "
+        "menciones UTC ni zonas horarias. Tampoco la leas de un reloj que veas en la "
+        "cámara."
+    ),
+    "en": (
+        "TIME AND DATE: you do not know what time it is. If the person asks the time, "
+        "the day or the date, call get_time every time and say what it returns, the "
+        "way a person would ('it's twelve twenty-three'). Never calculate or guess it, "
+        "and never mention UTC or time zones. Do not read it from a clock you see on "
+        "the camera either."
+    ),
+    "fr": (
+        "HEURE ET DATE : tu ne sais pas quelle heure il est. Si la personne demande "
+        "l'heure, le jour ou la date, appelle get_time à chaque fois et dis ce qu'elle "
+        "renvoie, comme le dirait une personne (« il est midi vingt-trois »). Ne la "
+        "calcule ni ne la devine jamais, et ne mentionne jamais UTC ni les fuseaux "
+        "horaires. Ne la lis pas non plus sur une horloge que tu vois à la caméra."
+    ),
+    "pt": (
+        "HORA E DATA: você não sabe que horas são. Se a pessoa perguntar a hora, o dia "
+        "ou a data, chame get_time toda vez e diga o que ela devolver, como uma pessoa "
+        "diria ('é meio-dia e vinte e três'). Nunca a calcule nem adivinhe, nem "
+        "mencione UTC ou fusos horários. Também não a leia de um relógio que você vê "
+        "na câmera."
+    ),
+    "it": (
+        "ORA E DATA: non sai che ore sono. Se la persona chiede l'ora, il giorno o la "
+        "data, chiama get_time ogni volta e di' quello che restituisce, come lo direbbe "
+        "una persona ('sono le dodici e ventitré'). Non calcolarla né indovinarla mai, "
+        "e non menzionare mai UTC o i fusi orari. Non leggerla nemmeno da un orologio "
+        "che vedi nella fotocamera."
+    ),
+}
+
 # HU-040: ciclo de observación. Gemini Live no habla si nadie le habla (CP-LAZA-36);
 # con todos callados la app envía '[OBSERVA]' cada pocos segundos por el flujo de la
 # cámara. Spike del 6 de octubre: responde en ~1,6 s y avisa de escalones, animales
@@ -1336,6 +1376,7 @@ def get_live_system_prompt(
         _SCREEN_LOCKED[lang],
         _TASK_INTENTS[lang],
         _NO_ROUTES[lang],
+        _TIME[lang],
         _LIVE_SYSTEM_PROMPTS[lang],
     ]
     if uname:
