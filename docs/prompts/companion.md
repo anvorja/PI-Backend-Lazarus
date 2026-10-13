@@ -2,6 +2,24 @@
 
 > Registro de versiones del prompt de sistema (`app/prompts/companion.py`). Cada cambio de comportamiento sube `PROMPT_VERSION` y agrega aquí un bloque `## vX.Y.Z — fecha — motivo`, del más reciente al más antiguo. El backend registra la versión en el log al iniciar cada sesión.
 
+## v1.16.0 — 2026-10-13 — Hora y fecha del teléfono (LAZA-115)
+
+**Motivo:** en la prueba de LAZA-113 (13 de octubre) el asistente dijo "Son las 4:58 de
+la tarde UTC" a las 11:58 de Colombia, y luego "las 5 y 23" a las 12:23. No conoce la
+hora del teléfono, así que daba la del servidor. En una prueba anterior leyó la hora de
+un reloj que vio en la cámara.
+
+**Cambio en la app y el backend:** nueva función `get_time`, sin parámetros. La responde
+el teléfono con su hora, su fecha y su zona horaria, tomadas de su reloj; no se fija
+UTC-5 en el código.
+
+**Cambio en el prompt (5 idiomas):** nuevo bloque HORA Y FECHA (en todas las sesiones):
+no sabe qué hora es; para la hora, el día o la fecha llama a `get_time` cada vez y la
+dice como una persona; nunca la calcula, la adivina ni la lee de un reloj en la cámara,
+y nunca menciona UTC ni zonas horarias.
+
+El resto del prompt es igual al de v1.15.0.
+
 ## v1.15.0 — 2026-10-08 — Sesión sin imágenes con la pantalla bloqueada y sin rutas (LAZA-45 · HU-017)
 
 **Motivo:** en la caminata de 10 minutos con la pantalla bloqueada (CP-LAZA-45, 8 de
