@@ -542,6 +542,8 @@ def test_unicentro_consulta_la_regla_de_la_app(language, screen_locked):
     assert "set_route_disturbance" in rule
     assert "tropel" in rule
     assert "active=true" in rule and "active=false" in rule
+    # Levantarlo pide doble confirmación: la app responde 'pending' la primera vez.
+    assert "'pending'" in rule
     # Remite al bloque sin rutas con su mismo nombre.
     no_routes = c._NO_ROUTES[language].split(":")[0].strip()
     assert no_routes in rule
