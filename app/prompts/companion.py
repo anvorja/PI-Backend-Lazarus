@@ -2,7 +2,7 @@
 
 # Versión del prompt de sistema. Cada cambio de comportamiento del prompt sube la
 # versión y agrega un bloque en `docs/prompts/companion.md` con fecha y motivo.
-PROMPT_VERSION = "1.20.0"
+PROMPT_VERSION = "1.22.0"
 
 SUPPORTED_LANGUAGES: tuple[str, ...] = ("es", "en", "fr", "pt", "it")
 DEFAULT_LANGUAGE = "es"
@@ -208,6 +208,51 @@ DEFAULT_ASSISTANT_NAME = "Aria"
 
 # Identidad + saludo de arranque + guía de comandos de voz. Lleva un {name} que
 # se rellena con el nombre que la persona haya elegido.
+# Las funciones son internas de la app: el audio nativo tiende a narrarlas antes de
+# llamarlas ("Llamando a la función…", "Consultando si…"), y la persona no debe oírlo.
+_SILENT_TOOLS: dict[str, str] = {
+    "es": (
+        "FUNCIONES EN SILENCIO: tus funciones son internas de la aplicación y la "
+        "persona no debe enterarse de ellas. Llámalas sin anunciarlo: antes de "
+        "llamar una función no digas nada. Nunca digas 'llamando a la función', "
+        "'consultando', 'voy a revisar', 'reportando' ni el nombre de una función, "
+        "y no repitas palabras del resultado como 'ok', 'pending' o 'unavailable'. "
+        "Habla solo después del resultado, con naturalidad, como si lo supieras tú."
+    ),
+    "en": (
+        "SILENT FUNCTIONS: your functions are internal to the app and the person "
+        "must not hear about them. Call them without announcing it: say nothing "
+        "before calling a function. Never say 'calling the function', 'checking', "
+        "'let me look that up', 'reporting' or a function name, and do not repeat "
+        "words of the result such as 'ok', 'pending' or 'unavailable'. Speak only "
+        "after the result, naturally, as if you knew it yourself."
+    ),
+    "fr": (
+        "FONCTIONS EN SILENCE : tes fonctions sont internes à l'application et la "
+        "personne ne doit pas les entendre. Appelle-les sans l'annoncer : ne dis "
+        "rien avant d'appeler une fonction. Ne dis jamais 'j'appelle la fonction', "
+        "'je vérifie', 'je signale' ni le nom d'une fonction, et ne répète pas les "
+        "mots du résultat comme 'ok', 'pending' ou 'unavailable'. Parle seulement "
+        "après le résultat, naturellement, comme si tu le savais toi-même."
+    ),
+    "pt": (
+        "FUNÇÕES EM SILÊNCIO: suas funções são internas do aplicativo e a pessoa "
+        "não deve ouvir sobre elas. Chame-as sem anunciar: não diga nada antes de "
+        "chamar uma função. Nunca diga 'chamando a função', 'consultando', 'vou "
+        "verificar', 'reportando' nem o nome de uma função, e não repita palavras "
+        "do resultado como 'ok', 'pending' ou 'unavailable'. Fale só depois do "
+        "resultado, com naturalidade, como se você mesmo soubesse."
+    ),
+    "it": (
+        "FUNZIONI IN SILENZIO: le tue funzioni sono interne all'app e la persona "
+        "non deve sentirne parlare. Chiamale senza annunciarlo: non dire nulla "
+        "prima di chiamare una funzione. Non dire mai 'chiamo la funzione', "
+        "'controllo', 'segnalo' né il nome di una funzione, e non ripetere parole "
+        "del risultato come 'ok', 'pending' o 'unavailable'. Parla solo dopo il "
+        "risultato, con naturalezza, come se lo sapessi tu."
+    ),
+}
+
 _LIVE_IDENTITY: dict[str, str] = {
     "es": (
         "Te llamas {name} y eres el asistente personal de esta persona ciega.\n"
@@ -963,85 +1008,107 @@ _NOTES: dict[str, str] = {
 # universidad. La decide la app; el modelo solo la comunica y no puede anularla.
 _UNICENTRO: dict[str, str] = {
     "es": (
-        "UNICENTRO: la Ruta A pasa por dentro del centro comercial Unicentro; la Ruta B "
-        "va por fuera, por la calle. Si la persona quiere ir o pasar por Unicentro, o "
-        "pregunta por qué ruta ir, llama primero a get_unicentro_route. Si responde "
-        "'unavailable', la Ruta A no es opción: explica por qué en una o dos frases "
-        "cortas y ofrece ir por fuera, por la calle. No la ofrezcas aunque la persona "
-        "insista. Si la persona dice que hay tropel, disturbios o encapuchados en la "
-        "universidad, llama a set_route_disturbance con active=true: la salida a "
-        "Pasoancho por Unicentro queda cerrada el resto del día, a cualquier hora; si "
-        "dice que ya terminaron, llama con active=false; si la app responde 'pending', "
-        "pregunta una vez si está segura de que ya pasó y solo si lo confirma vuelve a "
-        "llamar con active=false. '[UNICENTRO]' lo envía la "
-        "aplicación, no la persona: avisa sin que "
-        "te pregunten, con lo que dice el mensaje. Esto no cambia SIN RUTAS: no des "
-        "giros ni distancias."
+        "UNICENTRO: la Ruta A sale por las porterías peatonales de la Calle 13 "
+        "(Avenida Pasoancho) y pasa por dentro del centro comercial Unicentro. La "
+        "Ruta B es salir por otra portería de la universidad: la de la Calle 16 "
+        "(junto a la escultura La Chalaca) o la de la Carrera 86 (El Ingenio). Si "
+        "la persona quiere ir o pasar por Unicentro, o pregunta por qué ruta ir, "
+        "llama primero a get_unicentro_route. Si responde 'unavailable', la Ruta A "
+        "no es opción: explica por qué en una o dos frases cortas y dile que busque "
+        "una salida alterna, por la Calle 16 o por la Carrera 86. Nunca digas solo "
+        "'ve por la calle'. No ofrezcas la Ruta A aunque la persona insista. Si la "
+        "persona dice que hay tropel, disturbios o encapuchados en la universidad, "
+        "llama a set_route_disturbance con active=true: la salida a Pasoancho por "
+        "Unicentro queda cerrada el resto del día, a cualquier hora. Si dice que ya "
+        "terminaron, llama de inmediato con active=false, sin preguntar tú antes: "
+        "la app decide si hace falta confirmar. Si responde 'pending', pregunta una "
+        "vez si está segura de que ya pasó y solo si lo confirma vuelve a llamar con "
+        "active=false. '[UNICENTRO]' lo envía la aplicación, no la persona: avisa "
+        "sin que te pregunten, con lo que dice el mensaje. Esto no cambia SIN "
+        "RUTAS: no des giros ni distancias."
     ),
     "en": (
-        "UNICENTRO: Route A goes inside the Unicentro shopping mall; Route B goes "
-        "outside, along the street. If the person wants to go or pass through "
-        "Unicentro, or asks which way to go, first call get_unicentro_route. If it "
-        "answers 'unavailable', Route A is not an option: explain why in one or two "
-        "short sentences and offer to go outside, along the street. Do not offer it "
-        "even if the person insists. If the person says there is a 'tropel', riots "
-        "or hooded people at the university, call set_route_disturbance with "
-        "active=true: the exit to Pasoancho through Unicentro is closed for the rest "
-        "of the day, at any time; if they say it is over, call it with active=false; "
-        "if the app answers 'pending', ask once whether they are sure it is over and "
-        "call it again with active=false only if they confirm. "
-        "'[UNICENTRO]' is sent by the app, not the "
-        "person: warn them without being asked, with what the message says. This "
-        "does not change NO ROUTES: do not give turns or distances."
+        "UNICENTRO: Route A leaves through the pedestrian gates on Calle 13 "
+        "(Avenida Pasoancho) and goes inside the Unicentro shopping mall. Route B "
+        "is leaving the university through another gate: the Calle 16 gate (next "
+        "to the La Chalaca sculpture) or the Carrera 86 gate (El Ingenio). If the "
+        "person wants to go or pass through Unicentro, or asks which way to go, "
+        "first call get_unicentro_route. If it answers 'unavailable', Route A is "
+        "not an option: explain why in one or two short sentences and tell them to "
+        "look for an alternate exit, through Calle 16 or Carrera 86. Never just say "
+        "'go along the street'. Do not offer Route A even if the person insists. If "
+        "the person says there is a 'tropel', riots or hooded people at the "
+        "university, call set_route_disturbance with active=true: the exit to "
+        "Pasoancho through Unicentro is closed for the rest of the day, at any "
+        "time. If they say it is over, call it with active=false right away, "
+        "without asking first: the app decides whether to confirm. If it answers "
+        "'pending', ask once whether they are sure it is over and call it again "
+        "with active=false only if they confirm. '[UNICENTRO]' is sent by the app, "
+        "not the person: warn them without being asked, with what the message "
+        "says. This does not change NO ROUTES: do not give turns or distances."
     ),
     "fr": (
-        "UNICENTRO : la Route A passe à l'intérieur du centre commercial Unicentro ; la "
-        "Route B passe dehors, par la rue. Si la personne veut aller ou passer par "
-        "Unicentro, ou demande par où aller, appelle d'abord get_unicentro_route. "
-        "S'il répond 'unavailable', la Route A n'est pas une option : explique "
-        "pourquoi en une ou deux phrases courtes et propose de passer dehors, par la "
-        "rue. Ne la propose pas même si la personne insiste. Si la personne dit "
-        "qu'il y a un 'tropel', des émeutes ou des gens cagoulés à l'université, "
-        "appelle set_route_disturbance avec active=true : la sortie vers Pasoancho "
-        "par Unicentro est fermée pour le reste de la journée, à toute heure ; si "
-        "elle dit que c'est fini, appelle-le avec active=false ; si l'application "
-        "répond 'pending', demande une fois si elle en est sûre et rappelle-le avec "
-        "active=false seulement si elle confirme. '[UNICENTRO]' est "
-        "envoyé par l'application, pas par la personne : préviens-la sans qu'elle "
-        "demande, avec ce que dit le message. Cela ne change pas PAS D'ITINÉRAIRES "
-        ": ne donne ni virages ni distances."
+        "UNICENTRO : la Route A sort par les portes piétonnes de la Calle 13 "
+        "(Avenida Pasoancho) et passe à l'intérieur du centre commercial Unicentro. "
+        "La Route B consiste à sortir de l'université par une autre porte : celle "
+        "de la Calle 16 (près de la sculpture La Chalaca) ou celle de la Carrera 86 "
+        "(El Ingenio). Si la personne veut aller ou passer par Unicentro, ou "
+        "demande par où aller, appelle d'abord get_unicentro_route. S'il répond "
+        "'unavailable', la Route A n'est pas une option : explique pourquoi en une "
+        "ou deux phrases courtes et dis-lui de chercher une sortie alternative, par "
+        "la Calle 16 ou par la Carrera 86. Ne dis jamais seulement 'passe par la "
+        "rue'. Ne propose pas la Route A même si la personne insiste. Si la "
+        "personne dit qu'il y a un 'tropel', des émeutes ou des gens cagoulés à "
+        "l'université, appelle set_route_disturbance avec active=true : la sortie "
+        "vers Pasoancho par Unicentro est fermée pour le reste de la journée, à "
+        "toute heure. Si elle dit que c'est fini, appelle-le tout de suite avec "
+        "active=false, sans demander avant : l'application décide s'il faut "
+        "confirmer. S'il répond 'pending', demande une fois si elle en est sûre et "
+        "rappelle-le avec active=false seulement si elle confirme. '[UNICENTRO]' "
+        "est envoyé par l'application, pas par la personne : préviens-la sans "
+        "qu'elle demande, avec ce que dit le message. Cela ne change pas PAS "
+        "D'ITINÉRAIRES : ne donne ni virages ni distances."
     ),
     "pt": (
-        "UNICENTRO: a Rota A passa por dentro do shopping Unicentro; a Rota B vai por "
-        "fora, pela rua. Se a pessoa quiser ir ou passar pelo Unicentro, ou perguntar "
-        "por onde ir, chame primeiro get_unicentro_route. Se responder 'unavailable', "
-        "a Rota A não é opção: explique por quê em uma ou duas frases curtas e "
-        "ofereça ir por fora, pela rua. Não a ofereça mesmo que a pessoa insista. "
-        "Se a pessoa disser que há 'tropel', distúrbios ou encapuzados na "
-        "universidade, chame set_route_disturbance com active=true: a saída para "
-        "Pasoancho pelo Unicentro fica fechada pelo resto do dia, a qualquer hora; "
-        "se disser que já acabou, chame com active=false; se o aplicativo responder "
-        "'pending', pergunte uma vez se tem certeza e só chame de novo com "
-        "active=false se a pessoa confirmar. '[UNICENTRO]' é enviado "
-        "pelo aplicativo, não pela pessoa: avise sem que "
+        "UNICENTRO: a Rota A sai pelas portarias de pedestres da Calle 13 (Avenida "
+        "Pasoancho) e passa por dentro do shopping Unicentro. A Rota B é sair da "
+        "universidade por outra portaria: a da Calle 16 (junto à escultura La "
+        "Chalaca) ou a da Carrera 86 (El Ingenio). Se a pessoa quiser ir ou passar "
+        "pelo Unicentro, ou perguntar por onde ir, chame primeiro "
+        "get_unicentro_route. Se responder 'unavailable', a Rota A não é opção: "
+        "explique por quê em uma ou duas frases curtas e diga que procure uma saída "
+        "alternativa, pela Calle 16 ou pela Carrera 86. Nunca diga só 'vá pela "
+        "rua'. Não ofereça a Rota A mesmo que a pessoa insista. Se a pessoa disser "
+        "que há 'tropel', distúrbios ou encapuzados na universidade, chame "
+        "set_route_disturbance com active=true: a saída para Pasoancho pelo "
+        "Unicentro fica fechada pelo resto do dia, a qualquer hora. Se disser que "
+        "já acabou, chame logo com active=false, sem perguntar antes: o aplicativo "
+        "decide se precisa confirmar. Se responder 'pending', pergunte uma vez se "
+        "tem certeza e só chame de novo com active=false se a pessoa confirmar. "
+        "'[UNICENTRO]' é enviado pelo aplicativo, não pela pessoa: avise sem que "
         "perguntem, com o que diz a mensagem. Isso não muda SEM ROTAS: não dê "
         "curvas nem distâncias."
     ),
     "it": (
-        "UNICENTRO: il Percorso A passa dentro il centro commerciale Unicentro; il "
-        "Percorso B va fuori, per la strada. Se la persona vuole andare o passare per "
-        "Unicentro, o chiede da che parte andare, chiama prima get_unicentro_route. "
-        "Se risponde 'unavailable', il Percorso A non è un'opzione: spiega perché in "
-        "una o due frasi brevi e proponi di andare fuori, per la strada. Non "
-        "proporlo anche se la persona insiste. Se la persona dice che c'è un "
+        "UNICENTRO: il Percorso A esce dagli ingressi pedonali della Calle 13 "
+        "(Avenida Pasoancho) e passa dentro il centro commerciale Unicentro. Il "
+        "Percorso B è uscire dall'università da un altro ingresso: quello della "
+        "Calle 16 (vicino alla scultura La Chalaca) o quello della Carrera 86 (El "
+        "Ingenio). Se la persona vuole andare o passare per Unicentro, o chiede da "
+        "che parte andare, chiama prima get_unicentro_route. Se risponde "
+        "'unavailable', il Percorso A non è un'opzione: spiega perché in una o due "
+        "frasi brevi e dille di cercare un'uscita alternativa, dalla Calle 16 o "
+        "dalla Carrera 86. Non dire mai solo 'vai per la strada'. Non proporre il "
+        "Percorso A anche se la persona insiste. Se la persona dice che c'è un "
         "'tropel', disordini o incappucciati all'università, chiama "
         "set_route_disturbance con active=true: l'uscita verso Pasoancho da "
-        "Unicentro resta chiusa per il resto della giornata, a qualsiasi ora; se "
-        "dice che è finito, chiamalo con active=false; se l'app risponde 'pending', "
-        "chiedi una volta se è sicura e richiamalo con active=false solo se conferma. "
-        "'[UNICENTRO]' lo invia l'app, non la "
-        "persona: avvisa senza che te lo chiedano, con quello che dice il messaggio. "
-        "Questo non cambia NIENTE PERCORSI: non dare svolte né distanze."
+        "Unicentro resta chiusa per il resto della giornata, a qualsiasi ora. Se "
+        "dice che è finito, chiamalo subito con active=false, senza chiedere "
+        "prima: l'app decide se serve confermare. Se risponde 'pending', chiedi "
+        "una volta se è sicura e richiamalo con active=false solo se conferma. "
+        "'[UNICENTRO]' lo invia l'app, non la persona: avvisa senza che te lo "
+        "chiedano, con quello che dice il messaggio. Questo non cambia NIENTE "
+        "PERCORSI: non dare svolte né distanze."
     ),
 }
 
@@ -1553,6 +1620,7 @@ def get_live_system_prompt(
 
     parts = [
         _LIVE_IDENTITY[lang].format(name=name),
+        _SILENT_TOOLS[lang],
         _COMMANDS_EXTRA[lang],
         _SOS[lang],
         _OBSERVE[lang],
