@@ -94,3 +94,11 @@ def test_add_note_declarada_con_el_texto():
     tools = build_setup_message()["setup"]["tools"][0]["function_declarations"]
     add_note = next(t for t in tools if t["name"] == "add_note")
     assert add_note["parameters"]["required"] == ["text"]
+
+
+def test_get_unicentro_route_declarada_sin_parametros():
+    # HU-019: la regla horaria la decide la app; el asistente solo la consulta.
+    tools = build_setup_message()["setup"]["tools"][0]["function_declarations"]
+    route = next(t for t in tools if t["name"] == "get_unicentro_route")
+    assert route["parameters"] == {"type": "object", "properties": {}}
+    assert "Unicentro" in route["description"]

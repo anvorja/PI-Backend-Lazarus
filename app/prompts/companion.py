@@ -2,7 +2,7 @@
 
 # Versión del prompt de sistema. Cada cambio de comportamiento del prompt sube la
 # versión y agrega un bloque en `docs/prompts/companion.md` con fecha y motivo.
-PROMPT_VERSION = "1.18.0"
+PROMPT_VERSION = "1.19.0"
 
 SUPPORTED_LANGUAGES: tuple[str, ...] = ("es", "en", "fr", "pt", "it")
 DEFAULT_LANGUAGE = "es"
@@ -958,6 +958,63 @@ _NOTES: dict[str, str] = {
     ),
 }
 
+# Regla horaria de Unicentro (HU-019): la Ruta A atraviesa el centro comercial y se
+# desactiva 45 min antes del cierre. La decide la app con la hora de Colombia; el modelo
+# solo la comunica y no puede anularla.
+_UNICENTRO: dict[str, str] = {
+    "es": (
+        "UNICENTRO: la Ruta A pasa por dentro del centro comercial Unicentro; la Ruta B "
+        "va por fuera, por la calle. Si la persona quiere ir o pasar por Unicentro, o "
+        "pregunta por qué ruta ir, llama primero a get_unicentro_route. Si responde "
+        "'unavailable', la Ruta A no es opción: explica por qué en una o dos frases "
+        "cortas y ofrece ir por fuera, por la calle. No la ofrezcas aunque la persona "
+        "insista. '[UNICENTRO]' lo envía la aplicación, no la persona: avisa sin que "
+        "te pregunten, con lo que dice el mensaje. Esto no cambia SIN RUTAS: no des "
+        "giros ni distancias."
+    ),
+    "en": (
+        "UNICENTRO: Route A goes inside the Unicentro shopping mall; Route B goes "
+        "outside, along the street. If the person wants to go or pass through "
+        "Unicentro, or asks which way to go, first call get_unicentro_route. If it "
+        "answers 'unavailable', Route A is not an option: explain why in one or two "
+        "short sentences and offer to go outside, along the street. Do not offer it "
+        "even if the person insists. '[UNICENTRO]' is sent by the app, not the "
+        "person: warn them without being asked, with what the message says. This "
+        "does not change NO ROUTES: do not give turns or distances."
+    ),
+    "fr": (
+        "UNICENTRO : la Route A passe à l'intérieur du centre commercial Unicentro ; la "
+        "Route B passe dehors, par la rue. Si la personne veut aller ou passer par "
+        "Unicentro, ou demande par où aller, appelle d'abord get_unicentro_route. "
+        "S'il répond 'unavailable', la Route A n'est pas une option : explique "
+        "pourquoi en une ou deux phrases courtes et propose de passer dehors, par la "
+        "rue. Ne la propose pas même si la personne insiste. '[UNICENTRO]' est "
+        "envoyé par l'application, pas par la personne : préviens-la sans qu'elle "
+        "demande, avec ce que dit le message. Cela ne change pas PAS D'ITINÉRAIRES "
+        ": ne donne ni virages ni distances."
+    ),
+    "pt": (
+        "UNICENTRO: a Rota A passa por dentro do shopping Unicentro; a Rota B vai por "
+        "fora, pela rua. Se a pessoa quiser ir ou passar pelo Unicentro, ou perguntar "
+        "por onde ir, chame primeiro get_unicentro_route. Se responder 'unavailable', "
+        "a Rota A não é opção: explique por quê em uma ou duas frases curtas e "
+        "ofereça ir por fora, pela rua. Não a ofereça mesmo que a pessoa insista. "
+        "'[UNICENTRO]' é enviado pelo aplicativo, não pela pessoa: avise sem que "
+        "perguntem, com o que diz a mensagem. Isso não muda SEM ROTAS: não dê "
+        "curvas nem distâncias."
+    ),
+    "it": (
+        "UNICENTRO: il Percorso A passa dentro il centro commerciale Unicentro; il "
+        "Percorso B va fuori, per la strada. Se la persona vuole andare o passare per "
+        "Unicentro, o chiede da che parte andare, chiama prima get_unicentro_route. "
+        "Se risponde 'unavailable', il Percorso A non è un'opzione: spiega perché in "
+        "una o due frasi brevi e proponi di andare fuori, per la strada. Non "
+        "proporlo anche se la persona insiste. '[UNICENTRO]' lo invia l'app, non la "
+        "persona: avvisa senza che te lo chiedano, con quello che dice il messaggio. "
+        "Questo non cambia NIENTE PERCORSI: non dare svolte né distanze."
+    ),
+}
+
 # HU-040: ciclo de observación. Gemini Live no habla si nadie le habla (CP-LAZA-36);
 # con todos callados la app envía '[OBSERVA]' cada pocos segundos por el flujo de la
 # cámara. Spike del 6 de octubre: responde en ~1,6 s y avisa de escalones, animales
@@ -1475,6 +1532,7 @@ def get_live_system_prompt(
         _TIME[lang],
         _HEADING[lang],
         _NOTES[lang],
+        _UNICENTRO[lang],
         _LIVE_SYSTEM_PROMPTS[lang],
     ]
     if uname:
