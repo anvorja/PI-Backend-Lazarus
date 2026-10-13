@@ -538,6 +538,10 @@ def test_unicentro_consulta_la_regla_de_la_app(language, screen_locked):
     assert "get_unicentro_route" in rule
     assert "'unavailable'" in rule
     assert "[UNICENTRO]" in rule
+    # Regla 6: con tropel la Ruta A se cierra todo el día, y se levanta por voz.
+    assert "set_route_disturbance" in rule
+    assert "tropel" in rule
+    assert "active=true" in rule and "active=false" in rule
     # Remite al bloque sin rutas con su mismo nombre.
     no_routes = c._NO_ROUTES[language].split(":")[0].strip()
     assert no_routes in rule

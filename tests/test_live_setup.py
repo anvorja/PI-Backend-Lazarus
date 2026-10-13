@@ -102,3 +102,11 @@ def test_get_unicentro_route_declarada_sin_parametros():
     route = next(t for t in tools if t["name"] == "get_unicentro_route")
     assert route["parameters"] == {"type": "object", "properties": {}}
     assert "Unicentro" in route["description"]
+
+
+def test_set_route_disturbance_declarada_con_active():
+    # HU-019, regla 6: "hay tropel" inhabilita la Ruta A todo el día.
+    tools = build_setup_message()["setup"]["tools"][0]["function_declarations"]
+    tool = next(t for t in tools if t["name"] == "set_route_disturbance")
+    assert tool["parameters"]["required"] == ["active"]
+    assert tool["parameters"]["properties"]["active"]["type"] == "boolean"

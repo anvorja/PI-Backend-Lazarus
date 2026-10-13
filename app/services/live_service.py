@@ -261,6 +261,25 @@ _FUNCTION_DECLARATIONS = [
         "parameters": {"type": "object", "properties": {}},
     },
     {
+        "name": "set_route_disturbance",
+        "description": (
+            "Reporta (active=true) o levanta (active=false) disturbios en la "
+            "universidad: tropel, disturbios o encapuchados. Con el reporte, la "
+            "salida a Pasoancho por Unicentro (Ruta A) queda inhabilitada el resto "
+            "del día, a cualquier hora."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean",
+                    "description": "true si hay disturbios; false si ya terminaron.",
+                }
+            },
+            "required": ["active"],
+        },
+    },
+    {
         "name": "get_time",
         "description": (
             "Obtiene la hora y la fecha locales del teléfono de la persona (su zona "
