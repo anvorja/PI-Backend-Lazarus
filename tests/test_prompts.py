@@ -547,3 +547,16 @@ def test_unicentro_consulta_la_regla_de_la_app(language, screen_locked):
     # Remite al bloque sin rutas con su mismo nombre.
     no_routes = c._NO_ROUTES[language].split(":")[0].strip()
     assert no_routes in rule
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+@pytest.mark.parametrize("screen_locked", [False, True])
+def test_las_funciones_no_se_narran(language, screen_locked):
+    # En el teléfono el asistente decía "Llamando a la función…" y "Consultando
+    # si…" antes de cada función: son internas y la persona no debe oírlas.
+    prompt = c.get_live_system_prompt(language, screen_locked=screen_locked)
+    rule = c._SILENT_TOOLS[language]
+    assert rule in prompt
+    # Va justo después de la identidad, antes de las demás reglas.
+    assert prompt.index(rule) < prompt.index(c._COMMANDS_EXTRA[language])
+    assert "'pending'" in rule and "'unavailable'" in rule

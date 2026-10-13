@@ -2,6 +2,20 @@
 
 > Registro de versiones del prompt de sistema (`app/prompts/companion.py`). Cada cambio de comportamiento sube `PROMPT_VERSION` y agrega aquí un bloque `## vX.Y.Z — fecha — motivo`, del más reciente al más antiguo. El backend registra la versión en el log al iniciar cada sesión.
 
+## v1.21.0 — 2026-10-13 — Las funciones no se narran
+
+**Motivo:** en la prueba de HU-019 en el teléfono, el asistente anunciaba en voz alta lo
+que hacía por dentro antes de cada función: "Llamando a la función para levantar el
+reporte de disturbios", "Consultando si la ruta por Unicentro está disponible",
+"Disturbios en la universidad reportados". La persona no debe oír nada del
+funcionamiento interno. La única regla parecida estaba dentro del bloque de SOS.
+
+**Cambio en el prompt (5 idiomas):** nuevo bloque general FUNCIONES EN SILENCIO, justo
+después de la identidad. No decir nada antes de llamar una función. No decir "llamando a
+la función", "consultando", "voy a revisar" ni nombres de funciones. No repetir palabras
+del resultado (`ok`, `pending`, `unavailable`). Hablar solo después del resultado, con
+naturalidad.
+
 ## v1.20.0 — 2026-10-13 — Doble confirmación para levantar el tropel (LAZA-47 · HU-019)
 
 **Motivo:** en la prueba en el teléfono, "ya pasó el tropel" levantaba la regla de
