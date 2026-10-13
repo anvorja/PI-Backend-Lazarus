@@ -2,7 +2,7 @@
 
 # Versión del prompt de sistema. Cada cambio de comportamiento del prompt sube la
 # versión y agrega un bloque en `docs/prompts/companion.md` con fecha y motivo.
-PROMPT_VERSION = "1.19.0"
+PROMPT_VERSION = "1.20.0"
 
 SUPPORTED_LANGUAGES: tuple[str, ...] = ("es", "en", "fr", "pt", "it")
 DEFAULT_LANGUAGE = "es"
@@ -971,7 +971,9 @@ _UNICENTRO: dict[str, str] = {
         "insista. Si la persona dice que hay tropel, disturbios o encapuchados en la "
         "universidad, llama a set_route_disturbance con active=true: la salida a "
         "Pasoancho por Unicentro queda cerrada el resto del día, a cualquier hora; si "
-        "dice que ya terminaron, llama con active=false. '[UNICENTRO]' lo envía la "
+        "dice que ya terminaron, llama con active=false; si la app responde 'pending', "
+        "pregunta una vez si está segura de que ya pasó y solo si lo confirma vuelve a "
+        "llamar con active=false. '[UNICENTRO]' lo envía la "
         "aplicación, no la persona: avisa sin que "
         "te pregunten, con lo que dice el mensaje. Esto no cambia SIN RUTAS: no des "
         "giros ni distancias."
@@ -985,7 +987,9 @@ _UNICENTRO: dict[str, str] = {
         "even if the person insists. If the person says there is a 'tropel', riots "
         "or hooded people at the university, call set_route_disturbance with "
         "active=true: the exit to Pasoancho through Unicentro is closed for the rest "
-        "of the day, at any time; if they say it is over, call it with active=false. "
+        "of the day, at any time; if they say it is over, call it with active=false; "
+        "if the app answers 'pending', ask once whether they are sure it is over and "
+        "call it again with active=false only if they confirm. "
         "'[UNICENTRO]' is sent by the app, not the "
         "person: warn them without being asked, with what the message says. This "
         "does not change NO ROUTES: do not give turns or distances."
@@ -1000,7 +1004,9 @@ _UNICENTRO: dict[str, str] = {
         "qu'il y a un 'tropel', des émeutes ou des gens cagoulés à l'université, "
         "appelle set_route_disturbance avec active=true : la sortie vers Pasoancho "
         "par Unicentro est fermée pour le reste de la journée, à toute heure ; si "
-        "elle dit que c'est fini, appelle-le avec active=false. '[UNICENTRO]' est "
+        "elle dit que c'est fini, appelle-le avec active=false ; si l'application "
+        "répond 'pending', demande une fois si elle en est sûre et rappelle-le avec "
+        "active=false seulement si elle confirme. '[UNICENTRO]' est "
         "envoyé par l'application, pas par la personne : préviens-la sans qu'elle "
         "demande, avec ce que dit le message. Cela ne change pas PAS D'ITINÉRAIRES "
         ": ne donne ni virages ni distances."
@@ -1014,7 +1020,9 @@ _UNICENTRO: dict[str, str] = {
         "Se a pessoa disser que há 'tropel', distúrbios ou encapuzados na "
         "universidade, chame set_route_disturbance com active=true: a saída para "
         "Pasoancho pelo Unicentro fica fechada pelo resto do dia, a qualquer hora; "
-        "se disser que já acabou, chame com active=false. '[UNICENTRO]' é enviado "
+        "se disser que já acabou, chame com active=false; se o aplicativo responder "
+        "'pending', pergunte uma vez se tem certeza e só chame de novo com "
+        "active=false se a pessoa confirmar. '[UNICENTRO]' é enviado "
         "pelo aplicativo, não pela pessoa: avise sem que "
         "perguntem, com o que diz a mensagem. Isso não muda SEM ROTAS: não dê "
         "curvas nem distâncias."
@@ -1029,7 +1037,9 @@ _UNICENTRO: dict[str, str] = {
         "'tropel', disordini o incappucciati all'università, chiama "
         "set_route_disturbance con active=true: l'uscita verso Pasoancho da "
         "Unicentro resta chiusa per il resto della giornata, a qualsiasi ora; se "
-        "dice che è finito, chiamalo con active=false. '[UNICENTRO]' lo invia l'app, non la "
+        "dice che è finito, chiamalo con active=false; se l'app risponde 'pending', "
+        "chiedi una volta se è sicura e richiamalo con active=false solo se conferma. "
+        "'[UNICENTRO]' lo invia l'app, non la "
         "persona: avvisa senza che te lo chiedano, con quello che dice il messaggio. "
         "Questo non cambia NIENTE PERCORSI: non dare svolte né distanze."
     ),

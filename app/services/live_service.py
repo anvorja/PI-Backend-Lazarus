@@ -266,7 +266,9 @@ _FUNCTION_DECLARATIONS = [
             "Reporta (active=true) o levanta (active=false) disturbios en la "
             "universidad: tropel, disturbios o encapuchados. Con el reporte, la "
             "salida a Pasoancho por Unicentro (Ruta A) queda inhabilitada el resto "
-            "del día, a cualquier hora."
+            "del día, a cualquier hora. Para levantarlo la app pide confirmación: "
+            "si responde 'pending', pregunta a la persona y vuelve a llamar solo "
+            "si lo confirma."
         ),
         "parameters": {
             "type": "object",

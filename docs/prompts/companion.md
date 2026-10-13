@@ -2,6 +2,22 @@
 
 > Registro de versiones del prompt de sistema (`app/prompts/companion.py`). Cada cambio de comportamiento sube `PROMPT_VERSION` y agrega aquí un bloque `## vX.Y.Z — fecha — motivo`, del más reciente al más antiguo. El backend registra la versión en el log al iniciar cada sesión.
 
+## v1.20.0 — 2026-10-13 — Doble confirmación para levantar el tropel (LAZA-47 · HU-019)
+
+**Motivo:** en la prueba en el teléfono, "ya pasó el tropel" levantaba la regla de
+disturbios con una sola frase. Habilitar de nuevo la salida por Unicentro es la decisión
+de más riesgo de la regla, así que se pide confirmar.
+
+**Cambio en la app:** la primera llamada a `set_route_disturbance(active=false)` deja la
+Ruta A inhabilitada y responde `pending`. Solo una segunda llamada, después de que la
+persona vuelva a hablar (al menos 4 s y como máximo 3 min después), levanta el reporte.
+Así el asistente no puede confirmar por su cuenta en el mismo turno. Un nuevo reporte de
+tropel anula la confirmación pendiente.
+
+**Cambio en el prompt (5 idiomas):** en el bloque UNICENTRO, si la app responde
+`pending`, el asistente pregunta una vez si la persona está segura de que ya pasó y solo
+si lo confirma vuelve a llamar con `active=false`.
+
 ## v1.19.0 — 2026-10-13 — Regla horaria de Unicentro (LAZA-47 · HU-019)
 
 **Motivo:** la Ruta A atraviesa el centro comercial Unicentro. Llevar a la persona a un
