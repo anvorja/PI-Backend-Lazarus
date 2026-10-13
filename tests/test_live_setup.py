@@ -79,3 +79,11 @@ def test_get_time_declarada_sin_parametros():
     tools = build_setup_message()["setup"]["tools"][0]["function_declarations"]
     get_time = next(t for t in tools if t["name"] == "get_time")
     assert get_time["parameters"] == {"type": "object", "properties": {}}
+
+
+def test_get_heading_declarada_sin_parametros():
+    # HU-016: el rumbo lo da la brújula del teléfono.
+    tools = build_setup_message()["setup"]["tools"][0]["function_declarations"]
+    get_heading = next(t for t in tools if t["name"] == "get_heading")
+    assert get_heading["parameters"] == {"type": "object", "properties": {}}
+    assert "needs_calibration" in get_heading["description"]

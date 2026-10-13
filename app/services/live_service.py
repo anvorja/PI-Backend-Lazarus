@@ -219,6 +219,17 @@ _FUNCTION_DECLARATIONS = [
         "parameters": {"type": "object", "properties": {}},
     },
     {
+        "name": "get_heading",
+        "description": (
+            "Obtiene hacia dónde mira o camina la persona (punto cardinal y grados), "
+            "con la brújula del teléfono o, si camina, con el rumbo del GPS. Úsalo "
+            "cuando pregunte hacia dónde está mirando o en qué dirección va. Si el "
+            "resultado es 'needs_calibration', pídele mover el teléfono en forma de "
+            "ocho y no des ninguna dirección todavía."
+        ),
+        "parameters": {"type": "object", "properties": {}},
+    },
+    {
         "name": "get_time",
         "description": (
             "Obtiene la hora y la fecha locales del teléfono de la persona (su zona "
