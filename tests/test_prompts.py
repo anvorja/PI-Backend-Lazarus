@@ -465,3 +465,14 @@ def test_la_hora_la_da_el_telefono(language, screen_locked):
     assert rule in prompt
     assert "get_time" in rule
     assert "UTC" in rule  # para prohibir decirla
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+@pytest.mark.parametrize("screen_locked", [False, True])
+def test_la_orientacion_la_da_la_brujula(language, screen_locked):
+    # HU-016: hacia dónde mira, con get_heading; descalibrada, pide el ocho.
+    prompt = c.get_live_system_prompt(language, screen_locked=screen_locked)
+    rule = c._HEADING[language]
+    assert rule in prompt
+    assert "get_heading" in rule
+    assert "needs_calibration" in rule

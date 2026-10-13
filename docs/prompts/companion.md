@@ -2,6 +2,24 @@
 
 > Registro de versiones del prompt de sistema (`app/prompts/companion.py`). Cada cambio de comportamiento sube `PROMPT_VERSION` y agrega aquí un bloque `## vX.Y.Z — fecha — motivo`, del más reciente al más antiguo. El backend registra la versión en el log al iniciar cada sesión.
 
+## v1.17.0 — 2026-10-13 — Orientación con la brújula (LAZA-44 · HU-016)
+
+**Motivo:** las indicaciones en horas de reloj solo sirven si "las 12" es hacia donde
+la persona va. La cámara no basta: no sabe hacia qué punto cardinal mira, y con el
+teléfono en el pecho o en la mano el asistente no tenía cómo saberlo.
+
+**Cambio en la app y el backend:** nueva función `get_heading`, sin parámetros. La
+responde el teléfono con la brújula filtrada (media móvil circular) o, si la persona
+camina a más de 0,5 m/s, con el rumbo de marcha del GPS. Si la brújula está imprecisa,
+responde `needs_calibration`.
+
+**Cambio en el prompt (5 idiomas):** nuevo bloque ORIENTACIÓN (en todas las sesiones):
+para hacia dónde mira o va, llamar a `get_heading` cada vez, aunque la pantalla esté
+bloqueada; con `needs_calibration`, pedir el movimiento en forma de ocho y no dar
+ninguna dirección; nunca adivinar el punto cardinal por la cámara.
+
+El resto del prompt es igual al de v1.16.0.
+
 ## v1.16.0 — 2026-10-13 — Hora y fecha del teléfono (LAZA-115)
 
 **Motivo:** en la prueba de LAZA-113 (13 de octubre) el asistente dijo "Son las 4:58 de
