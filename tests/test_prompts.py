@@ -476,3 +476,30 @@ def test_la_orientacion_la_da_la_brujula(language, screen_locked):
     assert rule in prompt
     assert "get_heading" in rule
     assert "needs_calibration" in rule
+
+
+COMPASS_WORD = {
+    "es": "'brújula'",
+    "en": "'compass'",
+    "fr": "'boussole'",
+    "pt": "'bússola'",
+    "it": "'bussola'",
+}
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+def test_brujula_es_el_comando_y_la_ayuda_lo_ensena(language):
+    # HU-016: "¿Hacia dónde voy?" se contestó por la cámara; la palabra clave es
+    # "brújula", y la ayuda la menciona.
+    word = COMPASS_WORD[language]
+    assert word in c._HEADING[language]
+    help_start = c._COMMANDS_EXTRA[language].index(
+        {"es": "AYUDA", "en": "HELP", "fr": "AIDE", "pt": "AJUDA", "it": "AIUTO"}[language]
+    )
+    assert word in c._COMMANDS_EXTRA[language][help_start:]
+
+
+def test_en_espanol_dice_oriente_y_occidente():
+    rule = c._HEADING["es"]
+    assert "oriente y occidente" in rule
+    assert "Miras al norte." in rule and "Vas hacia el norte." in rule

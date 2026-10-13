@@ -2,6 +2,29 @@
 
 > Registro de versiones del prompt de sistema (`app/prompts/companion.py`). Cada cambio de comportamiento sube `PROMPT_VERSION` y agrega aquí un bloque `## vX.Y.Z — fecha — motivo`, del más reciente al más antiguo. El backend registra la versión en el log al iniciar cada sesión.
 
+## v1.17.1 — 2026-10-13 — Comando "brújula", respuestas cortas y oriente/occidente (LAZA-44 · HU-016)
+
+**Motivo:** en la prueba de HU-016, "¿Hacia dónde estoy mirando?" llamó a `get_heading`
+las dos veces, pero con "¿Hacia dónde voy?" el asistente contestó por la cámara ("No
+veo ningún camino o dirección clara para seguir"): la pregunta es ambigua. Se acordó
+una palabra clave corta y ligada a la función, como "silencio total".
+
+**Cambio en el prompt (5 idiomas):**
+- El bloque ORIENTACIÓN pasa a llamarse BRÚJULA. La palabra clave es "brújula"
+  ("compass", "boussole", "bússola", "bussola"). También cuentan "¿hacia dónde miro?",
+  "¿hacia dónde voy?" y "¿dónde queda el norte?", y se aclara que son preguntas de
+  orientación y no del camino que ve.
+- Respuesta en 3 o 4 palabras, sin grados: "Miras al norte." si está quieta y "Vas
+  hacia el norte." si camina (rumbo del GPS).
+- En español, oriente y occidente (y nororiente, suroccidente…), nunca este ni oeste.
+- Descalibrada: "Mueve el teléfono en forma de ocho y vuelve a decir brújula."
+- La AYUDA enseña el comando: "saber hacia dónde mira diciendo 'brújula'".
+
+**Cambio en la app:** la respuesta de `get_heading` dice si la persona está quieta o
+caminando, para elegir entre "Miras" y "Vas".
+
+El resto del prompt es igual al de v1.17.0.
+
 ## v1.17.0 — 2026-10-13 — Orientación con la brújula (LAZA-44 · HU-016)
 
 **Motivo:** las indicaciones en horas de reloj solo sirven si "las 12" es hacia donde

@@ -223,7 +223,7 @@ _FUNCTION_DECLARATIONS = [
         "description": (
             "Obtiene hacia dónde mira o camina la persona (punto cardinal y grados), "
             "con la brújula del teléfono o, si camina, con el rumbo del GPS. Úsalo "
-            "cuando pregunte hacia dónde está mirando o en qué dirección va. Si el "
+            "cuando diga 'brújula' o pregunte hacia dónde mira o hacia dónde va. Si el "
             "resultado es 'needs_calibration', pídele mover el teléfono en forma de "
             "ocho y no des ninguna dirección todavía."
         ),
