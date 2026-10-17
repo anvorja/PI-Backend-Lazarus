@@ -11,6 +11,11 @@ dependencies = [
     "pydantic-settings>=2.5.0",
     "google-genai>=2.3.0",
     "websockets>=13.0",
+    "sqlalchemy>=2.0.30",
+    "psycopg[binary]>=3.2",
+    "argon2-cffi>=23.1",
+    "pyjwt>=2.9",
+    "python-multipart>=0.0.12",
 ]
 
 [build-system]
@@ -34,6 +39,16 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.flake8-bugbear]
+# Dependencias de FastAPI como valor por defecto: es el patrón del framework.
+extend-immutable-calls = [
+    "fastapi.Depends",
+    "fastapi.Header",
+    "fastapi.Cookie",
+    "fastapi.File",
+    "fastapi.Query",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

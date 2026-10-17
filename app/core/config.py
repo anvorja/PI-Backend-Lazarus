@@ -27,6 +27,23 @@ class Settings(BaseSettings):
     # sesiones nuevas sin abrir Gemini (no gasta saldo) y la app dice que Lazarus
     # está en pausa. Se cambia en las variables de entorno de Render.
     live_enabled: bool = True
+
+    # Control de acceso por dispositivo (HU-044 a HU-046). Base de datos de
+    # dispositivos, sesiones y logs de campo: Postgres en producción (Neon,
+    # plan gratuito); SQLite en local y en las pruebas.
+    database_url: str = "sqlite:///./lazarus.db"
+    # true = solo dispositivos aprobados abren sesión. Se activa cuando todos
+    # los celulares del piloto tengan la versión que se registra.
+    device_auth_required: bool = False
+    # Primer administrador del panel: se crea al arrancar si no hay ninguno. La
+    # contraseña solo vive en las variables de entorno de Render; en la base se
+    # guarda su hash Argon2.
+    admin_username: str = ""
+    admin_password: str = ""
+    # Firma de las sesiones del panel (JWT). Sin ella, el panel no permite entrar.
+    admin_jwt_secret: str = ""
+    # Días que se guardan los logs subidos por los teléfonos.
+    log_retention_days: int = 30
     # v1alpha: necesario para `proactivity` (audio proactivo) y affective dialog.
     # v1beta rechaza el campo `proactivity` con close 1007.
     gemini_live_url: str = (

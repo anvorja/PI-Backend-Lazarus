@@ -101,6 +101,24 @@ transcripciones, el nombre de la persona ni la API key.
 | `HOST`, `PORT`, `DEBUG` | Servidor |
 | `CORS_ORIGINS` | Orígenes HTTP permitidos (lista JSON) |
 
+## Panel del piloto y control de acceso (HU-043 a HU-046)
+
+El mismo backend sirve un panel web en **`/admin`** para el coordinador de las pruebas:
+
+- **Servicio:** interruptor general y horario de las jornadas (hora de Colombia). `LIVE_ENABLED=false` en Render manda sobre todo y no deja abrir ninguna sesión.
+- **Dispositivos:** cada teléfono se registra solo la primera vez y queda pendiente. Desde el panel se aprueba, se nombra con un seudónimo, se le pone un límite de minutos por día, se le piden los logs, se le cierra la sesión o se deshabilita.
+- **Logs de campo:** al tocar Detener, la app sube lo nuevo de su log, notas, recorrido GPS y telemetría. El panel los descarga unidos en un .zip y muestra la latencia voz a voz.
+
+| Variable | Para qué |
+| --- | --- |
+| `DATABASE_URL` | Postgres de Neon (`postgresql://…`). Sin ella se usa SQLite, que en Render se pierde en cada despliegue. |
+| `DEVICE_AUTH_REQUIRED` | `true` cuando todos los teléfonos tengan la versión que se registra. |
+| `ADMIN_USERNAME`, `ADMIN_PASSWORD` | Primer administrador; la contraseña se guarda con Argon2. |
+| `ADMIN_JWT_SECRET` | Al menos 32 caracteres aleatorios; sin ella el panel no deja entrar. |
+| `LOG_RETENTION_DAYS` | Días que se guardan los logs (30 por defecto). |
+
+Códigos de cierre del control de acceso: 4006 en pausa o fuera de horario, 4007 pendiente de aprobación, 4008 deshabilitado, 4009 minutos del día agotados, 4010 sesión cerrada desde el panel.
+
 ## Flujo de trabajo (GitFlow)
 
 - `main`: versiones publicadas (etiquetas `vX.Y.Z`).

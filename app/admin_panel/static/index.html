@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Lazarus · Panel</title>
+  <link rel="stylesheet" href="panel.css">
+</head>
+<body>
+  <main id="login" class="card narrow" hidden>
+    <h1>Lazarus · Panel</h1>
+    <form id="login-form">
+      <label>Usuario <input name="username" autocomplete="username" required></label>
+      <label>Contraseña <input name="password" type="password" autocomplete="current-password" required></label>
+      <button type="submit">Entrar</button>
+      <p id="login-error" class="error" role="alert"></p>
+    </form>
+  </main>
+
+  <div id="app" hidden>
+    <header>
+      <h1>Lazarus · Panel del piloto</h1>
+      <span id="who"></span>
+      <button id="logout" class="link">Salir</button>
+    </header>
+
+    <section class="card" aria-labelledby="t-servicio">
+      <h2 id="t-servicio">Servicio</h2>
+      <p id="estado" class="estado"></p>
+      <div class="row">
+        <button id="toggle-service"></button>
+      </div>
+      <form id="schedule-form" class="row">
+        <label class="check"><input type="checkbox" name="enabled"> Solo en el horario de las jornadas</label>
+        <fieldset class="days">
+          <legend>Días</legend>
+          <label><input type="checkbox" name="day" value="0"> Lun</label>
+          <label><input type="checkbox" name="day" value="1"> Mar</label>
+          <label><input type="checkbox" name="day" value="2"> Mié</label>
+          <label><input type="checkbox" name="day" value="3"> Jue</label>
+          <label><input type="checkbox" name="day" value="4"> Vie</label>
+          <label><input type="checkbox" name="day" value="5"> Sáb</label>
+          <label><input type="checkbox" name="day" value="6"> Dom</label>
+        </fieldset>
+        <label>Desde <input name="from" type="time" required></label>
+        <label>Hasta <input name="to" type="time" required></label>
+        <button type="submit">Guardar horario</button>
+      </form>
+      <p class="hint">Hora de Colombia. El interruptor de emergencia LIVE_ENABLED de Render manda sobre todo esto.</p>
+    </section>
+
+    <section class="card" aria-labelledby="t-disp">
+      <h2 id="t-disp">Dispositivos</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Nombre</th><th>Estado</th><th>Teléfono</th><th>Última conexión</th>
+              <th>Hoy</th><th>Límite diario</th><th>Logs</th><th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="devices"></tbody>
+        </table>
+      </div>
+      <p class="hint">Un teléfono nuevo aparece "pendiente" al abrir Lazarus por primera vez.</p>
+    </section>
+
+    <section id="detail" class="card" hidden aria-labelledby="t-detalle">
+      <h2 id="t-detalle"></h2>
+      <div id="detail-body"></div>
+    </section>
+  </div>
+
+  <script src="panel.js"></script>
+</body>
+</html>
