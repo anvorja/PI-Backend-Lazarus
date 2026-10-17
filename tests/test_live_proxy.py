@@ -303,3 +303,29 @@ def test_eventos_de_sesion_sin_datos_de_la_persona(monkeypatch):
     assert "Andrés" not in text
     if settings.gemini_api_key:  # en CI no hay key
         assert settings.gemini_api_key not in text
+
+
+def test_sin_saldo_antes_del_setup_queda_consultable(monkeypatch):
+    # Fase 0: con el saldo agotado, Gemini cerró al recibir el setup y desde
+    # Render la app no recibió el código; la causa queda en /api/v1/live/status.
+    monkeypatch.setattr(proxy_module, "_last_failure", None)
+    gemini = ClosingGemini(
+        Close(1011, "Your prepayment credits are depleted. Please go to AI Studio")
+    )
+    gemini._incoming = []  # cierra antes del setupComplete
+    monkeypatch.setattr(proxy_module.websockets, "connect", lambda *a, **k: gemini)
+    client = TestClient(app)
+    with client.websocket_connect("/ws/live") as ws:
+        ws.send_text(json.dumps({"type": "start"}))
+        with pytest.raises(WebSocketDisconnect) as exc:
+            ws.receive_text()
+    assert exc.value.code == proxy_module.CLOSE_BILLING
+    assert client.get("/api/v1/live/status").json() == {"cause": "billing"}
+
+
+def test_sin_falla_reciente_el_estado_esta_vacio(monkeypatch):
+    monkeypatch.setattr(proxy_module, "_last_failure", None)
+    assert TestClient(app).get("/api/v1/live/status").json() == {"cause": None}
+    # Una falla vieja (más de 10 minutos) ya no cuenta.
+    monkeypatch.setattr(proxy_module, "_last_failure", (proxy_module.CLOSE_BILLING, -10_000.0))
+    assert proxy_module.last_upstream_failure() is None
