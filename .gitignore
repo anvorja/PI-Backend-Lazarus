@@ -198,3 +198,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Base SQLite local del panel del piloto (en producción, Postgres).
+*.db

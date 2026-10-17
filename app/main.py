@@ -1,15 +1,34 @@
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.api.v1.router import router
 from app.core.config import settings
 from app.core.telemetry import configure_telemetry_logging
+from app.db.session import SessionLocal, init_db
+from app.services.admin_auth import bootstrap_admin
 from app.sockets.live_proxy import live_proxy
+
+_PANEL = Path(__file__).parent / "admin_panel" / "static"
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    # Tablas del control de acceso y primer administrador del panel (HU-044/046).
+    init_db()
+    with SessionLocal() as db:
+        bootstrap_admin(db)
+    yield
 
 
 def create_fastapi_app() -> FastAPI:
     configure_telemetry_logging()
     app = FastAPI(
+        lifespan=lifespan,
         title=settings.app_name,
         version=settings.app_version,
         description=(
@@ -35,6 +54,9 @@ def create_fastapi_app() -> FastAPI:
     # Proxy WebSocket de Gemini Live (audio nativo): la app móvil habla con este
     # endpoint y el backend reenvía a Gemini con la API key server-side.
     app.add_api_websocket_route("/ws/live", live_proxy)
+
+    # Panel de administración (HU-046): página estática que usa /api/v1/admin.
+    app.mount("/admin", StaticFiles(directory=_PANEL, html=True), name="admin")
 
     return app
 

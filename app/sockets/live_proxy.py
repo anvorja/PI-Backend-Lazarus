@@ -27,7 +27,10 @@ from websockets.exceptions import ConnectionClosed
 
 from app.core.config import settings
 from app.core.telemetry import new_session_id, session_event
+from app.db.session import SessionLocal
 from app.prompts.companion import PROMPT_VERSION
+from app.services import access
+from app.services.access import CLOSE_DAILY_LIMIT, CLOSE_PAUSED
 from app.services.live_service import build_setup_message, build_upstream_url
 
 # uvicorn.error sí tiene handler configurado, así que estos logs se ven en consola.
@@ -43,7 +46,7 @@ CLOSE_UPSTREAM_ERROR = 4002  # fallo de red o de protocolo con Gemini
 CLOSE_QUOTA_EXCEEDED = 4003  # cuota de la API agotada
 CLOSE_MISCONFIGURED = 4004  # el servidor no tiene API key
 CLOSE_BILLING = 4005  # sin saldo o facturación del proyecto (no se resuelve esperando)
-CLOSE_PAUSED = 4006  # servicio en pausa por el administrador (LIVE_ENABLED=false)
+# 4006–4010: control de acceso (servicio en pausa, dispositivo y panel).
 
 _QUOTA_MARKERS = ("quota", "exhausted", "resource_exhausted", "429", "rate limit")
 # Antes que la cuota: "credits are depleted" no se arregla reintentando más tarde;
@@ -151,6 +154,12 @@ def last_upstream_failure() -> str | None:
     sesión terminó así hace poco; si no, None."""
     if not settings.live_enabled:
         return "paused"
+    try:
+        with SessionLocal() as db:
+            if not access.service_open(db, access.utcnow()):
+                return "paused"
+    except Exception:  # noqa: BLE001 — sin base, solo cuenta LIVE_ENABLED
+        pass
     if _last_failure is None:
         return None
     code, at = _last_failure
@@ -205,6 +214,76 @@ async def live_proxy(client: WebSocket) -> None:
         await client.close(code=CLOSE_PAUSED, reason="paused")
         return
 
+    # Control de acceso (HU-044): horario, dispositivo aprobado y minutos del día.
+    ip = _client_ip(client)
+    try:
+        granted = await asyncio.to_thread(_grant, start.get("deviceToken"), ip)
+    except Exception as exc:  # noqa: BLE001 — sin base no se bloquea el piloto
+        logger.error("Live: control de acceso no disponible (%s)", type(exc).__name__)
+        granted = (None, None, None, None)
+    device_id, refuse, record_id, remaining = granted
+    if refuse is not None:
+        logger.info("Live: sesión rechazada por el control de acceso (%s)", refuse)
+        await client.close(code=refuse, reason=_REFUSE_REASONS.get(refuse, "refused"))
+        return
+    if device_id is not None:
+        access.register_active(device_id, client)
+    stats: dict = {"from_app": 0, "from_gemini": 0, "close_code": None}
+    try:
+        await _run_session(client, start, stats, remaining)
+    finally:
+        if device_id is not None:
+            access.unregister_active(device_id, client)
+            code = stats.get("close_code")
+            if access.closed_by_admin(device_id, client):
+                code = access.CLOSE_BY_ADMIN
+            # Síncrono: si la tarea se cancela al cerrar, un await aquí se
+            # cancelaría también y la sesión quedaría sin cierre ni duración.
+            with contextlib.suppress(Exception):
+                _finish(record_id, code)
+
+
+_REFUSE_REASONS = {
+    access.CLOSE_PAUSED: "paused",
+    access.CLOSE_DEVICE_PENDING: "device_pending",
+    access.CLOSE_DEVICE_DISABLED: "device_disabled",
+    access.CLOSE_DAILY_LIMIT: "daily_limit",
+}
+
+
+def _client_ip(client: WebSocket) -> str:
+    # Render pone la IP real en X-Forwarded-For.
+    forwarded = client.headers.get("x-forwarded-for", "")
+    if forwarded:
+        return forwarded.split(",")[0].strip()[:64]
+    return (client.client.host if client.client else "")[:64]
+
+
+def _grant(token: str | None, ip: str):
+    """(device_id, código de rechazo, id del registro de sesión, segundos restantes)."""
+    now = access.utcnow()
+    with SessionLocal() as db:
+        device, refuse = access.check_access(db, token, now)
+        if device is not None:
+            access.touch(db, device, ip, now)
+        if refuse is not None or device is None:
+            return (device.id if device else None, refuse, None, None)
+        remaining = access.remaining_seconds(db, device, now)
+        record = access.start_session(db, device.id, ip, now)
+        return (device.id, None, record, remaining)
+
+
+def _finish(record_id: int | None, code: int | None) -> None:
+    if record_id is None:
+        return
+    with SessionLocal() as db:
+        access.end_session(db, record_id, code, access.utcnow())
+
+
+async def _run_session(
+    client: WebSocket, start: dict, stats: dict, remaining: float | None
+) -> None:
+    """Abre Gemini y reenvía en ambos sentidos hasta que alguien cierre."""
     language = start.get("language") or settings.gemini_live_language
     voice = start.get("voice")
     assistant_name = start.get("assistantName")
@@ -219,7 +298,6 @@ async def live_proxy(client: WebSocket) -> None:
 
     session_id = new_session_id()
     started = time.monotonic()
-    stats: dict = {"from_app": 0, "from_gemini": 0, "close_code": None}
 
     # 2. Abrir upstream a Gemini y enviar el setup.
     try:
@@ -267,10 +345,13 @@ async def live_proxy(client: WebSocket) -> None:
 
             # 3. Pipe bidireccional hasta que cualquier lado cierre.
             limit = asyncio.create_task(_session_limit(settings.gemini_live_max_session_s))
+            # Minutos del día del teléfono (HU-044): al acabarse, se cierra.
+            daily = asyncio.create_task(_session_limit(remaining if remaining is not None else 0))
             tasks = [
                 asyncio.create_task(_client_to_gemini(client, gemini, stats)),
                 asyncio.create_task(_gemini_to_client(client, gemini, stats)),
                 limit,
+                daily,
             ]
             done, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
             for task in pending:
@@ -280,6 +361,13 @@ async def live_proxy(client: WebSocket) -> None:
             for task in tasks:
                 with contextlib.suppress(asyncio.CancelledError, ConnectionClosed):
                     await task
+            if daily in done:
+                logger.info("Live: se acabaron los minutos del día del dispositivo")
+                stats["close_code"] = CLOSE_DAILY_LIMIT
+                _end(session_id, started, stats)
+                await gemini.close()
+                await _close_client(client, CLOSE_DAILY_LIMIT, "daily_limit")
+                return
             if limit in done:
                 # Mismo aviso que cuando Gemini termina la sesión por su cuenta.
                 logger.info("Live: se cumplió la duración máxima de la sesión")
