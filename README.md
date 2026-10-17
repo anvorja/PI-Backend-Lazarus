@@ -103,7 +103,7 @@ transcripciones, el nombre de la persona ni la API key.
 
 ## Panel del piloto y control de acceso (HU-043 a HU-046)
 
-El mismo backend sirve un panel web en **`/admin`** para el coordinador de las pruebas:
+El backend expone la API del panel en **`/api/v1/admin/*`**. La interfaz vive aparte, en `devices-laza-admin-ui` (React y TypeScript, publicada en Netlify), que reenvía `/api/*` a este backend con un proxy: para el navegador es el mismo origen, así que la cookie del refresh viaja con `SameSite=Strict` y no hace falta CORS.
 
 - **Servicio:** interruptor general y horario de las jornadas (hora de Colombia). `LIVE_ENABLED=false` en Render manda sobre todo y no deja abrir ninguna sesión.
 - **Dispositivos:** cada teléfono se registra solo la primera vez y queda pendiente. Desde el panel se aprueba, se nombra con un seudónimo, se le pone un límite de minutos por día, se le piden los logs, se le cierra la sesión o se deshabilita.
