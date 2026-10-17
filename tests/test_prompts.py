@@ -562,3 +562,14 @@ def test_las_funciones_no_se_narran(language, screen_locked):
     # Va justo después de la identidad, antes de las demás reglas.
     assert prompt.index(rule) < prompt.index(c._COMMANDS_EXTRA[language])
     assert "'pending'" in rule and "'unavailable'" in rule
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+def test_con_talkback_los_gestos_son_tocar_dos_veces(language):
+    # HU-023: con TalkBack un toque solo enfoca; la app avisa al iniciar.
+    rule = c._SCREEN_READER[language]
+    assert rule in c.get_live_system_prompt(language, screen_reader=True)
+    assert rule not in c.get_live_system_prompt(language)
+    # También en la sesión abierta con la pantalla bloqueada.
+    assert rule in c.get_live_system_prompt(language, screen_locked=True, screen_reader=True)
+    assert "TalkBack" in rule

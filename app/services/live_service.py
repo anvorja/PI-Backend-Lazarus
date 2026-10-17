@@ -363,6 +363,7 @@ def build_setup_message(
     describing: bool = True,
     camera: bool = True,
     screen_locked: bool = False,
+    screen_reader: bool = False,
 ) -> dict:
     """Construye el primer mensaje `setup` (BidiGenerateContentSetup) para Gemini.
 
@@ -379,6 +380,7 @@ def build_setup_message(
         describing=describing,
         camera=camera,
         screen_locked=screen_locked,
+        screen_reader=screen_reader,
     )
 
     return {

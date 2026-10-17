@@ -269,6 +269,16 @@ def test_con_la_pantalla_bloqueada_el_setup_pide_sesion_sin_imagenes(fake_gemini
     assert prompt.endswith(companion._SCREEN_LOCKED_SESSION["es"])
 
 
+def test_con_talkback_el_setup_pide_los_gestos_del_lector(fake_gemini):
+    # HU-023: la app avisa al iniciar que TalkBack está activo.
+    with TestClient(app).websocket_connect("/ws/live") as ws:
+        ws.send_text(json.dumps({"type": "start", "language": "es", "screenReader": True}))
+        ws.receive_text()
+
+    prompt = json.loads(fake_gemini.sent[0])["setup"]["system_instruction"]["parts"][0]["text"]
+    assert prompt.endswith(companion._SCREEN_READER["es"])
+
+
 def test_eventos_de_sesion_sin_datos_de_la_persona(monkeypatch):
     # HU-015: inicio y fin de sesión en JSON, sin el nombre de la persona ni la key.
     events: list[tuple[str, dict]] = []

@@ -2,7 +2,7 @@
 
 # Versión del prompt de sistema. Cada cambio de comportamiento del prompt sube la
 # versión y agrega un bloque en `docs/prompts/companion.md` con fecha y motivo.
-PROMPT_VERSION = "1.22.0"
+PROMPT_VERSION = "1.23.0"
 
 SUPPORTED_LANGUAGES: tuple[str, ...] = ("es", "en", "fr", "pt", "it")
 DEFAULT_LANGUAGE = "es"
@@ -1597,6 +1597,42 @@ _SOS: dict[str, str] = {
 }
 
 
+# HU-023: con TalkBack un toque solo enfoca; los gestos son tocar dos veces y tocar
+# dos veces y mantener. La app avisa al iniciar si el lector de pantalla está activo.
+_SCREEN_READER: dict[str, str] = {
+    "es": (
+        "LECTOR DE PANTALLA: la persona usa TalkBack, y con TalkBack un toque solo "
+        "enfoca. Cuando le indiques un gesto, di 'toca dos veces la pantalla' en "
+        "lugar de 'toca la pantalla', y 'toca dos veces y mantén presionada la "
+        "pantalla' en lugar de 'mantén presionada la pantalla'."
+    ),
+    "en": (
+        "SCREEN READER: the person uses TalkBack, and with TalkBack a single tap only "
+        "moves the focus. When you tell them a gesture, say 'double-tap the screen' "
+        "instead of 'tap the screen', and 'double-tap and hold the screen' instead of "
+        "'press and hold the screen'."
+    ),
+    "fr": (
+        "LECTEUR D'ÉCRAN : la personne utilise TalkBack, et avec TalkBack un seul "
+        "toucher ne fait que déplacer le focus. Quand tu lui indiques un geste, dis "
+        "'touche deux fois l'écran' au lieu de 'touche l'écran', et 'touche deux fois "
+        "l'écran et maintiens-le appuyé' au lieu de 'maintiens l'écran appuyé'."
+    ),
+    "pt": (
+        "LEITOR DE TELA: a pessoa usa o TalkBack, e com o TalkBack um toque só move o "
+        "foco. Quando indicar um gesto, diga 'toque duas vezes na tela' em vez de "
+        "'toque na tela', e 'toque duas vezes e mantenha a tela pressionada' em vez "
+        "de 'mantenha a tela pressionada'."
+    ),
+    "it": (
+        "LETTORE DI SCHERMO: la persona usa TalkBack, e con TalkBack un tocco sposta "
+        "solo il focus. Quando le indichi un gesto, di' 'tocca due volte lo schermo' "
+        "invece di 'tocca lo schermo', e 'tocca due volte e tieni premuto lo "
+        "schermo' invece di 'tieni premuto lo schermo'."
+    ),
+}
+
+
 def get_live_system_prompt(
     language: str,
     assistant_name: str | None = None,
@@ -1605,6 +1641,7 @@ def get_live_system_prompt(
     describing: bool = True,
     camera: bool = True,
     screen_locked: bool = False,
+    screen_reader: bool = False,
 ) -> str:
     """System prompt para la Live API (sesión continua, audio nativo).
 
@@ -1612,7 +1649,8 @@ def get_live_system_prompt(
     conoce) + guía de comandos + alerta SOS + intents de tarea (leer texto,
     describir escena, buscar objeto) + reglas base + modificadores de verbosidad y de pausa de
     descripciones (personalizables por voz) + modo sin cámara si la persona no dio
-    ese permiso + sesión sin imágenes si se abrió con la pantalla bloqueada (HU-017).
+    ese permiso + sesión sin imágenes si se abrió con la pantalla bloqueada (HU-017)
+    + gestos de TalkBack si la persona usa el lector de pantalla (HU-023).
     """
     lang = language if language in _LIVE_IDENTITY else DEFAULT_LANGUAGE
     name = (assistant_name or "").strip() or DEFAULT_ASSISTANT_NAME
@@ -1645,4 +1683,6 @@ def get_live_system_prompt(
         # Sin ninguna imagen: el ciclo de observación no aplica (la app no lo envía).
         parts.remove(_OBSERVE[lang])
         parts.append(_SCREEN_LOCKED_SESSION[lang])
+    if screen_reader:
+        parts.append(_SCREEN_READER[lang])
     return "\n".join(parts)
