@@ -575,3 +575,14 @@ def test_con_talkback_los_gestos_son_tocar_dos_veces(language):
     assert "TalkBack" in rule
     # Su voz llega por el micrófono: no es la persona y nunca dispara el SOS.
     assert "trigger_sos" in rule
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+@pytest.mark.parametrize("screen_locked", [False, True])
+def test_campo_cruces_notas_y_rutas(language, screen_locked):
+    # Fase 0 (17 de octubre): el asistente autorizó cruces ("puedes cruzar"), dijo
+    # "Anotado." sin llamar a add_note y eligió el camino ("puedes ir por ahí").
+    prompt = c.get_live_system_prompt(language, screen_locked=screen_locked)
+    assert c._CROSSING[language] in prompt
+    assert "add_note" in c._NOTES[language] and "'ok'" in c._NOTES[language]
+    assert "guide me" in c._NO_ROUTES["en"]
