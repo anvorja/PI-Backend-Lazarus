@@ -240,6 +240,8 @@ def test_panel_descarga_los_logs_unidos_y_la_latencia(client):
     )
     summary = client.get(f"/api/v1/admin/devices/{device_id}/logs", headers=headers).json()
     assert summary["latency"] == {"count": 3, "median_ms": 2200, "p90_ms": 3100}
+    listed = client.get("/api/v1/admin/devices", headers=headers).json()
+    assert next(d for d in listed if d["id"] == device_id)["latency_median_ms"] == 2200
     r = client.get(f"/api/v1/admin/devices/{device_id}/logs.zip", headers=headers)
     assert "Participante-2" in r.headers["content-disposition"]
     with zipfile.ZipFile(io.BytesIO(r.content)) as z:

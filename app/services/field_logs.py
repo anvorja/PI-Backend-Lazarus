@@ -74,6 +74,36 @@ def as_zip(files: dict[str, bytes]) -> bytes:
     return buffer.getvalue()
 
 
+# Mediana por dispositivo, recalculada solo cuando sube telemetría nueva.
+_median_cache: dict[int, tuple[int, int | None]] = {}
+
+
+def latency_median(db: Session, device_id: int) -> int | None:
+    """Mediana de la latencia voz a voz (ms) del teléfono, para la lista."""
+    last = db.scalar(
+        select(LogUpload.id)
+        .where(LogUpload.device_id == device_id, LogUpload.filename.like("telemetry%"))
+        .order_by(LogUpload.id.desc())
+        .limit(1)
+    )
+    if last is None:
+        return None
+    cached = _median_cache.get(device_id)
+    if cached and cached[0] == last:
+        return cached[1]
+    rows = db.scalars(
+        select(LogUpload)
+        .where(LogUpload.device_id == device_id, LogUpload.filename.like("telemetry%"))
+        .order_by(LogUpload.created_at, LogUpload.id)
+    )
+    files: dict[str, list[bytes]] = {}
+    for row in rows:
+        files.setdefault(row.filename, []).append(gzip.decompress(row.content))
+    median = latency({k: b"".join(v) for k, v in files.items()})["median_ms"]
+    _median_cache[device_id] = (last, median)
+    return median
+
+
 def latency(files: dict[str, bytes]) -> dict:
     """Latencia voz a voz del dispositivo, desde su telemetría subida."""
     values: list[int] = []
