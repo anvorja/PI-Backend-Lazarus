@@ -2,7 +2,7 @@
 
 # Versión del prompt de sistema. Cada cambio de comportamiento del prompt sube la
 # versión y agrega un bloque en `docs/prompts/companion.md` con fecha y motivo.
-PROMPT_VERSION = "1.23.0"
+PROMPT_VERSION = "1.24.0"
 
 SUPPORTED_LANGUAGES: tuple[str, ...] = ("es", "en", "fr", "pt", "it")
 DEFAULT_LANGUAGE = "es"
@@ -1604,31 +1604,58 @@ _SCREEN_READER: dict[str, str] = {
         "LECTOR DE PANTALLA: la persona usa TalkBack, y con TalkBack un toque solo "
         "enfoca. Cuando le indiques un gesto, di 'toca dos veces la pantalla' en "
         "lugar de 'toca la pantalla', y 'toca dos veces y mantén presionada la "
-        "pantalla' en lugar de 'mantén presionada la pantalla'."
+        "pantalla' en lugar de 'mantén presionada la pantalla'. TalkBack también "
+        "habla en voz alta y su voz puede llegarte por el micrófono: frases como "
+        "'toca dos veces para…', 'mantén pulsado para…', 'Asistente escuchando' o "
+        "'Detener asistente' las dice el lector de pantalla, no la persona. "
+        "Ignóralas: no las respondas, no las comentes y NUNCA llames a trigger_sos "
+        "por ellas; solo cuenta lo que la persona pide con sus palabras."
     ),
     "en": (
         "SCREEN READER: the person uses TalkBack, and with TalkBack a single tap only "
         "moves the focus. When you tell them a gesture, say 'double-tap the screen' "
         "instead of 'tap the screen', and 'double-tap and hold the screen' instead of "
-        "'press and hold the screen'."
+        "'press and hold the screen'. TalkBack also speaks out loud and its voice "
+        "may reach you through the microphone: phrases like 'double-tap to…', "
+        "'double-tap and hold to…', 'Asistente escuchando' or 'Detener asistente' "
+        "are said by the screen reader, not the person. Ignore them: do not answer "
+        "or comment on them and NEVER call trigger_sos because of them; only what "
+        "the person asks in their own words counts."
     ),
     "fr": (
         "LECTEUR D'ÉCRAN : la personne utilise TalkBack, et avec TalkBack un seul "
         "toucher ne fait que déplacer le focus. Quand tu lui indiques un geste, dis "
         "'touche deux fois l'écran' au lieu de 'touche l'écran', et 'touche deux fois "
-        "l'écran et maintiens-le appuyé' au lieu de 'maintiens l'écran appuyé'."
+        "l'écran et maintiens-le appuyé' au lieu de 'maintiens l'écran appuyé'. "
+        "TalkBack parle aussi à voix haute et sa voix peut t'arriver par le micro : "
+        "des phrases comme 'appuyez deux fois pour…', 'appuyez deux fois de manière "
+        "prolongée pour…', 'Asistente escuchando' ou 'Detener asistente' sont dites "
+        "par le lecteur d'écran, pas par la personne. Ignore-les : n'y réponds pas, "
+        "ne les commente pas et n'appelle JAMAIS trigger_sos à cause d'elles ; seul "
+        "compte ce que la personne demande avec ses propres mots."
     ),
     "pt": (
         "LEITOR DE TELA: a pessoa usa o TalkBack, e com o TalkBack um toque só move o "
         "foco. Quando indicar um gesto, diga 'toque duas vezes na tela' em vez de "
         "'toque na tela', e 'toque duas vezes e mantenha a tela pressionada' em vez "
-        "de 'mantenha a tela pressionada'."
+        "de 'mantenha a tela pressionada'. O TalkBack também fala em voz alta e a "
+        "voz dele pode chegar a você pelo microfone: frases como 'toque duas vezes "
+        "para…', 'toque duas vezes e mantenha pressionado para…', 'Asistente "
+        "escuchando' ou 'Detener asistente' são ditas pelo leitor de tela, não pela "
+        "pessoa. Ignore-as: não responda, não comente e NUNCA chame trigger_sos por "
+        "causa delas; só vale o que a pessoa pede com as próprias palavras."
     ),
     "it": (
         "LETTORE DI SCHERMO: la persona usa TalkBack, e con TalkBack un tocco sposta "
         "solo il focus. Quando le indichi un gesto, di' 'tocca due volte lo schermo' "
         "invece di 'tocca lo schermo', e 'tocca due volte e tieni premuto lo "
-        "schermo' invece di 'tieni premuto lo schermo'."
+        "schermo' invece di 'tieni premuto lo schermo'. TalkBack parla anche ad "
+        "alta voce e la sua voce può arrivarti dal microfono: frasi come 'tocca due "
+        "volte per…', 'tocca due volte e tieni premuto per…', 'Asistente "
+        "escuchando' o 'Detener asistente' le dice il lettore di schermo, non la "
+        "persona. Ignorale: non rispondere, non commentarle e non chiamare MAI "
+        "trigger_sos per loro; conta solo ciò che la persona chiede con le sue "
+        "parole."
     ),
 }
 
