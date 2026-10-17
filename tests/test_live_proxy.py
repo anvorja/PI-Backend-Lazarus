@@ -329,3 +329,20 @@ def test_sin_falla_reciente_el_estado_esta_vacio(monkeypatch):
     # Una falla vieja (más de 10 minutos) ya no cuenta.
     monkeypatch.setattr(proxy_module, "_last_failure", (proxy_module.CLOSE_BILLING, -10_000.0))
     assert proxy_module.last_upstream_failure() is None
+
+
+def test_servicio_en_pausa_rechaza_sin_abrir_gemini(monkeypatch):
+    # Fase 0 del control de acceso: con LIVE_ENABLED=false no se gasta saldo.
+    monkeypatch.setattr(proxy_module.settings, "live_enabled", False)
+
+    def no_gemini(*a, **k):
+        raise AssertionError("no debe conectarse a Gemini")
+
+    monkeypatch.setattr(proxy_module.websockets, "connect", no_gemini)
+    client = TestClient(app)
+    with client.websocket_connect("/ws/live") as ws:
+        ws.send_text(json.dumps({"type": "start"}))
+        with pytest.raises(WebSocketDisconnect) as exc:
+            ws.receive_text()
+    assert exc.value.code == proxy_module.CLOSE_PAUSED
+    assert client.get("/api/v1/live/status").json() == {"cause": "paused"}

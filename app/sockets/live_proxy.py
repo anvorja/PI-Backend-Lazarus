@@ -43,6 +43,7 @@ CLOSE_UPSTREAM_ERROR = 4002  # fallo de red o de protocolo con Gemini
 CLOSE_QUOTA_EXCEEDED = 4003  # cuota de la API agotada
 CLOSE_MISCONFIGURED = 4004  # el servidor no tiene API key
 CLOSE_BILLING = 4005  # sin saldo o facturación del proyecto (no se resuelve esperando)
+CLOSE_PAUSED = 4006  # servicio en pausa por el administrador (LIVE_ENABLED=false)
 
 _QUOTA_MARKERS = ("quota", "exhausted", "resource_exhausted", "429", "rate limit")
 # Antes que la cuota: "credits are depleted" no se arregla reintentando más tarde;
@@ -146,7 +147,10 @@ _last_failure: tuple[int, float] | None = None
 
 
 def last_upstream_failure() -> str | None:
-    """'billing' o 'quota' si la última sesión terminó así hace poco; si no, None."""
+    """'paused' si el servicio está en pausa; 'billing' o 'quota' si la última
+    sesión terminó así hace poco; si no, None."""
+    if not settings.live_enabled:
+        return "paused"
     if _last_failure is None:
         return None
     code, at = _last_failure
@@ -193,6 +197,12 @@ async def live_proxy(client: WebSocket) -> None:
 
     if start.get("type") != "start":
         await client.close(code=1008, reason="Se esperaba {type:'start'}")
+        return
+
+    # Servicio en pausa: se rechaza antes de abrir Gemini, sin gastar saldo.
+    if not settings.live_enabled:
+        logger.info("Live: servicio en pausa (LIVE_ENABLED=false), sesión rechazada")
+        await client.close(code=CLOSE_PAUSED, reason="paused")
         return
 
     language = start.get("language") or settings.gemini_live_language

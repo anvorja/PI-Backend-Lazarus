@@ -23,6 +23,10 @@ class Settings(BaseSettings):
     # Gemini). Al cumplirse, la app recibe el cierre 4001 y retoma con un toque.
     # Un valor corto (p. ej. 60) sirve para probar ese flujo en el teléfono.
     gemini_live_max_session_s: float = 0
+    # Interruptor del servicio: con LIVE_ENABLED=false el proxy rechaza las
+    # sesiones nuevas sin abrir Gemini (no gasta saldo) y la app dice que Lazarus
+    # está en pausa. Se cambia en las variables de entorno de Render.
+    live_enabled: bool = True
     # v1alpha: necesario para `proactivity` (audio proactivo) y affective dialog.
     # v1beta rechaza el campo `proactivity` con close 1007.
     gemini_live_url: str = (

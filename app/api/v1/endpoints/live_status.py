@@ -7,7 +7,7 @@ router = APIRouter()
 
 
 class LiveStatusResponse(BaseModel):
-    # "billing" (sin saldo), "quota" (cuota agotada) o None.
+    # "paused" (en pausa), "billing" (sin saldo), "quota" (cuota agotada) o None.
     cause: str | None
 
 
