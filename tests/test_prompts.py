@@ -586,3 +586,11 @@ def test_campo_cruces_notas_y_rutas(language, screen_locked):
     assert c._CROSSING[language] in prompt
     assert "add_note" in c._NOTES[language] and "'ok'" in c._NOTES[language]
     assert "guide me" in c._NO_ROUTES["en"]
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+def test_campo_direccion_solo_con_get_location(language):
+    # Participante 2: "Ahora mismo estás en la Carrera 82" sin llamar a get_location
+    # (estaba en la Carrera 100); y "Te avisaré cuando esté en verde para cruzar".
+    assert c._NO_ROUTES[language].count("get_location") >= 2
+    assert "danger" in c._CROSSING["en"] and "promise" in c._CROSSING["en"]
