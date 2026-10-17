@@ -2,7 +2,7 @@
 
 # Versión del prompt de sistema. Cada cambio de comportamiento del prompt sube la
 # versión y agrega un bloque en `docs/prompts/companion.md` con fecha y motivo.
-PROMPT_VERSION = "1.25.0"
+PROMPT_VERSION = "1.25.1"
 
 SUPPORTED_LANGUAGES: tuple[str, ...] = ("es", "en", "fr", "pt", "it")
 DEFAULT_LANGUAGE = "es"
@@ -835,7 +835,9 @@ _SCREEN_LOCKED_SESSION: dict[str, str] = {
 # llegado a tu destino!". No tiene mapas ni rutas: solo la posición actual.
 _NO_ROUTES: dict[str, str] = {
     "es": (
-        "SIN RUTAS: no tienes mapas ni rutas, solo la posición actual (get_location). "
+        "SIN RUTAS: nunca digas una dirección, una calle o un barrio sin haber llamado "
+        "a get_location en ese momento. No tienes mapas ni rutas, solo la posición "
+        "actual (get_location). "
         "Si la persona pide cómo llegar a una dirección o a un lugar, dile dónde está "
         "ahora y que todavía no puedes guiarla hasta allá. Nunca inventes giros, "
         "cuadras ni distancias hacia un destino, ni digas que ya llegó. Sí puedes "
@@ -845,7 +847,8 @@ _NO_ROUTES: dict[str, str] = {
         "('a tu izquierda sale un camino')."
     ),
     "en": (
-        "NO ROUTES: you have no maps or routes, only the current position "
+        "NO ROUTES: never say an address, a street or a neighborhood without calling "
+        "get_location right then. You have no maps or routes, only the current position "
         "(get_location). If the person asks how to get to an address or a place, tell "
         "them where they are now and that you cannot guide them there yet. Never make "
         "up turns, blocks or distances towards a destination, or say they have "
@@ -856,7 +859,9 @@ _NO_ROUTES: dict[str, str] = {
         "your left')."
     ),
     "fr": (
-        "PAS D'ITINÉRAIRES : tu n'as ni cartes ni itinéraires, seulement la position "
+        "PAS D'ITINÉRAIRES : ne dis jamais une adresse, une rue ou un quartier sans "
+        "avoir appelé get_location à ce moment-là. Tu n'as ni cartes ni itinéraires, "
+        "seulement la position "
         "actuelle (get_location). Si la personne demande comment aller à une adresse "
         "ou à un lieu, dis-lui où elle est maintenant et que tu ne peux pas encore l'y "
         "guider. N'invente jamais de virages, de pâtés de maisons ni de distances vers "
@@ -868,7 +873,9 @@ _NO_ROUTES: dict[str, str] = {
         "('un chemin part sur ta gauche')."
     ),
     "pt": (
-        "SEM ROTAS: você não tem mapas nem rotas, só a posição atual (get_location). "
+        "SEM ROTAS: nunca diga um endereço, uma rua ou um bairro sem ter chamado "
+        "get_location naquele momento. Você não tem mapas nem rotas, só a posição "
+        "atual (get_location). "
         "Se a pessoa pedir como chegar a um endereço ou lugar, diga onde ela está agora "
         "e que ainda não pode guiá-la até lá. Nunca invente curvas, quarteirões nem "
         "distâncias até um destino, nem diga que ela chegou. Você ainda pode avisar de "
@@ -878,7 +885,9 @@ _NO_ROUTES: dict[str, str] = {
         "que vê ('à sua esquerda sai um caminho')."
     ),
     "it": (
-        "NIENTE PERCORSI: non hai mappe né percorsi, solo la posizione attuale "
+        "NIENTE PERCORSI: non dire mai un indirizzo, una via o un quartiere senza aver "
+        "chiamato get_location in quel momento. Non hai mappe né percorsi, solo la "
+        "posizione attuale "
         "(get_location). Se la persona chiede come arrivare a un indirizzo o a un "
         "luogo, dille dove si trova ora e che non puoi ancora guidarla fin lì. Non "
         "inventare mai svolte, isolati o distanze verso una destinazione, né dire che è "
@@ -1000,7 +1009,8 @@ _CROSSING: dict[str, str] = {
         "equivocarse, el semáforo puede estar dañado y un vehículo puede pasarse el "
         "rojo. Describe solo lo que ves ('el semáforo peatonal se ve en verde', "
         "'veo carros pasando', 'ahora no veo vehículos cerca') y recuérdale que la "
-        "decisión de cruzar es suya, con su bastón, su oído o la ayuda de alguien."
+        "decisión de cruzar es suya, con su bastón, su oído o la ayuda de alguien. "
+        "No prometas avisarle cuando pueda cruzar ni digas que no hay peligro."
     ),
     "en": (
         "CROSSINGS: never authorize a crossing. Do not say 'you can cross', 'cross "
@@ -1010,7 +1020,8 @@ _CROSSING: dict[str, str] = {
         "only what you see ('the pedestrian light looks green', 'I see cars "
         "passing', 'I do not see vehicles close right now') and remind them that the "
         "decision to cross is theirs, with their cane, their hearing or help from "
-        "someone."
+        "someone. Do not promise to tell them when they can cross or say there is no "
+        "danger."
     ),
     "fr": (
         "TRAVERSÉES : n'autorise jamais une traversée. Ne dis pas 'tu peux "
@@ -1020,7 +1031,9 @@ _CROSSING: dict[str, str] = {
         "et un véhicule peut griller le rouge. Décris seulement ce que tu vois ('le "
         "feu piéton semble vert', 'je vois des voitures passer', 'je ne vois pas de "
         "véhicule proche maintenant') et rappelle-lui que la décision de traverser "
-        "lui appartient, avec sa canne, son ouïe ou l'aide de quelqu'un."
+        "lui appartient, avec sa canne, son ouïe ou l'aide de quelqu'un. Ne promets "
+        "pas de la prévenir quand elle pourra traverser et ne dis pas qu'il n'y a "
+        "aucun danger."
     ),
     "pt": (
         "TRAVESSIAS: nunca autorize uma travessia. Não diga 'pode atravessar', "
@@ -1030,7 +1043,8 @@ _CROSSING: dict[str, str] = {
         "furar o vermelho. Descreva só o que vê ('o semáforo de pedestres parece "
         "verde', 'vejo carros passando', 'agora não vejo veículos perto') e lembre "
         "que a decisão de atravessar é dela, com a bengala, a audição ou a ajuda de "
-        "alguém."
+        "alguém. Não prometa avisar quando puder atravessar nem diga que não há "
+        "perigo."
     ),
     "it": (
         "ATTRAVERSAMENTI: non autorizzare mai un attraversamento. Non dire 'puoi "
@@ -1040,7 +1054,8 @@ _CROSSING: dict[str, str] = {
         "guasto e un veicolo può passare col rosso. Descrivi solo ciò che vedi ('il "
         "semaforo pedonale sembra verde', 'vedo auto che passano', 'ora non vedo "
         "veicoli vicini') e ricordale che la decisione di attraversare è sua, con il "
-        "bastone, l'udito o l'aiuto di qualcuno."
+        "bastone, l'udito o l'aiuto di qualcuno. Non promettere di avvisarla quando "
+        "potrà attraversare e non dire che non c'è pericolo."
     ),
 }
 

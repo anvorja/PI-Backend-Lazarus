@@ -2,6 +2,19 @@
 
 > Registro de versiones del prompt de sistema (`app/prompts/companion.py`). Cada cambio de comportamiento sube `PROMPT_VERSION` y agrega aquí un bloque `## vX.Y.Z — fecha — motivo`, del más reciente al más antiguo. El backend registra la versión en el log al iniciar cada sesión.
 
+## v1.25.1 — 2026-10-17 — Direcciones solo con get_location y sin promesas en los cruces (LAZA-40)
+
+**Motivo:** en la caminata del participante 2 (estación Buitrera → Univalle):
+- Dijo "Ahora mismo estás en la Carrera 82" **sin llamar a `get_location`**; estaba en la
+  Carrera 100.
+- En un cruce prometió "Te avisaré cuando esté en verde para cruzar" y luego dijo
+  "Continúa cruzando, no hay peligro". La v1.25.0 ya prohíbe autorizar cruces.
+
+**Cambio en el prompt (5 idiomas):**
+- SIN RUTAS: nunca decir una dirección, una calle o un barrio sin llamar a `get_location`
+  en ese momento.
+- CRUCES: no prometer avisar cuando se pueda cruzar ni decir que no hay peligro.
+
 ## v1.25.0 — 2026-10-17 — Cruces, notas y caminos tras la primera caminata de la Fase 0 (LAZA-40)
 
 **Motivo:** en la primera caminata con un participante (estación Buitrera → Univalle):
