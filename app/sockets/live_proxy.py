@@ -175,6 +175,8 @@ async def live_proxy(client: WebSocket) -> None:
     camera = start.get("camera", True)  # False: sin permiso de cámara, solo audio
     # True: sesión abierta con la pantalla bloqueada, sin imágenes (HU-017).
     screen_locked = start.get("screenLocked", False)
+    # True: la persona usa TalkBack; los gestos se indican como "toca dos veces" (HU-023).
+    screen_reader = start.get("screenReader", False)
 
     session_id = new_session_id()
     started = time.monotonic()
@@ -199,6 +201,7 @@ async def live_proxy(client: WebSocket) -> None:
                 describing=describing,
                 camera=camera,
                 screen_locked=bool(screen_locked),
+                screen_reader=bool(screen_reader),
             )
             await gemini.send(json.dumps(setup))
             logger.info(
@@ -219,6 +222,7 @@ async def live_proxy(client: WebSocket) -> None:
                 describing=bool(describing),
                 camera=bool(camera),
                 screen_locked=bool(screen_locked),
+                screen_reader=bool(screen_reader),
                 user_name_known=bool(user_name),
             )
 

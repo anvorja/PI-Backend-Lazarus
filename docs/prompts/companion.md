@@ -2,6 +2,22 @@
 
 > Registro de versiones del prompt de sistema (`app/prompts/companion.py`). Cada cambio de comportamiento sube `PROMPT_VERSION` y agrega aquí un bloque `## vX.Y.Z — fecha — motivo`, del más reciente al más antiguo. El backend registra la versión en el log al iniciar cada sesión.
 
+## v1.23.0 — 2026-10-17 — Gestos de TalkBack (LAZA-51 · HU-023)
+
+**Motivo:** con TalkBack un toque solo enfoca: los gestos de la app son tocar dos veces y
+tocar dos veces y mantener. Al pedir silencio total, el asistente decía "toca la
+pantalla para reactivarme", y enseguida TalkBack decía "toca dos veces": dos
+instrucciones distintas para la misma persona.
+
+**Cambio en la app y el backend:** el mensaje de inicio lleva `screenReader: true` cuando
+TalkBack está activo. Los avisos de la app (sin conexión, sin datos, SOS) ya cambian sus
+instrucciones al gesto de TalkBack.
+
+**Cambio en el prompt (5 idiomas):** nuevo bloque LECTOR DE PANTALLA, solo con
+`screenReader`: al indicar un gesto, decir "toca dos veces la pantalla" en lugar de "toca
+la pantalla", y "toca dos veces y mantén presionada la pantalla" en lugar de "mantén
+presionada la pantalla".
+
 ## v1.22.0 — 2026-10-13 — Salidas alternas por la Calle 16 o la Carrera 86 (LAZA-47 · HU-019)
 
 **Motivo:** con la Ruta A inhabilitada, el asistente decía "puedes ir por la calle".
