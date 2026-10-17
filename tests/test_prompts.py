@@ -594,3 +594,14 @@ def test_campo_direccion_solo_con_get_location(language):
     # (estaba en la Carrera 100); y "Te avisaré cuando esté en verde para cruzar".
     assert c._NO_ROUTES[language].count("get_location") >= 2
     assert "danger" in c._CROSSING["en"] and "promise" in c._CROSSING["en"]
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+def test_campo_cruces_al_principio_y_con_las_frases_exactas(language):
+    # Participante 3: aún dijo "puedes cruzar con precaución" y "no hay peligro de
+    # cruzar". La regla va justo después de FUNCIONES EN SILENCIO.
+    prompt = c.get_live_system_prompt(language)
+    rule = c._CROSSING[language]
+    assert prompt.index(rule) < prompt.index(c._COMMANDS_EXTRA[language])
+    assert "puedes cruzar con precaución" in c._CROSSING["es"]
+    assert "no hay peligro" in c._CROSSING["es"]
