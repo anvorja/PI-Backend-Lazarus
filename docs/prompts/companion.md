@@ -2,6 +2,14 @@
 
 > Registro de versiones del prompt de sistema (`app/prompts/companion.py`). Cada cambio de comportamiento sube `PROMPT_VERSION` y agrega aquí un bloque `## vX.Y.Z — fecha — motivo`, del más reciente al más antiguo. El backend registra la versión en el log al iniciar cada sesión.
 
+## v1.26.1 — 2026-10-17 — No narrar varias funciones a la vez (LAZA-40)
+
+**Motivo:** en la segunda caminata (participante 3), al pedir "ubicación, GPS y brújula", el
+asistente llamó a tres funciones y dijo "Ahora consulto la ubicación, la hora y la brújula".
+
+**Cambio en el prompt (5 idiomas), bloque FUNCIONES EN SILENCIO:** prohíbe también "ahora
+consulto…", "déjame ver" y anunciar funciones aunque se llamen varias a la vez.
+
 ## v1.26.0 — 2026-10-17 — Regla de cruces al principio del prompt (LAZA-40)
 
 **Motivo:** en la segunda caminata (participante 3), la v1.25 funcionó casi siempre: "Aunque

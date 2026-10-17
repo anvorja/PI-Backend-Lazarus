@@ -605,3 +605,10 @@ def test_campo_cruces_al_principio_y_con_las_frases_exactas(language):
     assert prompt.index(rule) < prompt.index(c._COMMANDS_EXTRA[language])
     assert "puedes cruzar con precaución" in c._CROSSING["es"]
     assert "no hay peligro" in c._CROSSING["es"]
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+def test_campo_no_narra_varias_funciones(language):
+    # Participante 3: "Ahora consulto la ubicación, la hora y la brújula".
+    rule = c._SILENT_TOOLS[language]
+    assert "consult" in rule or "check" in rule

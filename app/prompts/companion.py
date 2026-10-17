@@ -2,7 +2,7 @@
 
 # Versión del prompt de sistema. Cada cambio de comportamiento del prompt sube la
 # versión y agrega un bloque en `docs/prompts/companion.md` con fecha y motivo.
-PROMPT_VERSION = "1.26.0"
+PROMPT_VERSION = "1.26.1"
 
 SUPPORTED_LANGUAGES: tuple[str, ...] = ("es", "en", "fr", "pt", "it")
 DEFAULT_LANGUAGE = "es"
@@ -215,7 +215,8 @@ _SILENT_TOOLS: dict[str, str] = {
         "FUNCIONES EN SILENCIO: tus funciones son internas de la aplicación y la "
         "persona no debe enterarse de ellas. Llámalas sin anunciarlo: antes de "
         "llamar una función no digas nada. Nunca digas 'llamando a la función', "
-        "'consultando', 'voy a revisar', 'reportando' ni el nombre de una función, "
+        "'consultando', 'ahora consulto…', 'voy a revisar', 'déjame ver', 'reportando' "
+        "ni el nombre de una función, aunque llames varias a la vez, "
         "y no repitas palabras del resultado como 'ok', 'pending' o 'unavailable'. "
         "Habla solo después del resultado, con naturalidad, como si lo supieras tú."
     ),
@@ -223,7 +224,8 @@ _SILENT_TOOLS: dict[str, str] = {
         "SILENT FUNCTIONS: your functions are internal to the app and the person "
         "must not hear about them. Call them without announcing it: say nothing "
         "before calling a function. Never say 'calling the function', 'checking', "
-        "'let me look that up', 'reporting' or a function name, and do not repeat "
+        "'now I'll check…', 'let me look that up', 'reporting' or a function name, "
+        "even when you call several at once, and do not repeat "
         "words of the result such as 'ok', 'pending' or 'unavailable'. Speak only "
         "after the result, naturally, as if you knew it yourself."
     ),
@@ -231,7 +233,8 @@ _SILENT_TOOLS: dict[str, str] = {
         "FONCTIONS EN SILENCE : tes fonctions sont internes à l'application et la "
         "personne ne doit pas les entendre. Appelle-les sans l'annoncer : ne dis "
         "rien avant d'appeler une fonction. Ne dis jamais 'j'appelle la fonction', "
-        "'je vérifie', 'je signale' ni le nom d'une fonction, et ne répète pas les "
+        "'je vérifie', 'maintenant je consulte…', 'je signale' ni le nom d'une "
+        "fonction, même si tu en appelles plusieurs à la fois, et ne répète pas les "
         "mots du résultat comme 'ok', 'pending' ou 'unavailable'. Parle seulement "
         "après le résultat, naturellement, comme si tu le savais toi-même."
     ),
@@ -239,7 +242,8 @@ _SILENT_TOOLS: dict[str, str] = {
         "FUNÇÕES EM SILÊNCIO: suas funções são internas do aplicativo e a pessoa "
         "não deve ouvir sobre elas. Chame-as sem anunciar: não diga nada antes de "
         "chamar uma função. Nunca diga 'chamando a função', 'consultando', 'vou "
-        "verificar', 'reportando' nem o nome de uma função, e não repita palavras "
+        "verificar', 'agora consulto…', 'reportando' nem o nome de uma função, "
+        "mesmo chamando várias de uma vez, e não repita palavras "
         "do resultado como 'ok', 'pending' ou 'unavailable'. Fale só depois do "
         "resultado, com naturalidade, como se você mesmo soubesse."
     ),
@@ -247,7 +251,8 @@ _SILENT_TOOLS: dict[str, str] = {
         "FUNZIONI IN SILENZIO: le tue funzioni sono interne all'app e la persona "
         "non deve sentirne parlare. Chiamale senza annunciarlo: non dire nulla "
         "prima di chiamare una funzione. Non dire mai 'chiamo la funzione', "
-        "'controllo', 'segnalo' né il nome di una funzione, e non ripetere parole "
+        "'controllo', 'ora consulto…', 'segnalo' né il nome di una funzione, anche "
+        "se ne chiami più di una insieme, e non ripetere parole "
         "del risultato come 'ok', 'pending' o 'unavailable'. Parla solo dopo il "
         "risultato, con naturalezza, come se lo sapessi tu."
     ),
