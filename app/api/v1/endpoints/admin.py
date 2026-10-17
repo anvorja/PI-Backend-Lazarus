@@ -131,6 +131,8 @@ class DeviceOut(BaseModel):
     active: bool
     uploads: int
     last_upload_at: datetime | None
+    # Mediana de la latencia voz a voz (ms) de su telemetría; None sin datos.
+    latency_median_ms: int | None
 
 
 def _device_out(db: Session, device: Device, now: datetime) -> DeviceOut:
@@ -155,6 +157,7 @@ def _device_out(db: Session, device: Device, now: datetime) -> DeviceOut:
         active=device.id in access.active_device_ids(),
         uploads=uploads,
         last_upload_at=last_upload,
+        latency_median_ms=field_logs.latency_median(db, device.id),
     )
 
 
