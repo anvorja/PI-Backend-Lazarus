@@ -2,6 +2,18 @@
 
 > Registro de versiones del prompt de sistema (`app/prompts/companion.py`). Cada cambio de comportamiento sube `PROMPT_VERSION` y agrega aquí un bloque `## vX.Y.Z — fecha — motivo`, del más reciente al más antiguo. El backend registra la versión en el log al iniciar cada sesión.
 
+## v1.24.0 — 2026-10-17 — La voz de TalkBack no es la persona (LAZA-51 · HU-023)
+
+**Motivo:** en la prueba con TalkBack, después de reactivar el silencio total con doble
+toque, TalkBack volvió a leer el elemento enfocado y el micrófono lo captó como si
+hablara la persona: "…reactivar el asistente" y "…pulsado para enviar una alerta SOS".
+El asistente no respondió, pero la frase del SOS podría disparar una alerta falsa.
+
+**Cambio en el prompt (5 idiomas), bloque LECTOR DE PANTALLA:** frases como "toca dos
+veces para…", "mantén pulsado para…", "Asistente escuchando" o "Detener asistente" las
+dice el lector de pantalla, no la persona. El asistente las ignora, no las responde y
+nunca llama a `trigger_sos` por ellas.
+
 ## v1.23.0 — 2026-10-17 — Gestos de TalkBack (LAZA-51 · HU-023)
 
 **Motivo:** con TalkBack un toque solo enfoca: los gestos de la app son tocar dos veces y

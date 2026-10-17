@@ -573,3 +573,5 @@ def test_con_talkback_los_gestos_son_tocar_dos_veces(language):
     # También en la sesión abierta con la pantalla bloqueada.
     assert rule in c.get_live_system_prompt(language, screen_locked=True, screen_reader=True)
     assert "TalkBack" in rule
+    # Su voz llega por el micrófono: no es la persona y nunca dispara el SOS.
+    assert "trigger_sos" in rule
