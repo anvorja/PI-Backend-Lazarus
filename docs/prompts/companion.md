@@ -2,6 +2,24 @@
 
 > Registro de versiones del prompt de sistema (`app/prompts/companion.py`). Cada cambio de comportamiento sube `PROMPT_VERSION` y agrega aquí un bloque `## vX.Y.Z — fecha — motivo`, del más reciente al más antiguo. El backend registra la versión en el log al iniciar cada sesión.
 
+## v1.25.0 — 2026-10-17 — Cruces, notas y caminos tras la primera caminata de la Fase 0 (LAZA-40)
+
+**Motivo:** en la primera caminata con un participante (estación Buitrera → Univalle):
+- El asistente **autorizó cruces**: "Semáforo en verde, puedes cruzar". Con el semáforo
+  peatonal dañado dijo "el semáforo vehicular está en rojo, puedes cruzar". No había
+  ninguna regla sobre cruces.
+- Dijo **"Anotado." cuatro veces sin llamar a `add_note`**: las notas de campo se perdieron.
+- **Eligió el camino** sin conocer la ruta: "A la derecha, a las 3", "A tu izquierda hay un
+  camino que se desvía, puedes ir por ahí", "Sí, vas bien".
+
+**Cambio en el prompt (5 idiomas):**
+- Nuevo bloque CRUCES: nunca autorizar un cruce, aunque el semáforo se vea en verde o la
+  persona lo pregunte. Solo describir lo que se ve y recordar que la decisión es de la
+  persona.
+- NOTAS: siempre llamar a `add_note` y decir "Anotado." solo cuando responda `ok`.
+- SIN RUTAS: ante "guíame" o "¿derecha o izquierda?", no elegir por la persona ni decir
+  "vas bien"; decir que todavía no conoce su ruta y describir lo que ve.
+
 ## v1.24.0 — 2026-10-17 — La voz de TalkBack no es la persona (LAZA-51 · HU-023)
 
 **Motivo:** en la prueba con TalkBack, después de reactivar el silencio total con doble

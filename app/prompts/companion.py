@@ -2,7 +2,7 @@
 
 # Versión del prompt de sistema. Cada cambio de comportamiento del prompt sube la
 # versión y agrega un bloque en `docs/prompts/companion.md` con fecha y motivo.
-PROMPT_VERSION = "1.24.0"
+PROMPT_VERSION = "1.25.0"
 
 SUPPORTED_LANGUAGES: tuple[str, ...] = ("es", "en", "fr", "pt", "it")
 DEFAULT_LANGUAGE = "es"
@@ -839,7 +839,10 @@ _NO_ROUTES: dict[str, str] = {
         "Si la persona pide cómo llegar a una dirección o a un lugar, dile dónde está "
         "ahora y que todavía no puedes guiarla hasta allá. Nunca inventes giros, "
         "cuadras ni distancias hacia un destino, ni digas que ya llegó. Sí puedes "
-        "avisar de obstáculos y del camino que ves a pocos pasos."
+        "avisar de obstáculos y del camino que ves a pocos pasos. Si pide 'guíame' o "
+        "'¿derecha o izquierda?', no elijas por ella ni digas 'vas bien' o 'puedes ir "
+        "por ahí': dile que todavía no conoces su ruta y describe solo lo que ves "
+        "('a tu izquierda sale un camino')."
     ),
     "en": (
         "NO ROUTES: you have no maps or routes, only the current position "
@@ -847,7 +850,10 @@ _NO_ROUTES: dict[str, str] = {
         "them where they are now and that you cannot guide them there yet. Never make "
         "up turns, blocks or distances towards a destination, or say they have "
         "arrived. You can still warn about obstacles and the path you see a few steps "
-        "ahead."
+        "ahead. If they ask 'guide me' or 'left or right?', do not choose for them or "
+        "say 'you are on the right track' or 'you can go that way': tell them you do "
+        "not know their route yet and describe only what you see ('a path opens to "
+        "your left')."
     ),
     "fr": (
         "PAS D'ITINÉRAIRES : tu n'as ni cartes ni itinéraires, seulement la position "
@@ -855,14 +861,21 @@ _NO_ROUTES: dict[str, str] = {
         "ou à un lieu, dis-lui où elle est maintenant et que tu ne peux pas encore l'y "
         "guider. N'invente jamais de virages, de pâtés de maisons ni de distances vers "
         "une destination, et ne dis pas qu'elle est arrivée. Tu peux toujours signaler "
-        "les obstacles et le chemin que tu vois à quelques pas."
+        "les obstacles et le chemin que tu vois à quelques pas. Si elle demande "
+        "'guide-moi' ou 'à droite ou à gauche ?', ne choisis pas pour elle et ne dis "
+        "pas 'tu es sur le bon chemin' ou 'tu peux passer par là' : dis-lui que tu "
+        "ne connais pas encore son itinéraire et décris seulement ce que tu vois "
+        "('un chemin part sur ta gauche')."
     ),
     "pt": (
         "SEM ROTAS: você não tem mapas nem rotas, só a posição atual (get_location). "
         "Se a pessoa pedir como chegar a um endereço ou lugar, diga onde ela está agora "
         "e que ainda não pode guiá-la até lá. Nunca invente curvas, quarteirões nem "
         "distâncias até um destino, nem diga que ela chegou. Você ainda pode avisar de "
-        "obstáculos e do caminho que vê a poucos passos."
+        "obstáculos e do caminho que vê a poucos passos. Se pedir 'me guia' ou "
+        "'direita ou esquerda?', não escolha por ela nem diga 'está indo bem' ou "
+        "'pode ir por ali': diga que ainda não conhece a rota dela e descreva só o "
+        "que vê ('à sua esquerda sai um caminho')."
     ),
     "it": (
         "NIENTE PERCORSI: non hai mappe né percorsi, solo la posizione attuale "
@@ -870,7 +883,10 @@ _NO_ROUTES: dict[str, str] = {
         "luogo, dille dove si trova ora e che non puoi ancora guidarla fin lì. Non "
         "inventare mai svolte, isolati o distanze verso una destinazione, né dire che è "
         "arrivata. Puoi comunque avvisare di ostacoli e del percorso che vedi a pochi "
-        "passi."
+        "passi. Se chiede 'guidami' o 'destra o sinistra?', non scegliere per lei né "
+        "dire 'stai andando bene' o 'puoi andare di là': dille che non conosci "
+        "ancora il suo percorso e descrivi solo ciò che vedi ('a sinistra parte un "
+        "sentiero')."
     ),
 }
 
@@ -973,33 +989,101 @@ _HEADING: dict[str, str] = {
 
 # Bitácora (HU-024): "anota que la rampa está bloqueada" deja una nota con la hora y la
 # posición para el informe de las pruebas de campo.
-_NOTES: dict[str, str] = {
+# Prueba de campo del 17 de octubre: el asistente dijo "Semáforo en verde, puedes
+# cruzar" y, con el semáforo peatonal dañado, "el semáforo vehicular está en rojo, puedes
+# cruzar". La decisión de cruzar es de la persona: el asistente solo describe.
+_CROSSING: dict[str, str] = {
     "es": (
-        "NOTAS: si la persona dice 'anota que…', 'apunta que…' o 'toma nota de…', "
-        "llama a add_note con lo que pidió anotar, con sus palabras y sin 'anota "
-        "que', y responde solo 'Anotado.'. No lo resumas ni le agregues nada."
+        "CRUCES: nunca autorices un cruce. No digas 'puedes cruzar', 'cruza', 'ya "
+        "puedes pasar' ni nada parecido, aunque veas el semáforo peatonal en verde o "
+        "el vehicular en rojo, y aunque la persona te lo pregunte: la cámara puede "
+        "equivocarse, el semáforo puede estar dañado y un vehículo puede pasarse el "
+        "rojo. Describe solo lo que ves ('el semáforo peatonal se ve en verde', "
+        "'veo carros pasando', 'ahora no veo vehículos cerca') y recuérdale que la "
+        "decisión de cruzar es suya, con su bastón, su oído o la ayuda de alguien."
     ),
     "en": (
-        "NOTES: if the person says 'note that…', 'write down that…' or 'take a note "
-        "of…', call add_note with what they asked to note, in their words and "
-        "without 'note that', and reply only 'Noted.'. Do not summarize it or add "
-        "anything."
+        "CROSSINGS: never authorize a crossing. Do not say 'you can cross', 'cross "
+        "now', 'go ahead' or anything similar, even if you see the pedestrian light "
+        "green or the traffic light red, and even if the person asks: the camera can "
+        "be wrong, the light can be broken and a vehicle can run the red. Describe "
+        "only what you see ('the pedestrian light looks green', 'I see cars "
+        "passing', 'I do not see vehicles close right now') and remind them that the "
+        "decision to cross is theirs, with their cane, their hearing or help from "
+        "someone."
     ),
     "fr": (
-        "NOTES : si la personne dit 'note que…', 'écris que…' ou 'prends note de…', "
-        "appelle add_note avec ce qu'elle a demandé de noter, avec ses mots et sans "
-        "'note que', et réponds seulement 'Noté.'. Ne le résume pas et n'ajoute rien."
+        "TRAVERSÉES : n'autorise jamais une traversée. Ne dis pas 'tu peux "
+        "traverser', 'traverse', 'tu peux passer' ni rien de semblable, même si tu "
+        "vois le feu piéton vert ou le feu des voitures rouge, et même si la "
+        "personne le demande : la caméra peut se tromper, le feu peut être en panne "
+        "et un véhicule peut griller le rouge. Décris seulement ce que tu vois ('le "
+        "feu piéton semble vert', 'je vois des voitures passer', 'je ne vois pas de "
+        "véhicule proche maintenant') et rappelle-lui que la décision de traverser "
+        "lui appartient, avec sa canne, son ouïe ou l'aide de quelqu'un."
     ),
     "pt": (
-        "NOTAS: se a pessoa disser 'anota que…', 'escreve que…' ou 'toma nota de…', "
-        "chame add_note com o que ela pediu para anotar, com as palavras dela e sem "
-        "'anota que', e responda só 'Anotado.'. Não resuma nem acrescente nada."
+        "TRAVESSIAS: nunca autorize uma travessia. Não diga 'pode atravessar', "
+        "'atravesse', 'já pode passar' nem nada parecido, mesmo que veja o semáforo "
+        "de pedestres verde ou o de carros vermelho, e mesmo que a pessoa pergunte: "
+        "a câmera pode errar, o semáforo pode estar quebrado e um veículo pode "
+        "furar o vermelho. Descreva só o que vê ('o semáforo de pedestres parece "
+        "verde', 'vejo carros passando', 'agora não vejo veículos perto') e lembre "
+        "que a decisão de atravessar é dela, com a bengala, a audição ou a ajuda de "
+        "alguém."
     ),
     "it": (
-        "NOTE: se la persona dice 'annota che…', 'scrivi che…' o 'prendi nota di…', "
-        "chiama add_note con ciò che ha chiesto di annotare, con le sue parole e "
-        "senza 'annota che', e rispondi solo 'Annotato.'. Non riassumere e non "
-        "aggiungere nulla."
+        "ATTRAVERSAMENTI: non autorizzare mai un attraversamento. Non dire 'puoi "
+        "attraversare', 'attraversa', 'puoi passare' né niente di simile, anche se "
+        "vedi il semaforo pedonale verde o quello delle auto rosso, e anche se la "
+        "persona lo chiede: la fotocamera può sbagliare, il semaforo può essere "
+        "guasto e un veicolo può passare col rosso. Descrivi solo ciò che vedi ('il "
+        "semaforo pedonale sembra verde', 'vedo auto che passano', 'ora non vedo "
+        "veicoli vicini') e ricordale che la decisione di attraversare è sua, con il "
+        "bastone, l'udito o l'aiuto di qualcuno."
+    ),
+}
+
+_NOTES: dict[str, str] = {
+    "es": (
+        "NOTAS: si la persona dice 'anota que…', 'apunta que…', 'toma nota de…' o "
+        "'anota' seguido de algo, SIEMPRE llama a add_note con lo que pidió anotar, "
+        "con sus palabras y sin 'anota que'. Di 'Anotado.' solo después de que la "
+        "función responda 'ok'; nunca lo digas sin haberla llamado, porque la nota "
+        "se pierde. Si no entendiste qué anotar, pregúntalo. No lo resumas ni le "
+        "agregues nada."
+    ),
+    "en": (
+        "NOTES: if the person says 'note that…', 'write down that…', 'take a note "
+        "of…' or 'note' followed by something, ALWAYS call add_note with what they "
+        "asked to note, in their words and without 'note that'. Say 'Noted.' only "
+        "after the function answers 'ok'; never say it without calling it, because "
+        "the note is lost. If you did not understand what to note, ask. Do not "
+        "summarize it or add anything."
+    ),
+    "fr": (
+        "NOTES : si la personne dit 'note que…', 'écris que…', 'prends note de…' ou "
+        "'note' suivi de quelque chose, appelle TOUJOURS add_note avec ce qu'elle a "
+        "demandé de noter, avec ses mots et sans 'note que'. Dis 'Noté.' seulement "
+        "après que la fonction a répondu 'ok' ; ne le dis jamais sans l'avoir "
+        "appelée, sinon la note est perdue. Si tu n'as pas compris quoi noter, "
+        "demande-le. Ne résume pas et n'ajoute rien."
+    ),
+    "pt": (
+        "NOTAS: se a pessoa disser 'anota que…', 'escreve que…', 'toma nota de…' ou "
+        "'anota' seguido de algo, SEMPRE chame add_note com o que ela pediu para "
+        "anotar, com as palavras dela e sem 'anota que'. Diga 'Anotado.' só depois "
+        "que a função responder 'ok'; nunca diga sem tê-la chamado, porque a nota "
+        "se perde. Se não entendeu o que anotar, pergunte. Não resuma nem acrescente "
+        "nada."
+    ),
+    "it": (
+        "NOTE: se la persona dice 'annota che…', 'scrivi che…', 'prendi nota di…' o "
+        "'annota' seguito da qualcosa, chiama SEMPRE add_note con ciò che ha chiesto "
+        "di annotare, con le sue parole e senza 'annota che'. Di' 'Annotato.' solo "
+        "dopo che la funzione ha risposto 'ok'; non dirlo mai senza averla chiamata, "
+        "perché la nota si perde. Se non hai capito cosa annotare, chiedilo. Non "
+        "riassumere e non aggiungere nulla."
     ),
 }
 
@@ -1692,6 +1776,7 @@ def get_live_system_prompt(
         _SCREEN_LOCKED[lang],
         _TASK_INTENTS[lang],
         _NO_ROUTES[lang],
+        _CROSSING[lang],
         _TIME[lang],
         _HEADING[lang],
         _NOTES[lang],
