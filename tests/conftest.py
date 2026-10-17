@@ -19,7 +19,9 @@ import pytest  # noqa: E402
 def _fresh_db():
     """Cada prueba con las tablas vacías."""
     from app.db.session import Base, engine, init_db
+    from app.services import access
 
     init_db()
     yield
     Base.metadata.drop_all(engine)
+    access._admin_closed_at.clear()

@@ -3,6 +3,7 @@
 import gzip
 import io
 import json
+import time
 import zipfile
 from datetime import datetime, timedelta
 
@@ -131,6 +132,39 @@ def test_el_panel_cierra_el_servicio_para_todos(client, monkeypatch):
         access.put_settings(db, {"service_open": False})
     assert _close_code(client, token, monkeypatch) == access.CLOSE_PAUSED
     assert client.get("/api/v1/live/status").json() == {"cause": "paused"}
+
+
+def test_la_app_sabe_la_causa_aunque_el_cierre_llegue_sin_codigo(client):
+    # Fase 0: el 4010 llegó por Render como un corte sin código y la app
+    # reconectó. Con su token, /live/status le dice la causa una sola vez.
+    token = _register(client)
+
+    def status():
+        r = client.get("/api/v1/live/status", headers={"X-Device-Token": token})
+        return r.json()["cause"]
+
+    assert status() == "device_pending"
+    device_id = _set_device(token, status="approved")
+    assert status() is None
+    access._admin_closed_at[device_id] = time.monotonic()
+    assert status() == "closed_by_admin"
+    assert status() is None  # ya se informó: el próximo corte sí se reintenta
+    _set_device(token, status="disabled")
+    assert status() == "device_disabled"
+    _set_device(token, status="approved", daily_minutes_limit=1)
+    with SessionLocal() as db:
+        now = access.utcnow()
+        db.add(
+            DeviceSession(
+                device_id=device_id,
+                started_at=now - timedelta(minutes=2),
+                ended_at=now,
+                duration_s=120,
+            )
+        )
+        db.commit()
+    assert status() == "daily_limit"
+    assert client.get("/api/v1/live/status").json() == {"cause": None}
 
 
 def test_horario_de_las_jornadas_en_hora_de_colombia():

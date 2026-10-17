@@ -9,6 +9,7 @@ cerrarlas.
 import hashlib
 import json
 import secrets
+import time
 from datetime import UTC, datetime, timedelta
 
 from fastapi import WebSocket
@@ -200,6 +201,18 @@ def active_device_ids() -> set[int]:
 # Sesiones cerradas desde el panel, para registrar la causa al terminar.
 _admin_closed: set[int] = set()
 
+# Cierres del panel por teléfono, para que la app sepa la causa aunque el
+# código 4010 no le llegue: el 17 de octubre llegó a través de Render como un
+# corte sin código y la app reconectó diciendo "Te escucho de nuevo".
+_ADMIN_CLOSE_TTL_S = 120.0
+_admin_closed_at: dict[int, float] = {}
+
+
+def take_admin_close(device_id: int) -> bool:
+    """True una sola vez si el panel cerró la sesión de este teléfono hace poco."""
+    at = _admin_closed_at.pop(device_id, None)
+    return at is not None and time.monotonic() - at <= _ADMIN_CLOSE_TTL_S
+
 
 def closed_by_admin(device_id: int, client: WebSocket) -> bool:
     key = id(client)
@@ -214,6 +227,7 @@ async def close_active(device_id: int) -> bool:
     if client is None:
         return False
     _admin_closed.add(id(client))
+    _admin_closed_at[device_id] = time.monotonic()
     try:
         await client.close(code=CLOSE_BY_ADMIN, reason="closed_by_admin")
     except RuntimeError:
