@@ -136,8 +136,37 @@ async def _gemini_to_client(client: WebSocket, gemini, stats: dict | None = None
     await _close_client(client, CLOSE_UPSTREAM_ENDED, "upstream closed")
 
 
+# Última falla de Gemini que no se arregla reintentando (sin saldo o sin cuota).
+# En la Fase 0 (17 de octubre), con el saldo agotado, el cierre llegó a la app
+# sin código a través de Render y la app solo dijo "no se pudo conectar". La app
+# consulta esta causa en GET /api/v1/live/status cuando la conexión se corta sin
+# código.
+_FAILURE_TTL_S = 600.0
+_last_failure: tuple[int, float] | None = None
+
+
+def last_upstream_failure() -> str | None:
+    """'billing' o 'quota' si la última sesión terminó así hace poco; si no, None."""
+    if _last_failure is None:
+        return None
+    code, at = _last_failure
+    if time.monotonic() - at > _FAILURE_TTL_S:
+        return None
+    return {CLOSE_BILLING: "billing", CLOSE_QUOTA_EXCEEDED: "quota"}.get(code)
+
+
+def _remember_outcome(stats: dict) -> None:
+    global _last_failure
+    code = stats.get("close_code")
+    if code in (CLOSE_BILLING, CLOSE_QUOTA_EXCEEDED):
+        _last_failure = (code, time.monotonic())
+    elif stats.get("from_gemini"):
+        _last_failure = None  # Gemini respondió: ya no hay falla vigente
+
+
 def _end(session_id: str, started: float, stats: dict) -> None:
     """Evento de fin de sesión con su duración, cierre y conteo de mensajes."""
+    _remember_outcome(stats)
     session_event(
         "session_end",
         session_id,
