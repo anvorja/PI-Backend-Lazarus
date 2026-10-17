@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop]
+
+permissions:
+  contents: read
+
+jobs:
+  calidad:
+    name: Lint y pruebas
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar uv y Python 3.12
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Instalar dependencias
+        run: uv sync --all-groups --frozen
+
+      - name: Lint (ruff check)
+        run: uv run ruff check .
+
+      - name: Formato (ruff format)
+        run: uv run ruff format --check .
+
+      - name: Pruebas (pytest)
+        run: uv run python -m pytest -q
+
+  docker:
+    name: Build de la imagen Docker
+    runs-on: ubuntu-latest
+    needs: calidad
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build
+        run: |
+          if [ -f main.py ] && [ -f app/main.py ]; then
+            docker build -t lazarus-backend:ci .
+          else
+            echo "::notice::La app aún no está integrada (entra con LAZA-24); se omite el build."
+          fi

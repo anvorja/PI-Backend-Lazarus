@@ -1,0 +1,416 @@
+"""Helpers para la sesión Gemini Live (audio nativo) sobre la Developer API.
+
+El backend actúa como proxy WebSocket (ver `app/sockets/live_proxy.py`): la
+app móvil habla con este backend y el backend habla con Gemini. La API key viaja
+solo aquí (query param), nunca llega al cliente.
+
+A diferencia de Vertex AI, la Developer API:
+- usa la API key en la URL (`?key=...`), sin Bearer ni ADC;
+- el `setup.model` es `models/<MODEL>` (sin `projects/.../locations/...`).
+"""
+
+from urllib.parse import quote
+
+from app.core.config import settings
+from app.prompts.companion import get_live_system_prompt
+
+
+def build_upstream_url() -> str:
+    """URL del WebSocket de Gemini Live con la API key como query param."""
+    if not settings.gemini_api_key:
+        raise RuntimeError("GEMINI_API_KEY no configurada. Defínela en .env para usar /ws/live.")
+    return f"{settings.gemini_live_url}?key={quote(settings.gemini_api_key)}"
+
+
+# Tools que la persona puede invocar por voz (personalización persistente).
+# Gemini emite un toolCall; la app lo ejecuta (persiste el ajuste) y responde.
+_FUNCTION_DECLARATIONS = [
+    {
+        "name": "set_assistant_name",
+        "description": (
+            "Cambia el nombre con el que el asistente se identifica "
+            "(p. ej. 'Lazarus'). Úsalo cuando la persona pida llamarte de otra "
+            "forma. The new name persists across sessions."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Nuevo nombre del asistente.",
+                },
+            },
+            "required": ["name"],
+        },
+    },
+    {
+        "name": "set_user_name",
+        "description": (
+            "Guarda el nombre de la PERSONA usuaria (no el del asistente). Úsalo "
+            "cuando la persona diga cómo se llama ('me llamo Andrés', 'yo soy "
+            "Andrés'). Persiste entre sesiones."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Nombre de la persona usuaria.",
+                },
+            },
+            "required": ["name"],
+        },
+    },
+    {
+        "name": "set_voice",
+        "description": (
+            "Cambia la VOZ con la que habla el asistente (timbre), distinta del "
+            "nombre. Úsalo cuando la persona pida cambiar tu voz o probar otra. Al "
+            "cambiarla, la sesión se reinicia y la persona oye la nueva voz al "
+            "instante. Persiste entre sesiones."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "voice": {
+                    "type": "string",
+                    "enum": [
+                        "Charon",
+                        "Puck",
+                        "Kore",
+                        "Fenrir",
+                        "Aoede",
+                        "Leda",
+                        "Orus",
+                        "Zephyr",
+                    ],
+                    "description": "Nombre de la voz prebuilt elegida.",
+                },
+            },
+            "required": ["voice"],
+        },
+    },
+    {
+        "name": "set_language",
+        "description": (
+            "Cambia el idioma de la conversación. Úsalo cuando la persona pida "
+            "hablar en otro idioma. Persiste entre sesiones."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "language": {
+                    "type": "string",
+                    "enum": ["es", "en", "fr", "pt", "it"],
+                    "description": "Código ISO del idioma destino.",
+                },
+            },
+            "required": ["language"],
+        },
+    },
+    {
+        "name": "set_verbosity",
+        "description": (
+            "Ajusta cuánto detalle dan las descripciones. 'concise' = frases muy "
+            "cortas; 'detailed' = algo más de contexto. Persiste."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "level": {
+                    "type": "string",
+                    "enum": ["concise", "detailed"],
+                    "description": "Nivel de detalle deseado.",
+                },
+            },
+            "required": ["level"],
+        },
+    },
+    {
+        "name": "set_descriptions",
+        "description": (
+            "Activa o pausa las descripciones automáticas del entorno. Cuando está "
+            "en pausa solo respondes preguntas y alertas de seguridad. Persiste."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean",
+                    "description": "True para describir el entorno; False para pausar.",
+                },
+            },
+            "required": ["enabled"],
+        },
+    },
+    {
+        "name": "set_system_cues",
+        "description": (
+            "Silencia o activa los avisos hablados informativos de la aplicación "
+            "(p. ej. 'Asistente detenido' o 'Reintentando'). Los avisos que explican "
+            "cómo recuperarse de un error suenan siempre. Útil si la persona usa "
+            "lector de pantalla. Persiste."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean",
+                    "description": "True para activar los avisos; False para silenciarlos.",
+                },
+            },
+            "required": ["enabled"],
+        },
+    },
+    {
+        "name": "set_meeting_mode",
+        "description": (
+            "Activa o desactiva el MODO REUNIÓN. Úsalo cuando la persona diga que "
+            "está en una reunión, clase o conversación y quiera que escuches y "
+            "recuerdes lo que se dice pero SIN hablar, salvo que te llame por tu "
+            "nombre. Con enabled=True entras en modo reunión (callado y atento); "
+            "con enabled=False sales y vuelves al modo normal."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean",
+                    "description": (
+                        "True para entrar en modo reunión (silencioso, atento); False para salir."
+                    ),
+                },
+            },
+            "required": ["enabled"],
+        },
+    },
+    {
+        "name": "set_microphone",
+        "description": (
+            "Enciende o apaga el MICRÓFONO, para silencio total y privacidad. Úsalo "
+            "cuando la persona pida silencio total, que no escuches nada o que te "
+            "apagues. Con active=False la app deja de enviar audio y vídeo: no oyes "
+            "ni recuerdas nada hasta que la persona te reactive TOCANDO LA PANTALLA "
+            "(no por voz, porque el micrófono estará apagado). Antes de apagarlo, "
+            "avísale en una frase corta de que toque la pantalla para reactivarte."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean",
+                    "description": (
+                        "False para apagar el micrófono (silencio total); True para reactivarlo."
+                    ),
+                },
+            },
+            "required": ["active"],
+        },
+    },
+    {
+        "name": "get_location",
+        "description": (
+            "Obtiene la ubicación actual de la persona por GPS: dirección "
+            "aproximada (calle y barrio), precisión en metros y si el GPS es "
+            "confiable en este momento. Úsalo cuando pregunte dónde está, en qué "
+            "calle o lugar se encuentra. Si el resultado no es 'ok', la ubicación "
+            "no es confiable o no está disponible y debes decírselo."
+        ),
+        "parameters": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "get_heading",
+        "description": (
+            "Obtiene hacia dónde mira o camina la persona (punto cardinal y grados), "
+            "con la brújula del teléfono o, si camina, con el rumbo del GPS. Úsalo "
+            "cuando diga 'brújula' o pregunte hacia dónde mira o hacia dónde va. Si el "
+            "resultado es 'needs_calibration', pídele mover el teléfono en forma de "
+            "ocho y no des ninguna dirección todavía."
+        ),
+        "parameters": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "add_note",
+        "description": (
+            "Guarda una nota de campo con la hora y la posición actuales, para la "
+            "bitácora de las pruebas. Úsalo cuando la persona diga 'anota que…', "
+            "'apunta que…' o 'toma nota de…'."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "text": {
+                    "type": "string",
+                    "description": (
+                        "Lo que pidió anotar, con sus palabras y sin 'anota que' "
+                        "(p. ej. 'la rampa está bloqueada')."
+                    ),
+                }
+            },
+            "required": ["text"],
+        },
+    },
+    {
+        "name": "get_unicentro_route",
+        "description": (
+            "Dice si ahora se puede pasar por Unicentro (Ruta A) o si hay que buscar "
+            "una salida alterna, por la Calle 16 o la Carrera 86 (Ruta B). "
+            "Lo decide la app con la hora de Colombia y el horario de "
+            "Unicentro; la respuesta no se puede cambiar. Úsalo antes de sugerir o "
+            "aceptar la ruta por Unicentro."
+        ),
+        "parameters": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "set_route_disturbance",
+        "description": (
+            "Reporta (active=true) o levanta (active=false) disturbios en la "
+            "universidad: tropel, disturbios o encapuchados. Con el reporte, la "
+            "salida a Pasoancho por Unicentro (Ruta A) queda inhabilitada el resto "
+            "del día, a cualquier hora. Para levantarlo la app pide confirmación: "
+            "si responde 'pending', pregunta a la persona y vuelve a llamar solo "
+            "si lo confirma."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean",
+                    "description": "true si hay disturbios; false si ya terminaron.",
+                }
+            },
+            "required": ["active"],
+        },
+    },
+    {
+        "name": "get_time",
+        "description": (
+            "Obtiene la hora y la fecha locales del teléfono de la persona (su zona "
+            "horaria). Úsalo cada vez que pregunte qué hora es, qué día o qué fecha "
+            "es hoy. No conoces la hora por tu cuenta: sin esta función la dirías "
+            "mal."
+        ),
+        "parameters": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "set_emergency_contact",
+        "description": (
+            "Guarda el CONTACTO DE EMERGENCIA que recibirá la alerta SOS. Úsalo "
+            "cuando la persona diga 'mi contacto de emergencia es…' con un nombre "
+            "y un número de teléfono. Si falta el número, pídeselo antes de llamar."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Nombre del contacto, p. ej. 'Mamá' o 'Laura'.",
+                },
+                "phone": {
+                    "type": "string",
+                    "description": "Número de teléfono, solo dígitos (p. ej. '3151234567').",
+                },
+            },
+            "required": ["name", "phone"],
+        },
+    },
+    {
+        "name": "trigger_sos",
+        "description": (
+            "Alerta SOS: la app envía un SMS al contacto de emergencia con la "
+            "ubicación. Llámala de inmediato cuando la persona diga 'SOS' o pida "
+            "ayuda urgente, y otra vez si confirma el envío. Sigue lo que diga el "
+            "resultado ('pending', 'sent', 'failed' o 'no_contact')."
+        ),
+        "parameters": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "cancel_sos",
+        "description": (
+            "Cancela la alerta SOS pendiente de confirmación. Úsalo solo si la "
+            "persona dice que no la envíes."
+        ),
+        "parameters": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "call_phone",
+        "description": (
+            "Hace una llamada telefónica: al contacto de emergencia (to='contact') "
+            "o a la línea oficial de emergencias 123 (to='emergency'). Durante la "
+            "llamada el asistente se pausa."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "to": {
+                    "type": "string",
+                    "enum": ["contact", "emergency"],
+                    "description": "'contact' = contacto de emergencia; 'emergency' = línea 123.",
+                },
+            },
+            "required": ["to"],
+        },
+    },
+]
+
+
+def build_setup_message(
+    language: str = "es",
+    voice: str | None = None,
+    assistant_name: str | None = None,
+    user_name: str | None = None,
+    verbosity: str = "concise",
+    describing: bool = True,
+    camera: bool = True,
+    screen_locked: bool = False,
+    screen_reader: bool = False,
+) -> dict:
+    """Construye el primer mensaje `setup` (BidiGenerateContentSetup) para Gemini.
+
+    El system prompt vive server-side (`companion.py`) como única fuente de
+    verdad; la app solo elige idioma, voz, nombre y preferencias de
+    verbosidad/descripción (personalizables por voz, persistentes).
+    """
+    voice_name = voice or settings.gemini_live_voice
+    system_prompt = get_live_system_prompt(
+        language,
+        assistant_name,
+        user_name=user_name,
+        verbosity=verbosity,
+        describing=describing,
+        camera=camera,
+        screen_locked=screen_locked,
+        screen_reader=screen_reader,
+    )
+
+    return {
+        "setup": {
+            "model": f"models/{settings.gemini_live_model}",
+            "generation_config": {
+                "response_modalities": ["AUDIO"],
+                "temperature": 0.3,
+                "speech_config": {
+                    "voice_config": {
+                        "prebuilt_voice_config": {"voice_name": voice_name},
+                    },
+                },
+            },
+            "system_instruction": {
+                "parts": [{"text": system_prompt}],
+            },
+            "tools": [{"function_declarations": _FUNCTION_DECLARATIONS}],
+            # Proactividad: Gemini puede hablar sin esperar al usuario (describe
+            # el entorno por su cuenta). Interrumpible por defecto.
+            "proactivity": {"proactive_audio": True},
+            # Detección automática de voz: cuando la persona empieza a hablar, el
+            # asistente se interrumpe (barge-in).
+            "realtime_input_config": {
+                "automatic_activity_detection": {"disabled": False},
+                "activity_handling": "START_OF_ACTIVITY_INTERRUPTS",
+            },
+            # Transcripción de la voz del usuario y del asistente: la app las
+            # registra en su log como evidencia de lo que se dijo en cada turno.
+            "input_audio_transcription": {},
+            "output_audio_transcription": {},
+        }
+    }
