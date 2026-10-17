@@ -2,7 +2,7 @@
 
 # Versión del prompt de sistema. Cada cambio de comportamiento del prompt sube la
 # versión y agrega un bloque en `docs/prompts/companion.md` con fecha y motivo.
-PROMPT_VERSION = "1.25.1"
+PROMPT_VERSION = "1.26.0"
 
 SUPPORTED_LANGUAGES: tuple[str, ...] = ("es", "en", "fr", "pt", "it")
 DEFAULT_LANGUAGE = "es"
@@ -1003,8 +1003,10 @@ _HEADING: dict[str, str] = {
 # cruzar". La decisión de cruzar es de la persona: el asistente solo describe.
 _CROSSING: dict[str, str] = {
     "es": (
-        "CRUCES: nunca autorices un cruce. No digas 'puedes cruzar', 'cruza', 'ya "
-        "puedes pasar' ni nada parecido, aunque veas el semáforo peatonal en verde o "
+        "CRUCES: nunca autorices un cruce. No digas 'puedes cruzar', 'puedes cruzar "
+        "con precaución', 'cruza', 'ya puedes pasar', 'no hay peligro', 'es seguro' "
+        "ni 'has cruzado correctamente', ni nada parecido, aunque veas el semáforo "
+        "peatonal en verde o "
         "el vehicular en rojo, y aunque la persona te lo pregunte: la cámara puede "
         "equivocarse, el semáforo puede estar dañado y un vehículo puede pasarse el "
         "rojo. Describe solo lo que ves ('el semáforo peatonal se ve en verde', "
@@ -1013,8 +1015,10 @@ _CROSSING: dict[str, str] = {
         "No prometas avisarle cuando pueda cruzar ni digas que no hay peligro."
     ),
     "en": (
-        "CROSSINGS: never authorize a crossing. Do not say 'you can cross', 'cross "
-        "now', 'go ahead' or anything similar, even if you see the pedestrian light "
+        "CROSSINGS: never authorize a crossing. Do not say 'you can cross', 'you can "
+        "cross carefully', 'cross now', 'go ahead', 'there is no danger', 'it is "
+        "safe' or 'you crossed correctly', or anything similar, even if you see the "
+        "pedestrian light "
         "green or the traffic light red, and even if the person asks: the camera can "
         "be wrong, the light can be broken and a vehicle can run the red. Describe "
         "only what you see ('the pedestrian light looks green', 'I see cars "
@@ -1025,7 +1029,8 @@ _CROSSING: dict[str, str] = {
     ),
     "fr": (
         "TRAVERSÉES : n'autorise jamais une traversée. Ne dis pas 'tu peux "
-        "traverser', 'traverse', 'tu peux passer' ni rien de semblable, même si tu "
+        "traverser', 'tu peux traverser prudemment', 'traverse', 'tu peux passer', "
+        "'il n'y a pas de danger', 'c'est sûr' ni rien de semblable, même si tu "
         "vois le feu piéton vert ou le feu des voitures rouge, et même si la "
         "personne le demande : la caméra peut se tromper, le feu peut être en panne "
         "et un véhicule peut griller le rouge. Décris seulement ce que tu vois ('le "
@@ -1037,7 +1042,8 @@ _CROSSING: dict[str, str] = {
     ),
     "pt": (
         "TRAVESSIAS: nunca autorize uma travessia. Não diga 'pode atravessar', "
-        "'atravesse', 'já pode passar' nem nada parecido, mesmo que veja o semáforo "
+        "'pode atravessar com cuidado', 'atravesse', 'já pode passar', 'não há "
+        "perigo', 'é seguro' nem nada parecido, mesmo que veja o semáforo "
         "de pedestres verde ou o de carros vermelho, e mesmo que a pessoa pergunte: "
         "a câmera pode errar, o semáforo pode estar quebrado e um veículo pode "
         "furar o vermelho. Descreva só o que vê ('o semáforo de pedestres parece "
@@ -1048,7 +1054,8 @@ _CROSSING: dict[str, str] = {
     ),
     "it": (
         "ATTRAVERSAMENTI: non autorizzare mai un attraversamento. Non dire 'puoi "
-        "attraversare', 'attraversa', 'puoi passare' né niente di simile, anche se "
+        "attraversare', 'puoi attraversare con prudenza', 'attraversa', 'puoi "
+        "passare', 'non c'è pericolo', 'è sicuro' né niente di simile, anche se "
         "vedi il semaforo pedonale verde o quello delle auto rosso, e anche se la "
         "persona lo chiede: la fotocamera può sbagliare, il semaforo può essere "
         "guasto e un veicolo può passare col rosso. Descrivi solo ciò che vedi ('il "
@@ -1785,13 +1792,13 @@ def get_live_system_prompt(
     parts = [
         _LIVE_IDENTITY[lang].format(name=name),
         _SILENT_TOOLS[lang],
+        _CROSSING[lang],
         _COMMANDS_EXTRA[lang],
         _SOS[lang],
         _OBSERVE[lang],
         _SCREEN_LOCKED[lang],
         _TASK_INTENTS[lang],
         _NO_ROUTES[lang],
-        _CROSSING[lang],
         _TIME[lang],
         _HEADING[lang],
         _NOTES[lang],
