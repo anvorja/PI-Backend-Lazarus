@@ -149,15 +149,31 @@ _FAILURE_TTL_S = 600.0
 _last_failure: tuple[int, float] | None = None
 
 
-def last_upstream_failure() -> str | None:
-    """'paused' si el servicio está en pausa; 'billing' o 'quota' si la última
-    sesión terminó así hace poco; si no, None."""
+_DEVICE_CAUSES = {
+    access.CLOSE_PAUSED: "paused",
+    access.CLOSE_DEVICE_PENDING: "device_pending",
+    access.CLOSE_DEVICE_DISABLED: "device_disabled",
+    access.CLOSE_DAILY_LIMIT: "daily_limit",
+}
+
+
+def last_upstream_failure(device_token: str | None = None) -> str | None:
+    """'paused' si el servicio está en pausa; con el token del teléfono, además
+    'closed_by_admin', 'device_pending', 'device_disabled' o 'daily_limit';
+    'billing' o 'quota' si la última sesión terminó así hace poco; si no, None."""
     if not settings.live_enabled:
         return "paused"
     try:
         with SessionLocal() as db:
-            if not access.service_open(db, access.utcnow()):
+            now = access.utcnow()
+            if not access.service_open(db, now):
                 return "paused"
+            if device_token:
+                device, refuse = access.check_access(db, device_token, now)
+                if device is not None and access.take_admin_close(device.id):
+                    return "closed_by_admin"
+                if refuse is not None:
+                    return _DEVICE_CAUSES.get(refuse)
     except Exception:  # noqa: BLE001 — sin base, solo cuenta LIVE_ENABLED
         pass
     if _last_failure is None:
