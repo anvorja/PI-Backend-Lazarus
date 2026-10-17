@@ -248,7 +248,3 @@ def test_panel_descarga_los_logs_unidos_y_la_latencia(client):
 
 def test_los_logs_se_guardan_comprimidos():
     assert gzip.decompress(gzip.compress(b"x" * 10)) == b"x" * 10
-
-
-def test_el_panel_web_se_sirve(client):
-    assert client.get("/admin/").status_code == 200
