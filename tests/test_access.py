@@ -282,5 +282,27 @@ def test_panel_descarga_los_logs_unidos_y_la_latencia(client):
         assert z.read("notas_campo.csv") == b"hora,nota\n11:02,cebra\n"
 
 
+def test_panel_limpia_los_logs_de_un_telefono_sin_tocar_otros(client):
+    headers = _admin(client)
+    ids = []
+    for _n in range(2):
+        token = _register(client)
+        ids.append(_set_device(token, status="approved"))
+        client.post(
+            "/api/v1/devices/me/logs",
+            headers={"X-Device-Token": token},
+            files=[("files", ("notas_campo.csv", b"hora,nota\n", "text/csv"))],
+        )
+    url = f"/api/v1/admin/devices/{ids[0]}/logs"
+    assert client.delete(url).status_code == 401
+    assert client.delete(url, headers=headers).json() == {"deleted": 1}
+    assert client.get(url, headers=headers).json()["files"] == []
+    assert (
+        len(client.get(f"/api/v1/admin/devices/{ids[1]}/logs", headers=headers).json()["files"])
+        == 1
+    )
+    assert client.delete("/api/v1/admin/devices/999999/logs", headers=headers).status_code == 404
+
+
 def test_los_logs_se_guardan_comprimidos():
     assert gzip.decompress(gzip.compress(b"x" * 10)) == b"x" * 10

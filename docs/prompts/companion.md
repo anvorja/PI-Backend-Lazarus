@@ -2,6 +2,18 @@
 
 > Registro de versiones del prompt de sistema (`app/prompts/companion.py`). Cada cambio de comportamiento sube `PROMPT_VERSION` y agrega aquí un bloque `## vX.Y.Z — fecha — motivo`, del más reciente al más antiguo. El backend registra la versión en el log al iniciar cada sesión.
 
+## v1.26.2 — 2026-10-21 — Contacto de emergencia incompleto y "contacto de emergencia" no es SOS (LAZA-40)
+
+**Motivo:** en la prueba del 21 de octubre:
+- La persona dijo "contacto de emergencia" y el asistente llamó a `trigger_sos`.
+- Luego dictó "mi contacto de emergencia es…" sin nombre y con el número en partes. El
+  asistente no llamó a `set_emergency_contact` ni pidió lo que faltaba: se quedó callado.
+
+**Cambio en el prompt (5 idiomas), bloque CONTACTO DE EMERGENCIA:**
+- Si falta el nombre o el número, o el número quedó cortado, lo pide en una frase y pide el
+  número completo de una vez. Nunca se queda callado.
+- Decir solo "contacto de emergencia" no es pedir SOS: pregunta si quiere configurarlo.
+
 ## v1.26.1 — 2026-10-17 — No narrar varias funciones a la vez (LAZA-40)
 
 **Motivo:** en la segunda caminata (participante 3), al pedir "ubicación, GPS y brújula", el
