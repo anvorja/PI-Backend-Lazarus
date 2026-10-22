@@ -10,7 +10,8 @@ from sqlalchemy.orm import Session
 
 from app.db.models import APPROVED, DISABLED, PENDING, AdminUser, Device, DeviceSession, LogUpload
 from app.db.session import get_db
-from app.services import access, admin_auth, field_logs
+from app.schemas.route_profile import RouteProfile
+from app.services import access, admin_auth, field_logs, route_profiles
 from app.services.admin_auth import REFRESH_COOKIE, current_admin
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -298,3 +299,31 @@ def clear_logs(
     """Borra los logs subidos por el teléfono; el dispositivo y sus sesiones quedan."""
     _device(db, device_id)
     return {"deleted": field_logs.clear(db, device_id)}
+
+
+# ---- Perfiles de ruta (HU-022) ----------------------------------------------
+
+
+@router.get("/routes", response_model=list[RouteProfile])
+def list_routes(_: AdminUser = Depends(current_admin), db: Session = Depends(get_db)):
+    return route_profiles.all_profiles(db)
+
+
+@router.put("/routes/{slug}", response_model=RouteProfile)
+def put_route(
+    slug: str,
+    body: RouteProfile,
+    _: AdminUser = Depends(current_admin),
+    db: Session = Depends(get_db),
+):
+    """Crea o reemplaza un perfil. El slug de la URL y el del cuerpo coinciden."""
+    if body.slug != slug:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "El slug no coincide con la URL")
+    route_profiles.save(db, body)
+    return body
+
+
+@router.delete("/routes/{slug}", status_code=204)
+def delete_route(slug: str, _: AdminUser = Depends(current_admin), db: Session = Depends(get_db)):
+    if not route_profiles.delete(db, slug):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Perfil no encontrado")
