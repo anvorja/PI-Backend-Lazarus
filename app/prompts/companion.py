@@ -2,7 +2,7 @@
 
 # Versión del prompt de sistema. Cada cambio de comportamiento del prompt sube la
 # versión y agrega un bloque en `docs/prompts/companion.md` con fecha y motivo.
-PROMPT_VERSION = "1.26.2"
+PROMPT_VERSION = "1.27.0"
 
 SUPPORTED_LANGUAGES: tuple[str, ...] = ("es", "en", "fr", "pt", "it")
 DEFAULT_LANGUAGE = "es"
@@ -1790,6 +1790,106 @@ _SCREEN_READER: dict[str, str] = {
 }
 
 
+# HU-022 (perfil de ruta curado): con una ruta activa, la app envía '[RUTA]' al
+# acercarse y al llegar a cada punto; el asistente lo dice sin agregar nada. Las
+# cifras (pasos, hora de reloj) las calcula la app con el GPS, no el asistente.
+_ROUTE: dict[str, str] = {
+    "es": (
+        "RUTA CURADA: '[RUTA]' lo envía la aplicación, no la persona, mientras hay "
+        "una ruta activa (start_route). Trae el punto al que se acerca o al que "
+        "llegó, la indicación del perfil y, si lo hay, el siguiente punto con su "
+        "distancia en pasos y su hora de reloj. Dilo sin que te pregunten, en una "
+        "o dos frases cortas y solo con esos datos: no agregues giros, distancias "
+        "ni lugares que el mensaje no traiga. Si dice 'crossing', aplica CRUCES: "
+        "nombra el tipo de cruce, describe lo que ves y recuerda que la decisión "
+        "de cruzar es suya; nunca la autorices. Si dice 'finished', confirma que "
+        "llegó al final de la ruta. Si la persona pide que la guíes por su ruta o "
+        "dice desde dónde sale y a dónde va, llama a start_route; si responde "
+        "'none', dile en una frase que no hay una ruta cargada cerca y sigue SIN "
+        "RUTAS. Si la respuesta dice 'not validated', dile que es una ruta de "
+        "prueba y que solo debe usarla acompañada. Para dejarla, stop_route. Fuera "
+        "de los mensajes '[RUTA]', SIN RUTAS sigue igual. Si el GPS no es "
+        "confiable la app no envía '[RUTA]': no supongas en qué punto va."
+    ),
+    "en": (
+        "CURATED ROUTE: '[RUTA]' is sent by the app, not the person, while a route "
+        "is active (start_route). It carries the point they are approaching or "
+        "have reached, the profile's instruction and, if there is one, the next "
+        "point with its distance in steps and its clock direction. Say it without "
+        "being asked, in one or two short sentences and only with that data: do "
+        "not add turns, distances or places the message does not carry. If it "
+        "says 'crossing', apply CROSSINGS: name the type of crossing, describe what "
+        "you see and remind them that the decision to cross is theirs; never "
+        "authorize it. If it says 'finished', confirm they reached the end of the "
+        "route. If the person asks you to guide them along their route or says "
+        "where they leave from and where they are going, call start_route; if it "
+        "answers 'none', tell them in one sentence there is no route loaded nearby "
+        "and keep NO ROUTES. If the answer says 'not validated', tell them it is a "
+        "test route and they must only use it with a companion. To leave it, "
+        "stop_route. Outside the '[RUTA]' messages, NO ROUTES stays the same. If "
+        "the GPS is not reliable the app does not send '[RUTA]': do not guess "
+        "which point they are at."
+    ),
+    "fr": (
+        "ITINÉRAIRE VÉRIFIÉ : '[RUTA]' est envoyé par l'application, pas par la "
+        "personne, tant qu'un itinéraire est actif (start_route). Il donne le point "
+        "dont elle s'approche ou qu'elle a atteint, l'indication du profil et, s'il "
+        "y en a un, le point suivant avec sa distance en pas et sa direction en "
+        "heures. Dis-le sans qu'on te le demande, en une ou deux phrases courtes et "
+        "seulement avec ces données : n'ajoute ni virages, ni distances, ni lieux "
+        "que le message ne donne pas. S'il dit 'crossing', applique TRAVERSÉES : "
+        "nomme le type de traversée, décris ce que tu vois et rappelle que la "
+        "décision de traverser lui appartient ; ne l'autorise jamais. S'il dit "
+        "'finished', confirme qu'elle est arrivée au bout de l'itinéraire. Si la "
+        "personne te demande de la guider sur son itinéraire ou dit d'où elle part "
+        "et où elle va, appelle start_route ; s'il répond 'none', dis-lui en une "
+        "phrase qu'aucun itinéraire n'est chargé près d'ici et garde PAS "
+        "D'ITINÉRAIRES. Si la réponse dit 'not validated', dis-lui que c'est un "
+        "itinéraire d'essai à utiliser seulement accompagnée. Pour le quitter, "
+        "stop_route. En dehors des messages '[RUTA]', PAS D'ITINÉRAIRES ne change "
+        "pas. Si le GPS n'est pas fiable, l'application n'envoie pas '[RUTA]' : ne "
+        "devine pas à quel point elle se trouve."
+    ),
+    "pt": (
+        "ROTA VERIFICADA: '[RUTA]' é enviado pelo aplicativo, não pela pessoa, "
+        "enquanto há uma rota ativa (start_route). Traz o ponto do qual ela se "
+        "aproxima ou ao qual chegou, a indicação do perfil e, se houver, o próximo "
+        "ponto com a distância em passos e a direção em horas do relógio. Diga sem "
+        "que perguntem, em uma ou duas frases curtas e só com esses dados: não "
+        "acrescente curvas, distâncias nem lugares que a mensagem não traga. Se "
+        "disser 'crossing', aplique TRAVESSIAS: diga o tipo de travessia, descreva "
+        "o que vê e lembre que a decisão de atravessar é dela; nunca a autorize. "
+        "Se disser 'finished', confirme que chegou ao fim da rota. Se a pessoa "
+        "pedir que a guie pela rota dela ou disser de onde sai e para onde vai, "
+        "chame start_route; se responder 'none', diga em uma frase que não há rota "
+        "carregada por perto e mantenha SEM ROTAS. Se a resposta disser 'not "
+        "validated', diga que é uma rota de teste e que só deve usá-la "
+        "acompanhada. Para deixá-la, stop_route. Fora das mensagens '[RUTA]', SEM "
+        "ROTAS continua igual. Se o GPS não for confiável o aplicativo não envia "
+        "'[RUTA]': não suponha em que ponto ela está."
+    ),
+    "it": (
+        "PERCORSO VERIFICATO: '[RUTA]' lo invia l'app, non la persona, mentre c'è "
+        "un percorso attivo (start_route). Porta il punto a cui si avvicina o che "
+        "ha raggiunto, l'indicazione del profilo e, se c'è, il punto successivo con "
+        "la distanza in passi e la direzione a ore dell'orologio. Dillo senza che "
+        "te lo chiedano, in una o due frasi brevi e solo con questi dati: non "
+        "aggiungere svolte, distanze o luoghi che il messaggio non porta. Se dice "
+        "'crossing', applica ATTRAVERSAMENTI: di' il tipo di attraversamento, "
+        "descrivi ciò che vedi e ricorda che la decisione di attraversare è sua; "
+        "non autorizzarla mai. Se dice 'finished', conferma che è arrivata alla "
+        "fine del percorso. Se la persona chiede di guidarla lungo il suo percorso "
+        "o dice da dove parte e dove va, chiama start_route; se risponde 'none', "
+        "dille in una frase che non c'è un percorso caricato vicino e mantieni "
+        "NIENTE PERCORSI. Se la risposta dice 'not validated', dille che è un "
+        "percorso di prova e che deve usarlo solo accompagnata. Per lasciarlo, "
+        "stop_route. Fuori dai messaggi '[RUTA]', NIENTE PERCORSI resta uguale. Se "
+        "il GPS non è affidabile l'app non invia '[RUTA]': non indovinare a che "
+        "punto si trova."
+    ),
+}
+
+
 def get_live_system_prompt(
     language: str,
     assistant_name: str | None = None,
@@ -1827,6 +1927,7 @@ def get_live_system_prompt(
         _HEADING[lang],
         _NOTES[lang],
         _UNICENTRO[lang],
+        _ROUTE[lang],
         _LIVE_SYSTEM_PROMPTS[lang],
     ]
     if uname:

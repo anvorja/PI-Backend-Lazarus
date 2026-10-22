@@ -83,6 +83,18 @@ class AdminSession(Base):
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
 
+class RouteProfileRow(Base):
+    """Perfil de ruta curado (HU-022) como JSON validado por
+    `app.schemas.route_profile.RouteProfile`. Lleva coordenadas: vive en la base
+    de datos, no en el repositorio."""
+
+    __tablename__ = "route_profiles"
+
+    slug: Mapped[str] = mapped_column(String(60), primary_key=True)
+    data: Mapped[str] = mapped_column(Text)
+    updated_at: Mapped[datetime] = mapped_column(DateTime)
+
+
 class AppSetting(Base):
     """Ajustes del panel (servicio abierto, horario), como JSON por clave."""
 

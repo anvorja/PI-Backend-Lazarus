@@ -2,6 +2,24 @@
 
 > Registro de versiones del prompt de sistema (`app/prompts/companion.py`). Cada cambio de comportamiento sube `PROMPT_VERSION` y agrega aquí un bloque `## vX.Y.Z — fecha — motivo`, del más reciente al más antiguo. El backend registra la versión en el log al iniciar cada sesión.
 
+## v1.27.0 — 2026-10-22 — Ruta curada: avisos '[RUTA]' y funciones start_route y stop_route (LAZA-50)
+
+**Motivo:** HU-022. La app guía por un perfil de ruta curado (puntos verificados en campo):
+- con una ruta activa, avisa al acercarse y al llegar a cada punto;
+- antes, el asistente no conocía ninguna ruta (SIN RUTAS).
+
+**Cambio en el prompt (5 idiomas), bloque nuevo RUTA CURADA:**
+- `'[RUTA]'` lo envía la app. El asistente lo dice sin que le pregunten, en una o dos frases
+  y solo con los datos del mensaje: punto, indicación del perfil, siguiente punto con pasos y
+  hora de reloj. No agrega giros ni distancias propias.
+- **Cruces:** si el mensaje dice `crossing`, aplica CRUCES: nombra el tipo de cruce y nunca
+  autoriza cruzar.
+- **Iniciar y dejar la ruta:** `start_route` cuando la persona pide que la guíe por su ruta.
+  Si responde `none`, sigue SIN RUTAS. Si dice `not validated`, avisa que es una ruta de
+  prueba y que solo se usa acompañada. `stop_route` deja la ruta.
+- **Fuera de `'[RUTA]'`, SIN RUTAS no cambia.** Sin GPS confiable no hay avisos y el asistente
+  no supone en qué punto va la persona.
+
 ## v1.26.2 — 2026-10-21 — Contacto de emergencia incompleto y "contacto de emergencia" no es SOS (LAZA-40)
 
 **Motivo:** en la prueba del 21 de octubre:

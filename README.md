@@ -108,6 +108,7 @@ El backend expone la API del panel en **`/api/v1/admin/*`**. La interfaz vive ap
 - **Servicio:** interruptor general y horario de las jornadas (hora de Colombia). `LIVE_ENABLED=false` en Render manda sobre todo y no deja abrir ninguna sesión.
 - **Dispositivos:** cada teléfono se registra solo la primera vez y queda pendiente. Desde el panel se aprueba, se nombra con un seudónimo, se le pone un límite de minutos por día, se le piden o se le limpian los logs, se le cierra la sesión o se deshabilita.
 - **Logs de campo:** al tocar Detener, la app sube lo nuevo de su log, notas, recorrido GPS y telemetría. El panel los descarga unidos en un .zip y muestra la latencia voz a voz.
+- **Perfiles de ruta (HU-022):** cada perfil curado (una estación, un sentido, sus puntos en orden) se guarda en la base de datos, no en el repositorio, porque lleva coordenadas. Se carga con `uv run python scripts/load_route.py perfil.json --url <backend> --user <admin>`, que pide la clave por teclado, o con `PUT /api/v1/admin/routes/{slug}`. La app lo descarga con su token (`GET /api/v1/devices/me/routes`, solo teléfonos aprobados).
 
 | Variable | Para qué |
 | --- | --- |
