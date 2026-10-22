@@ -53,6 +53,14 @@ def purge_old(db: Session) -> int:
     return result.rowcount or 0
 
 
+def clear(db: Session, device_id: int) -> int:
+    """Borra todos los fragmentos de logs del teléfono; devuelve cuántos eran."""
+    result = db.execute(delete(LogUpload).where(LogUpload.device_id == device_id))
+    db.commit()
+    _median_cache.pop(device_id, None)
+    return result.rowcount or 0
+
+
 def combined(db: Session, device_id: int) -> dict[str, bytes]:
     """Cada archivo completo: sus fragmentos unidos en el orden en que llegaron."""
     out: dict[str, list[bytes]] = {}

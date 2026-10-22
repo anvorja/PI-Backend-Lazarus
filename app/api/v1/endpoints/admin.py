@@ -289,3 +289,12 @@ def download_logs(
         media_type="application/zip",
         headers={"Content-Disposition": f'attachment; filename="{label}-{day}.zip"'},
     )
+
+
+@router.delete("/devices/{device_id}/logs")
+def clear_logs(
+    device_id: int, _: AdminUser = Depends(current_admin), db: Session = Depends(get_db)
+):
+    """Borra los logs subidos por el teléfono; el dispositivo y sus sesiones quedan."""
+    _device(db, device_id)
+    return {"deleted": field_logs.clear(db, device_id)}
