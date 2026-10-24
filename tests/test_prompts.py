@@ -589,6 +589,16 @@ def test_campo_cruces_notas_y_rutas(language, screen_locked):
 
 
 @pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+def test_anotar_no_consulta_ubicacion_rumbo_ni_hora(language):
+    # Jornada del 24 de octubre: con "posición, brújula, fecha y hora, anota…" el
+    # asistente llamaba a get_location, get_heading y get_time antes de add_note (9–15 s).
+    # La nota ya guarda esos datos.
+    rule = c._NOTES[language]
+    for tool in ("get_location", "get_heading", "get_time"):
+        assert tool in rule
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
 def test_campo_direccion_solo_con_get_location(language):
     # Participante 2: "Ahora mismo estás en la Carrera 82" sin llamar a get_location
     # (estaba en la Carrera 100); y "Te avisaré cuando esté en verde para cruzar".

@@ -2,7 +2,7 @@
 
 # Versión del prompt de sistema. Cada cambio de comportamiento del prompt sube la
 # versión y agrega un bloque en `docs/prompts/companion.md` con fecha y motivo.
-PROMPT_VERSION = "1.27.0"
+PROMPT_VERSION = "1.28.0"
 
 SUPPORTED_LANGUAGES: tuple[str, ...] = ("es", "en", "fr", "pt", "it")
 DEFAULT_LANGUAGE = "es"
@@ -1078,7 +1078,11 @@ _NOTES: dict[str, str] = {
         "con sus palabras y sin 'anota que'. Di 'Anotado.' solo después de que la "
         "función responda 'ok'; nunca lo digas sin haberla llamado, porque la nota "
         "se pierde. Si no entendiste qué anotar, pregúntalo. No lo resumas ni le "
-        "agregues nada."
+        "agregues nada. La nota ya guarda sola la hora, la posición y el rumbo: para "
+        "anotar no llames a get_location, get_heading ni get_time, aunque la persona "
+        "diga 'posición, brújula, fecha y hora'; quita esas palabras de la nota y no las "
+        "digas. Si solo pide anotar 'posición' o 'coordenadas', anótalo y luego "
+        "pregunta en una frase corta qué hay en ese punto."
     ),
     "en": (
         "NOTES: if the person says 'note that…', 'write down that…', 'take a note "
@@ -1086,7 +1090,12 @@ _NOTES: dict[str, str] = {
         "asked to note, in their words and without 'note that'. Say 'Noted.' only "
         "after the function answers 'ok'; never say it without calling it, because "
         "the note is lost. If you did not understand what to note, ask. Do not "
-        "summarize it or add anything."
+        "summarize it or add anything. The note already saves the time, position and "
+        "heading by itself: to take a note do not call get_location, get_heading or "
+        "get_time, even if the person says 'position, compass, date and time'; remove "
+        "those words from the note and do not say them. If they only ask to note "
+        "'position' or 'coordinates', note it and then ask in one short sentence what "
+        "is at that spot."
     ),
     "fr": (
         "NOTES : si la personne dit 'note que…', 'écris que…', 'prends note de…' ou "
@@ -1094,7 +1103,12 @@ _NOTES: dict[str, str] = {
         "demandé de noter, avec ses mots et sans 'note que'. Dis 'Noté.' seulement "
         "après que la fonction a répondu 'ok' ; ne le dis jamais sans l'avoir "
         "appelée, sinon la note est perdue. Si tu n'as pas compris quoi noter, "
-        "demande-le. Ne résume pas et n'ajoute rien."
+        "demande-le. Ne résume pas et n'ajoute rien. La note enregistre déjà seule l'heure, la "
+        "position et le cap : pour noter, n'appelle pas get_location, get_heading ni "
+        "get_time, même si la personne dit 'position, boussole, date et heure' ; retire "
+        "ces mots de la note et ne les dis pas. Si elle demande seulement de noter "
+        "'position' ou 'coordonnées', note-le puis demande en une phrase courte ce "
+        "qu'il y a à cet endroit."
     ),
     "pt": (
         "NOTAS: se a pessoa disser 'anota que…', 'escreve que…', 'toma nota de…' ou "
@@ -1102,7 +1116,11 @@ _NOTES: dict[str, str] = {
         "anotar, com as palavras dela e sem 'anota que'. Diga 'Anotado.' só depois "
         "que a função responder 'ok'; nunca diga sem tê-la chamado, porque a nota "
         "se perde. Se não entendeu o que anotar, pergunte. Não resuma nem acrescente "
-        "nada."
+        "nada. A nota já guarda sozinha a hora, a posição e o rumo: para anotar "
+        "não chame get_location, get_heading nem get_time, mesmo que a pessoa diga "
+        "'posição, bússola, data e hora'; tire essas palavras da nota e não as diga. "
+        "Se ela pedir só para anotar 'posição' ou 'coordenadas', anote e depois "
+        "pergunte numa frase curta o que há nesse ponto."
     ),
     "it": (
         "NOTE: se la persona dice 'annota che…', 'scrivi che…', 'prendi nota di…' o "
@@ -1110,7 +1128,12 @@ _NOTES: dict[str, str] = {
         "di annotare, con le sue parole e senza 'annota che'. Di' 'Annotato.' solo "
         "dopo che la funzione ha risposto 'ok'; non dirlo mai senza averla chiamata, "
         "perché la nota si perde. Se non hai capito cosa annotare, chiedilo. Non "
-        "riassumere e non aggiungere nulla."
+        "riassumere e non aggiungere nulla. La nota salva già da sola l'ora, la "
+        "posizione e la direzione: per annotare non chiamare get_location, get_heading "
+        "né get_time, anche se la persona dice 'posizione, bussola, data e ora'; togli "
+        "quelle parole dalla nota e non dirle. Se chiede solo di annotare 'posizione' "
+        "o 'coordinate', annotalo e poi chiedi in una frase breve cosa c'è in quel "
+        "punto."
     ),
 }
 

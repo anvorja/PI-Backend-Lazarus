@@ -2,6 +2,20 @@
 
 > Registro de versiones del prompt de sistema (`app/prompts/companion.py`). Cada cambio de comportamiento sube `PROMPT_VERSION` y agrega aquí un bloque `## vX.Y.Z — fecha — motivo`, del más reciente al más antiguo. El backend registra la versión en el log al iniciar cada sesión.
 
+## v1.28.0 — 2026-10-24 — Anotar no consulta la ubicación, el rumbo ni la hora (LAZA-52)
+
+**Motivo:** en la jornada del 24 de octubre, los participantes decían "posición, brújula,
+fecha y hora" en cada nota. El asistente llamaba a `get_location`, `get_heading` y
+`get_time` antes de `add_note` y tardaba entre 9 y 15 s en responder, cuando la nota ya
+guarda esos datos sola. Sin funciones, la mediana fue de 1,9 a 2,1 s. Además, varias notas
+decían solo "posición" o "coordenadas", sin describir el lugar.
+
+**Cambio en el prompt (5 idiomas), bloque NOTAS:**
+- Para anotar no se llama a `get_location`, `get_heading` ni `get_time`, aunque la persona
+  lo pida. Esas palabras se quitan de la nota y no se dicen.
+- Si la nota es solo "posición" o "coordenadas", se guarda y el asistente pregunta en una
+  frase corta qué hay en ese punto.
+
 ## v1.27.0 — 2026-10-22 — Ruta curada: avisos '[RUTA]' y funciones start_route y stop_route (LAZA-50)
 
 **Motivo:** HU-022. La app guía por un perfil de ruta curado (puntos verificados en campo):
