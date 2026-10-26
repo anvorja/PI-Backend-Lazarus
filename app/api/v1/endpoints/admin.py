@@ -1,8 +1,8 @@
 """Rutas del panel de administración (HU-046)."""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Query, Request, Response, status
 from fastapi.responses import Response as RawResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select
@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from app.db.models import APPROVED, DISABLED, PENDING, AdminUser, Device, DeviceSession, LogUpload
 from app.db.session import get_db
 from app.schemas.route_profile import RouteProfile
-from app.services import access, admin_auth, field_logs, route_profiles
+from app.services import access, admin_auth, field_logs, metrics, route_profiles
 from app.services.admin_auth import REFRESH_COOKIE, current_admin
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -235,6 +235,8 @@ class SessionOut(BaseModel):
     duration_s: float
     close_code: int | None
     ip: str
+    carrier: str = ""
+    transport: str = ""
 
 
 @router.get("/devices/{device_id}/sessions", response_model=list[SessionOut])
@@ -256,6 +258,8 @@ def device_sessions(
             duration_s=r.duration_s,
             close_code=r.close_code,
             ip=r.ip,
+            carrier=r.carrier,
+            transport=r.transport,
         )
         for r in rows
     ]
@@ -327,3 +331,49 @@ def put_route(
 def delete_route(slug: str, _: AdminUser = Depends(current_admin), db: Session = Depends(get_db)):
     if not route_profiles.delete(db, slug):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Perfil no encontrado")
+
+
+# ---- Capacidad del servidor ---------------------------------------------------
+
+
+class MetricPoint(BaseModel):
+    ts: datetime
+    platform: str
+    cpu_pct: float
+    rss_mb: float
+    active_sessions: int
+    kbps_up: float
+    kbps_down: float
+    loop_lag_ms: float
+
+
+@router.get("/metrics")
+def get_metrics(
+    hours: int = Query(default=6, ge=1, le=168),
+    platform: str | None = Query(default=None, max_length=20),
+    _: AdminUser = Depends(current_admin),
+    db: Session = Depends(get_db),
+):
+    """Serie y resumen por plataforma de las muestras de las últimas `hours` horas."""
+    rows = metrics.series(db, access.utcnow() - timedelta(hours=hours), platform)
+    by_platform: dict[str, list] = {}
+    for r in rows:
+        by_platform.setdefault(r.platform, []).append(r)
+    return {
+        "hours": hours,
+        "live_sessions": metrics.active_sessions(),
+        "summary": {name: metrics.summarize(items) for name, items in by_platform.items()},
+        "series": [
+            MetricPoint(
+                ts=r.ts,
+                platform=r.platform,
+                cpu_pct=r.cpu_pct,
+                rss_mb=r.rss_mb,
+                active_sessions=r.active_sessions,
+                kbps_up=round(r.bytes_up * 8 / 1000 / r.interval_s, 1) if r.interval_s else 0,
+                kbps_down=round(r.bytes_down * 8 / 1000 / r.interval_s, 1) if r.interval_s else 0,
+                loop_lag_ms=r.loop_lag_ms,
+            )
+            for r in metrics.downsample(rows)
+        ],
+    }

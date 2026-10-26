@@ -29,7 +29,7 @@ from app.core.config import settings
 from app.core.telemetry import new_session_id, session_event
 from app.db.session import SessionLocal
 from app.prompts.companion import PROMPT_VERSION
-from app.services import access
+from app.services import access, metrics
 from app.services.access import CLOSE_DAILY_LIMIT, CLOSE_PAUSED
 from app.services.live_service import build_setup_message, build_upstream_url
 
@@ -89,6 +89,7 @@ async def _client_to_gemini(client: WebSocket, gemini, stats: dict | None = None
             message = await client.receive_text()
             if stats is not None:
                 stats["from_app"] += 1
+            metrics.add_bytes(up=len(message))
             await gemini.send(message)
     except WebSocketDisconnect:
         logger.info("Live: cliente desconectado")
@@ -117,6 +118,7 @@ async def _gemini_to_client(client: WebSocket, gemini, stats: dict | None = None
                 stats["from_gemini"] += 1
             if isinstance(message, bytes):
                 message = message.decode("utf-8")
+            metrics.add_bytes(down=len(message))
             try:
                 await client.send_text(message)
             except (WebSocketDisconnect, RuntimeError):
@@ -233,7 +235,9 @@ async def live_proxy(client: WebSocket) -> None:
     # Control de acceso (HU-044): horario, dispositivo aprobado y minutos del día.
     ip = _client_ip(client)
     try:
-        granted = await asyncio.to_thread(_grant, start.get("deviceToken"), ip)
+        granted = await asyncio.to_thread(
+            _grant, start.get("deviceToken"), ip, *parse_network(start.get("network"))
+        )
     except Exception as exc:  # noqa: BLE001 — sin base no se bloquea el piloto
         logger.error("Live: control de acceso no disponible (%s)", type(exc).__name__)
         granted = (None, None, None, None)
@@ -245,9 +249,11 @@ async def live_proxy(client: WebSocket) -> None:
     if device_id is not None:
         access.register_active(device_id, client)
     stats: dict = {"from_app": 0, "from_gemini": 0, "close_code": None}
+    metrics.session_opened()
     try:
         await _run_session(client, start, stats, remaining)
     finally:
+        metrics.session_closed()
         if device_id is not None:
             access.unregister_active(device_id, client)
             code = stats.get("close_code")
@@ -267,6 +273,28 @@ _REFUSE_REASONS = {
 }
 
 
+_TRANSPORTS = {"wifi", "cellular", "other", "none"}
+
+
+def parse_network(raw: object) -> tuple[str, str]:
+    """(operador, tipo de red) del frame `start`; vacíos si faltan o no son válidos.
+
+    El operador es texto libre del teléfono (p. ej. "Claro"): se recorta y se
+    limpia de caracteres de control antes de guardarlo.
+    """
+    if not isinstance(raw, dict):
+        return "", ""
+    carrier = raw.get("operator")
+    transport = raw.get("transport")
+    carrier = (
+        "".join(c for c in carrier if c.isprintable()).strip()[:40]
+        if isinstance(carrier, str)
+        else ""
+    )
+    transport = transport if isinstance(transport, str) and transport in _TRANSPORTS else ""
+    return carrier, transport
+
+
 def _client_ip(client: WebSocket) -> str:
     # Render pone la IP real en X-Forwarded-For.
     forwarded = client.headers.get("x-forwarded-for", "")
@@ -275,7 +303,7 @@ def _client_ip(client: WebSocket) -> str:
     return (client.client.host if client.client else "")[:64]
 
 
-def _grant(token: str | None, ip: str):
+def _grant(token: str | None, ip: str, carrier: str = "", transport: str = ""):
     """(device_id, código de rechazo, id del registro de sesión, segundos restantes)."""
     now = access.utcnow()
     with SessionLocal() as db:
@@ -285,7 +313,7 @@ def _grant(token: str | None, ip: str):
         if refuse is not None or device is None:
             return (device.id if device else None, refuse, None, None)
         remaining = access.remaining_seconds(db, device, now)
-        record = access.start_session(db, device.id, ip, now)
+        record = access.start_session(db, device.id, ip, now, carrier, transport)
         return (device.id, None, record, remaining)
 
 
@@ -346,9 +374,12 @@ async def _run_session(
                 assistant_name or "Aria",
                 "conocido" if user_name else "—",  # el nombre no va al log (privacidad)
             )
+            carrier, transport = parse_network(start.get("network"))
             session_event(
                 "session_start",
                 session_id,
+                carrier=carrier,
+                transport=transport,
                 prompt=PROMPT_VERSION,
                 language=language,
                 voice=voice or settings.gemini_live_voice,

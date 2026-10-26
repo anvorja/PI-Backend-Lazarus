@@ -44,6 +44,11 @@ class Settings(BaseSettings):
     admin_jwt_secret: str = ""
     # Días que se guardan los logs subidos por los teléfonos.
     log_retention_days: int = 30
+    # Muestreo de CPU, RAM y tráfico del proceso para el panel (0 = apagado).
+    # PLATFORM etiqueta cada muestra ("render", "aws", "local") para compararlas.
+    platform: str = "local"
+    metrics_interval_s: float = 30.0
+    metrics_retention_days: int = 14
     # v1alpha: necesario para `proactivity` (audio proactivo) y affective dialog.
     # v1beta rechaza el campo `proactivity` con close 1007.
     gemini_live_url: str = (

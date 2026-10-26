@@ -1,5 +1,6 @@
+import asyncio
 from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,6 +10,7 @@ from app.core.config import settings
 from app.core.telemetry import configure_telemetry_logging
 from app.db.session import SessionLocal, init_db
 from app.services.admin_auth import bootstrap_admin
+from app.services.metrics import run_sampler
 from app.sockets.live_proxy import live_proxy
 
 
@@ -18,7 +20,11 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     init_db()
     with SessionLocal() as db:
         bootstrap_admin(db)
+    sampler = asyncio.create_task(run_sampler())
     yield
+    sampler.cancel()
+    with suppress(asyncio.CancelledError):
+        await sampler
 
 
 def create_fastapi_app() -> FastAPI:
