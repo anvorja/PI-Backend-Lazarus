@@ -161,8 +161,17 @@ def touch(db: Session, device: Device, ip: str, now: datetime) -> None:
     db.commit()
 
 
-def start_session(db: Session, device_id: int, ip: str, now: datetime) -> int:
-    row = DeviceSession(device_id=device_id, started_at=now, ip=ip)
+def start_session(
+    db: Session,
+    device_id: int,
+    ip: str,
+    now: datetime,
+    carrier: str = "",
+    transport: str = "",
+) -> int:
+    row = DeviceSession(
+        device_id=device_id, started_at=now, ip=ip, carrier=carrier, transport=transport
+    )
     db.add(row)
     db.commit()
     return row.id
