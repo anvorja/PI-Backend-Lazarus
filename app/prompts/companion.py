@@ -2,7 +2,7 @@
 
 # Versión del prompt de sistema. Cada cambio de comportamiento del prompt sube la
 # versión y agrega un bloque en `docs/prompts/companion.md` con fecha y motivo.
-PROMPT_VERSION = "1.28.0"
+PROMPT_VERSION = "1.29.0"
 
 SUPPORTED_LANGUAGES: tuple[str, ...] = ("es", "en", "fr", "pt", "it")
 DEFAULT_LANGUAGE = "es"
@@ -1262,6 +1262,9 @@ _OBSERVE: dict[str, str] = {
         "(puerta, escalera, cruce, salida, señal) y que no hayas mencionado: dilo en una frase de "
         "8 palabras como máximo. Si no, NO "
         "DIGAS NADA: no describas el piso, flechas, paredes ni lo que ya dijiste. "
+        "Nunca digas que la vista es igual o parecida ('vista similar', 'sigue igual'), "
+        "ni lo poco que alcanzas a ver ('solo veo…'), ni vuelvas a ubicar objetos que ya "
+        "mencionaste: en esos casos calla. "
         "'[OBSERVA_RIESGOS]' es lo mismo con las descripciones en pausa: habla SOLO en el caso (a)."
     ),
     "en": (
@@ -1274,7 +1277,10 @@ _OBSERVE: dict[str, str] = {
         "something NEW that helps orientation appeared (door, stairs, crossing, exit, "
         "sign) that you have not mentioned: say it in one sentence of 8 words at most. Otherwise "
         "SAY NOTHING: do not describe the "
-        "floor, arrows, walls or what you already said. '[OBSERVA_RIESGOS]' is the same with "
+        "floor, arrows, walls or what you already said. Never say the view is the same or "
+        "similar ('similar view', 'still the same'), never report the little you can see "
+        "('I only see…') and never re-locate objects you already mentioned: in those cases "
+        "stay silent. '[OBSERVA_RIESGOS]' is the same with "
         "descriptions paused: speak ONLY in case (a)."
     ),
     "fr": (
@@ -1289,7 +1295,10 @@ _OBSERVE: dict[str, str] = {
         "s'orienter est apparu (porte, escalier, passage, sortie, panneau) que tu n'as "
         "pas mentionné : dis-le en une phrase de 8 mots au plus. Sinon NE DIS RIEN : ne décris "
         "pas le sol, les flèches, les "
-        "murs ni ce que tu as déjà dit. '[OBSERVA_RIESGOS]' est la même chose avec les "
+        "murs ni ce que tu as déjà dit. Ne dis jamais que la vue est la même ou semblable "
+        "(« vue similaire », « toujours pareil »), ni le peu que tu arrives à voir (« je ne "
+        "vois que… »), et ne resitue pas des objets déjà mentionnés : dans ces cas, tais-toi. "
+        "'[OBSERVA_RIESGOS]' est la même chose avec les "
         "descriptions en pause : parle SEULEMENT dans le cas (a)."
     ),
     "pt": (
@@ -1302,7 +1311,10 @@ _OBSERVE: dict[str, str] = {
         "estão ativas e apareceu algo NOVO que ajuda a se orientar (porta, escada, "
         "travessia, saída, placa) e que você não mencionou: diga em uma frase de no máximo 8 "
         "palavras. Se não, NÃO DIGA NADA: não "
-        "descreva o chão, setas, paredes nem o que já disse. '[OBSERVA_RIESGOS]' é o mesmo com as "
+        "descreva o chão, setas, paredes nem o que já disse. Nunca diga que a vista é igual "
+        "ou parecida ('vista semelhante', 'continua igual'), nem o pouco que consegue ver "
+        "('só vejo…'), nem volte a localizar objetos que já mencionou: nesses casos, fique "
+        "em silêncio. '[OBSERVA_RIESGOS]' é o mesmo com as "
         "descrições em pausa: fale SÓ no caso (a)."
     ),
     "it": (
@@ -1316,7 +1328,10 @@ _OBSERVE: dict[str, str] = {
         "(porta, scala, attraversamento, uscita, cartello) che non hai menzionato: "
         "dillo in una frase di al massimo 8 parole. "
         "Altrimenti NON DIRE NULLA: non descrivere il pavimento, le frecce, i muri né "
-        "ciò che hai già detto. '[OBSERVA_RIESGOS]' è lo stesso con le descrizioni in pausa: "
+        "ciò che hai già detto. Non dire mai che la vista è uguale o simile ('vista simile', "
+        "'è tutto uguale'), né quel poco che riesci a vedere ('vedo solo…'), né ricollocare "
+        "oggetti già menzionati: in quei casi taci. "
+        "'[OBSERVA_RIESGOS]' è lo stesso con le descrizioni in pausa: "
         "parla SOLO nel caso (a)."
     ),
 }
