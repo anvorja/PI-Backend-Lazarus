@@ -2,6 +2,23 @@
 
 > Registro de versiones del prompt de sistema (`app/prompts/companion.py`). Cada cambio de comportamiento sube `PROMPT_VERSION` y agrega aquí un bloque `## vX.Y.Z — fecha — motivo`, del más reciente al más antiguo. El backend registra la versión en el log al iniciar cada sesión.
 
+## v1.29.0 — 2026-10-27 — La observación no repite ni dice que la vista sigue igual (LAZA-51)
+
+**Motivo:** en la prueba con TalkBack del 27 de octubre, con la persona quieta en una mesa,
+el asistente respondió a `[OBSERVA]` cada 6 o 7 s con frases que no cumplen ninguno de los
+dos casos del bloque: "Vista similar, los auriculares siguen sobre la cartera", "Solo veo una
+parte de tu brazo" y "Los auriculares están sobre la cartera a tu derecha" (ya los había
+mencionado). Su voz se cruzaba con la de TalkBack mientras la persona buscaba el botón
+Detener.
+
+**Cambio en el prompt (5 idiomas), bloque OBSERVACIÓN:**
+- Nunca decir que la vista es igual o parecida ("vista similar", "sigue igual"), ni lo poco
+  que alcanza a ver ("solo veo…"), ni volver a ubicar objetos ya mencionados: en esos casos,
+  callar.
+
+**En la app (misma prueba):** con TalkBack hablando, y hasta 10 s después de su última
+lectura, no se envía `[OBSERVA]`: la persona está explorando la pantalla.
+
 ## v1.28.0 — 2026-10-24 — Anotar no consulta la ubicación, el rumbo ni la hora (LAZA-52)
 
 **Motivo:** en la jornada del 24 de octubre, los participantes decían "posición, brújula,
