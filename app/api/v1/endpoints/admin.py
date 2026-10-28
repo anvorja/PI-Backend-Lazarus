@@ -1,6 +1,6 @@
 """Rutas del panel de administración (HU-046)."""
 
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Query, Request, Response, status
 from fastapi.responses import Response as RawResponse
@@ -279,6 +279,27 @@ def device_logs(
         "files": [{"name": n, "size": len(d)} for n, d in sorted(files.items())],
         "latency": field_logs.latency(files),
     }
+
+
+@router.get("/devices/{device_id}/notes")
+def device_notes(
+    device_id: int, _: AdminUser = Depends(current_admin), db: Session = Depends(get_db)
+):
+    """Notas de campo del teléfono, para curar rutas en el panel."""
+    _device(db, device_id)
+    return field_logs.notes(field_logs.combined(db, device_id, field_logs.NOTE_FILES))
+
+
+@router.get("/devices/{device_id}/track")
+def device_track(
+    device_id: int,
+    day: date | None = None,
+    _: AdminUser = Depends(current_admin),
+    db: Session = Depends(get_db),
+):
+    """Recorrido GPS de un día del teléfono, para ver por dónde caminó."""
+    _device(db, device_id)
+    return field_logs.track(field_logs.combined(db, device_id, field_logs.TRACK_FILES), day)
 
 
 @router.get("/devices/{device_id}/logs.zip")
