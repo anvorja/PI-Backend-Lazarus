@@ -282,5 +282,75 @@ def test_panel_descarga_los_logs_unidos_y_la_latencia(client):
         assert z.read("notas_campo.csv") == b"hora,nota\n11:02,cebra\n"
 
 
+def test_panel_limpia_los_logs_de_un_telefono_sin_tocar_otros(client):
+    headers = _admin(client)
+    ids = []
+    for _n in range(2):
+        token = _register(client)
+        ids.append(_set_device(token, status="approved"))
+        client.post(
+            "/api/v1/devices/me/logs",
+            headers={"X-Device-Token": token},
+            files=[("files", ("notas_campo.csv", b"hora,nota\n", "text/csv"))],
+        )
+    url = f"/api/v1/admin/devices/{ids[0]}/logs"
+    assert client.delete(url).status_code == 401
+    assert client.delete(url, headers=headers).json() == {"deleted": 1}
+    assert client.get(url, headers=headers).json()["files"] == []
+    assert (
+        len(client.get(f"/api/v1/admin/devices/{ids[1]}/logs", headers=headers).json()["files"])
+        == 1
+    )
+    assert client.delete("/api/v1/admin/devices/999999/logs", headers=headers).status_code == 404
+
+
 def test_los_logs_se_guardan_comprimidos():
     assert gzip.decompress(gzip.compress(b"x" * 10)) == b"x" * 10
+
+
+def test_panel_lee_notas_y_recorrido_para_curar_rutas(client):
+    headers = _admin(client)
+    token = _register(client)
+    device_id = _set_device(token, status="approved", name="Participante 3")
+    up = {"X-Device-Token": token}
+    # Coordenadas ficticias.
+    notes = (
+        "hora,nota,latitud,longitud,precision_m,estado_gps,rumbo_grados,rumbo_fuente\n"
+        '2026-10-27T17:11:13,"aquí es el cruce, con semáforo",'
+        "1.000100,-2.000200,4.9,reliable,34,compass\n"
+        "2026-10-27T17:12:00,sin posición,,,,,,\n"
+    ).encode()
+    track = (
+        b"2026-10-27T17:00:00,2026-10-27T22:11:13.000Z,1.0001,-2.0002,4.9,reliable,0.8,34,compass,no\n"
+        b"2026-10-27T17:00:00,2026-10-28T03:00:00.000Z,1.0002,-2.0003,5.0,reliable,0.8,34,compass,no\n"
+        b"2026-10-26T09:00:00,2026-10-26T14:00:00.000Z,1.0003,-2.0004,6.0,unknown,0.0,,,\n"
+    )
+    client.post(
+        "/api/v1/devices/me/logs",
+        headers=up,
+        files=[
+            ("files", ("notas_campo.csv", notes, "text/csv")),
+            ("files", ("gps_track.csv", track, "text/csv")),
+        ],
+    )
+    got = client.get(f"/api/v1/admin/devices/{device_id}/notes", headers=headers).json()
+    assert got[0] == {
+        "at": "2026-10-27T17:11:13",
+        "text": "aquí es el cruce, con semáforo",
+        "lat": 1.0001,
+        "lon": -2.0002,
+        "accuracy_m": 4.9,
+        "reliability": "reliable",
+        "heading": 34.0,
+    }
+    assert got[1]["lat"] is None and got[1]["text"] == "sin posición"
+    url = f"/api/v1/admin/devices/{device_id}/track"
+    latest = client.get(url, headers=headers).json()
+    # 22:11 UTC es 17:11 en Colombia; 03:00 UTC del 28 es 22:00 del 27.
+    assert latest["days"] == ["2026-10-27", "2026-10-26"]
+    assert latest["day"] == "2026-10-27"
+    assert [p["at"] for p in latest["points"]] == ["2026-10-27T17:11:13", "2026-10-27T22:00:00"]
+    other = client.get(url, headers=headers, params={"day": "2026-10-26"}).json()
+    assert len(other["points"]) == 1 and other["points"][0]["reliability"] == "unknown"
+    assert client.get("/api/v1/admin/devices/999999/notes", headers=headers).status_code == 404
+    assert client.get(url).status_code == 401

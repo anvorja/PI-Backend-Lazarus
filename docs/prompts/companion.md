@@ -2,6 +2,67 @@
 
 > Registro de versiones del prompt de sistema (`app/prompts/companion.py`). Cada cambio de comportamiento sube `PROMPT_VERSION` y agrega aquí un bloque `## vX.Y.Z — fecha — motivo`, del más reciente al más antiguo. El backend registra la versión en el log al iniciar cada sesión.
 
+## v1.29.0 — 2026-10-27 — La observación no repite ni dice que la vista sigue igual (LAZA-51)
+
+**Motivo:** en la prueba con TalkBack del 27 de octubre, con la persona quieta en una mesa,
+el asistente respondió a `[OBSERVA]` cada 6 o 7 s con frases que no cumplen ninguno de los
+dos casos del bloque: "Vista similar, los auriculares siguen sobre la cartera", "Solo veo una
+parte de tu brazo" y "Los auriculares están sobre la cartera a tu derecha" (ya los había
+mencionado). Su voz se cruzaba con la de TalkBack mientras la persona buscaba el botón
+Detener.
+
+**Cambio en el prompt (5 idiomas), bloque OBSERVACIÓN:**
+- Nunca decir que la vista es igual o parecida ("vista similar", "sigue igual"), ni lo poco
+  que alcanza a ver ("solo veo…"), ni volver a ubicar objetos ya mencionados: en esos casos,
+  callar.
+
+**En la app (misma prueba):** con TalkBack hablando, y hasta 10 s después de su última
+lectura, no se envía `[OBSERVA]`: la persona está explorando la pantalla.
+
+## v1.28.0 — 2026-10-24 — Anotar no consulta la ubicación, el rumbo ni la hora (LAZA-52)
+
+**Motivo:** en la jornada del 24 de octubre, los participantes decían "posición, brújula,
+fecha y hora" en cada nota. El asistente llamaba a `get_location`, `get_heading` y
+`get_time` antes de `add_note` y tardaba entre 9 y 15 s en responder, cuando la nota ya
+guarda esos datos sola. Sin funciones, la mediana fue de 1,9 a 2,1 s. Además, varias notas
+decían solo "posición" o "coordenadas", sin describir el lugar.
+
+**Cambio en el prompt (5 idiomas), bloque NOTAS:**
+- Para anotar no se llama a `get_location`, `get_heading` ni `get_time`, aunque la persona
+  lo pida. Esas palabras se quitan de la nota y no se dicen.
+- Si la nota es solo "posición" o "coordenadas", se guarda y el asistente pregunta en una
+  frase corta qué hay en ese punto.
+
+## v1.27.0 — 2026-10-22 — Ruta curada: avisos '[RUTA]' y funciones start_route y stop_route (LAZA-50)
+
+**Motivo:** HU-022. La app guía por un perfil de ruta curado (puntos verificados en campo):
+- con una ruta activa, avisa al acercarse y al llegar a cada punto;
+- antes, el asistente no conocía ninguna ruta (SIN RUTAS).
+
+**Cambio en el prompt (5 idiomas), bloque nuevo RUTA CURADA:**
+- `'[RUTA]'` lo envía la app. El asistente lo dice sin que le pregunten, en una o dos frases
+  y solo con los datos del mensaje: punto, indicación del perfil, siguiente punto con pasos y
+  hora de reloj. No agrega giros ni distancias propias.
+- **Cruces:** si el mensaje dice `crossing`, aplica CRUCES: nombra el tipo de cruce y nunca
+  autoriza cruzar.
+- **Iniciar y dejar la ruta:** `start_route` cuando la persona pide que la guíe por su ruta.
+  Si responde `none`, sigue SIN RUTAS. Si dice `not validated`, avisa que es una ruta de
+  prueba y que solo se usa acompañada. `stop_route` deja la ruta.
+- **Fuera de `'[RUTA]'`, SIN RUTAS no cambia.** Sin GPS confiable no hay avisos y el asistente
+  no supone en qué punto va la persona.
+
+## v1.26.2 — 2026-10-21 — Contacto de emergencia incompleto y "contacto de emergencia" no es SOS (LAZA-40)
+
+**Motivo:** en la prueba del 21 de octubre:
+- La persona dijo "contacto de emergencia" y el asistente llamó a `trigger_sos`.
+- Luego dictó "mi contacto de emergencia es…" sin nombre y con el número en partes. El
+  asistente no llamó a `set_emergency_contact` ni pidió lo que faltaba: se quedó callado.
+
+**Cambio en el prompt (5 idiomas), bloque CONTACTO DE EMERGENCIA:**
+- Si falta el nombre o el número, o el número quedó cortado, lo pide en una frase y pide el
+  número completo de una vez. Nunca se queda callado.
+- Decir solo "contacto de emergencia" no es pedir SOS: pregunta si quiere configurarlo.
+
 ## v1.26.1 — 2026-10-17 — No narrar varias funciones a la vez (LAZA-40)
 
 **Motivo:** en la segunda caminata (participante 3), al pedir "ubicación, GPS y brújula", el

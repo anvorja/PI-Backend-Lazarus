@@ -283,6 +283,36 @@ _FUNCTION_DECLARATIONS = [
         },
     },
     {
+        "name": "start_route",
+        "description": (
+            "Activa la guía por una ruta curada (perfil verificado en campo): la "
+            "app elige el perfil que empieza cerca de la posición actual y desde "
+            "ahí envía '[RUTA]' al acercarse y al llegar a cada punto. Úsalo cuando "
+            "la persona pida que la guíes por su ruta o diga desde dónde sale y a "
+            "dónde va. Si responde 'none', no hay ruta cargada cerca."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "destination": {
+                    "type": "string",
+                    "description": (
+                        "A dónde va, con sus palabras (p. ej. 'Univalle' o 'la "
+                        "estación'); vacío si no lo dijo."
+                    ),
+                }
+            },
+        },
+    },
+    {
+        "name": "stop_route",
+        "description": (
+            "Deja de guiar por la ruta curada activa. Úsalo cuando la persona pida "
+            "dejar la ruta, cambie de destino o diga que ya no la necesita."
+        ),
+        "parameters": {"type": "object", "properties": {}},
+    },
+    {
         "name": "get_time",
         "description": (
             "Obtiene la hora y la fecha locales del teléfono de la persona (su zona "

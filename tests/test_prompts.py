@@ -369,6 +369,32 @@ def test_observa_avisa_solo_de_riesgos_o_algo_nuevo(language):
     assert observe in c.get_live_system_prompt(language)
 
 
+# Prueba con TalkBack del 27-oct: con la persona quieta, el asistente dijo cada 6 s
+# "Vista similar, los auriculares siguen sobre la cartera", "Solo veo una parte de tu
+# brazo" y volvió a ubicar los mismos auriculares, encima de la voz de TalkBack.
+SAME_VIEW = {
+    "es": "'vista similar'",
+    "en": "'similar view'",
+    "fr": "« vue similaire »",
+    "pt": "'vista semelhante'",
+    "it": "'vista simile'",
+}
+ONLY_SEE = {
+    "es": "'solo veo…'",
+    "en": "'I only see…'",
+    "fr": "« je ne vois que… »",
+    "pt": "'só vejo…'",
+    "it": "'vedo solo…'",
+}
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+def test_observa_no_dice_que_sigue_igual_ni_repite_objetos(language):
+    observe = " ".join(c._OBSERVE[language].split())
+    assert SAME_VIEW[language] in observe
+    assert ONLY_SEE[language] in observe
+
+
 @pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
 def test_en_pausa_observa_solo_por_riesgos(language):
     assert "'[OBSERVA]'" in c._DESCRIPTIONS_PAUSED[language]
@@ -586,6 +612,16 @@ def test_campo_cruces_notas_y_rutas(language, screen_locked):
     assert c._CROSSING[language] in prompt
     assert "add_note" in c._NOTES[language] and "'ok'" in c._NOTES[language]
     assert "guide me" in c._NO_ROUTES["en"]
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+def test_anotar_no_consulta_ubicacion_rumbo_ni_hora(language):
+    # Jornada del 24 de octubre: con "posición, brújula, fecha y hora, anota…" el
+    # asistente llamaba a get_location, get_heading y get_time antes de add_note (9–15 s).
+    # La nota ya guarda esos datos.
+    rule = c._NOTES[language]
+    for tool in ("get_location", "get_heading", "get_time"):
+        assert tool in rule
 
 
 @pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)

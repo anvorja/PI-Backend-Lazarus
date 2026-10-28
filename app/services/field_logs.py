@@ -5,12 +5,13 @@ La app sube solo lo nuevo de cada archivo de evidencia (`lazarus.log`,
 comprimidos y el panel los une en orden para descargarlos completos.
 """
 
+import csv
 import gzip
 import io
 import json
 import statistics
 import zipfile
-from datetime import timedelta
+from datetime import date, datetime, timedelta
 
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
@@ -53,14 +54,22 @@ def purge_old(db: Session) -> int:
     return result.rowcount or 0
 
 
-def combined(db: Session, device_id: int) -> dict[str, bytes]:
-    """Cada archivo completo: sus fragmentos unidos en el orden en que llegaron."""
+def clear(db: Session, device_id: int) -> int:
+    """Borra todos los fragmentos de logs del teléfono; devuelve cuántos eran."""
+    result = db.execute(delete(LogUpload).where(LogUpload.device_id == device_id))
+    db.commit()
+    _median_cache.pop(device_id, None)
+    return result.rowcount or 0
+
+
+def combined(db: Session, device_id: int, names: set[str] | None = None) -> dict[str, bytes]:
+    """Cada archivo completo: sus fragmentos unidos en el orden en que llegaron.
+    Con [names], solo esos archivos (el registro de la app pesa varios MB)."""
     out: dict[str, list[bytes]] = {}
-    rows = db.scalars(
-        select(LogUpload)
-        .where(LogUpload.device_id == device_id)
-        .order_by(LogUpload.created_at, LogUpload.id)
-    )
+    query = select(LogUpload).where(LogUpload.device_id == device_id)
+    if names is not None:
+        query = query.where(LogUpload.filename.in_(names))
+    rows = db.scalars(query.order_by(LogUpload.created_at, LogUpload.id))
     for row in rows:
         out.setdefault(row.filename, []).append(gzip.decompress(row.content))
     return {name: b"".join(parts) for name, parts in out.items()}
@@ -122,3 +131,80 @@ def latency(files: dict[str, bytes]) -> dict:
     ordered = sorted(values)
     p90 = ordered[min(len(ordered) - 1, int(round(0.9 * (len(ordered) - 1))))]
     return {"count": len(values), "median_ms": int(statistics.median(values)), "p90_ms": p90}
+
+
+# ---- Notas y recorrido para el editor de rutas del panel ----------------------
+
+NOTE_FILES = {"notas_campo_anterior.csv", "notas_campo.csv"}
+TRACK_FILES = {"gps_track_anterior.csv", "gps_track.csv"}
+# La app escribe la hora del GPS en UTC; el panel trabaja en hora de Colombia.
+_BOGOTA = timedelta(hours=-5)
+MAX_TRACK_POINTS = 4000
+
+
+def _number(value: str | None) -> float | None:
+    try:
+        return float(value) if value not in (None, "") else None
+    except ValueError:
+        return None
+
+
+def notes(files: dict[str, bytes]) -> list[dict]:
+    """Notas de campo en orden: hora local, texto, posición y rumbo si los hay."""
+    out: list[dict] = []
+    for name in ("notas_campo_anterior.csv", "notas_campo.csv"):
+        text = files.get(name, b"").decode("utf-8", "replace")
+        for row in csv.DictReader(io.StringIO(text)):
+            # Un encabezado repetido (archivo recreado) no es una nota.
+            if not row.get("hora") or row.get("hora") == "hora" or not row.get("nota"):
+                continue
+            out.append(
+                {
+                    "at": row["hora"],
+                    "text": row["nota"],
+                    "lat": _number(row.get("latitud")),
+                    "lon": _number(row.get("longitud")),
+                    "accuracy_m": _number(row.get("precision_m")),
+                    "reliability": row.get("estado_gps") or None,
+                    "heading": _number(row.get("rumbo_grados")),
+                }
+            )
+    return out
+
+
+def track(files: dict[str, bytes], day: date | None = None) -> dict:
+    """Posiciones del GPS de un día (hora de Colombia), las más recientes si no
+    se dice cuál, con los días disponibles. Si son muchas, se toma una de cada N."""
+    by_day: dict[date, list[dict]] = {}
+    for name in ("gps_track_anterior.csv", "gps_track.csv"):
+        text = files.get(name, b"").decode("utf-8", "replace")
+        for cols in csv.reader(io.StringIO(text)):
+            # tramo,hora,latitud,longitud,precision_m,estado,… (a veces sin encabezado)
+            if len(cols) < 6:
+                continue
+            try:
+                at = datetime.fromisoformat(cols[1].replace("Z", "+00:00"))
+            except ValueError:
+                continue
+            lat, lon, accuracy = _number(cols[2]), _number(cols[3]), _number(cols[4])
+            if lat is None or lon is None:
+                continue
+            local = (at + _BOGOTA).replace(tzinfo=None)
+            by_day.setdefault(local.date(), []).append(
+                {
+                    "at": local.isoformat(timespec="seconds"),
+                    "lat": lat,
+                    "lon": lon,
+                    "accuracy_m": accuracy,
+                    "reliability": cols[5] or None,
+                }
+            )
+    days = sorted(by_day, reverse=True)
+    chosen = day if day in by_day else (days[0] if days else None)
+    points = by_day.get(chosen, []) if chosen else []
+    step = max(1, -(-len(points) // MAX_TRACK_POINTS))
+    return {
+        "days": [d.isoformat() for d in days],
+        "day": chosen.isoformat() if chosen else None,
+        "points": points[::step],
+    }

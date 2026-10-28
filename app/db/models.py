@@ -47,6 +47,9 @@ class DeviceSession(Base):
     duration_s: Mapped[float] = mapped_column(default=0.0)
     close_code: Mapped[int | None] = mapped_column(nullable=True)
     ip: Mapped[str] = mapped_column(String(64), default="")
+    # Red del teléfono al abrir la sesión (la app la informa en el frame `start`).
+    carrier: Mapped[str] = mapped_column(String(40), default="")
+    transport: Mapped[str] = mapped_column(String(12), default="")
 
 
 class LogUpload(Base):
@@ -83,6 +86,18 @@ class AdminSession(Base):
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
 
+class RouteProfileRow(Base):
+    """Perfil de ruta curado (HU-022) como JSON validado por
+    `app.schemas.route_profile.RouteProfile`. Lleva coordenadas: vive en la base
+    de datos, no en el repositorio."""
+
+    __tablename__ = "route_profiles"
+
+    slug: Mapped[str] = mapped_column(String(60), primary_key=True)
+    data: Mapped[str] = mapped_column(Text)
+    updated_at: Mapped[datetime] = mapped_column(DateTime)
+
+
 class AppSetting(Base):
     """Ajustes del panel (servicio abierto, horario), como JSON por clave."""
 
@@ -90,3 +105,24 @@ class AppSetting(Base):
 
     key: Mapped[str] = mapped_column(String(40), primary_key=True)
     value: Mapped[str] = mapped_column(Text)
+
+
+class MetricSample(Base):
+    """Muestra periódica del proceso del backend (CPU, RAM, sesiones, tráfico).
+
+    Sirve para dimensionar el servidor y comparar plataformas (Render, AWS):
+    `platform` viene de la variable PLATFORM del despliegue.
+    """
+
+    __tablename__ = "metric_samples"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    ts: Mapped[datetime] = mapped_column(DateTime, index=True)
+    platform: Mapped[str] = mapped_column(String(20), index=True)
+    cpu_pct: Mapped[float] = mapped_column(default=0.0)  # % de un núcleo
+    rss_mb: Mapped[float] = mapped_column(default=0.0)
+    active_sessions: Mapped[int] = mapped_column(default=0)
+    bytes_up: Mapped[int] = mapped_column(default=0)  # app → Gemini en el intervalo
+    bytes_down: Mapped[int] = mapped_column(default=0)  # Gemini → app en el intervalo
+    loop_lag_ms: Mapped[float] = mapped_column(default=0.0)  # peor retraso del event loop
+    interval_s: Mapped[float] = mapped_column(default=0.0)

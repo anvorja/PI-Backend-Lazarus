@@ -201,3 +201,6 @@ __marimo__/
 
 # Base SQLite local del panel del piloto (en producción, Postgres).
 *.db
+
+# Notas locales del autor: nunca al remoto
+nota_importante.txt

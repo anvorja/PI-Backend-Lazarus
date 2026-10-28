@@ -1,4 +1,5 @@
-"""Rutas que usa la app (HU-044 y HU-045): registro, estado y logs de campo."""
+"""Rutas que usa la app (HU-044, HU-045 y HU-022): registro, estado, logs de campo
+y perfiles de ruta."""
 
 from fastapi import APIRouter, Depends, File, Header, HTTPException, Request, UploadFile, status
 from pydantic import BaseModel, Field
@@ -7,7 +8,8 @@ from sqlalchemy.orm import Session
 
 from app.db.models import APPROVED, Device
 from app.db.session import get_db
-from app.services import access, field_logs
+from app.schemas.route_profile import RouteProfile
+from app.services import access, field_logs, route_profiles
 
 router = APIRouter(prefix="/devices", tags=["devices"])
 
@@ -107,3 +109,12 @@ async def upload_logs(
     db.commit()
     field_logs.purge_old(db)
     return {"saved": saved}
+
+
+@router.get("/me/routes", response_model=list[RouteProfile])
+def routes(device: Device = Depends(device_from_header), db: Session = Depends(get_db)):
+    """Perfiles de ruta curados (HU-022): la app los descarga al iniciar y los
+    guarda para usarlos sin datos. Llevan coordenadas: solo teléfonos aprobados."""
+    if device.status != APPROVED:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Dispositivo no aprobado")
+    return route_profiles.all_profiles(db)
