@@ -8,7 +8,19 @@ from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.db.models import APPROVED, DISABLED, PENDING, AdminUser, Device, DeviceSession, LogUpload
+from app.db.models import (
+    APPROVED,
+    DISABLED,
+    NOTE_APPLIED,
+    NOTE_DISMISSED,
+    NOTE_PENDING,
+    PENDING,
+    AdminUser,
+    Device,
+    DeviceSession,
+    LogUpload,
+    NoteReview,
+)
 from app.db.session import get_db
 from app.schemas.route_profile import RouteProfile
 from app.services import access, admin_auth, field_logs, metrics, route_profiles, usage
@@ -322,9 +334,45 @@ def device_logs(
 def device_notes(
     device_id: int, _: AdminUser = Depends(current_admin), db: Session = Depends(get_db)
 ):
-    """Notas de campo del teléfono, para curar rutas en el panel."""
+    """Notas de campo del teléfono, para curar rutas en el panel: con la ruta y el
+    punto siguiente si se dictaron con una ruta activa, y si ya se revisaron."""
     _device(db, device_id)
-    return field_logs.notes(field_logs.combined(db, device_id, field_logs.NOTE_FILES))
+    notes = field_logs.notes(field_logs.combined(db, device_id, field_logs.NOTE_FILES))
+    reviews = {
+        r.note_key: r.status
+        for r in db.scalars(select(NoteReview).where(NoteReview.device_id == device_id))
+    }
+    for note in notes:
+        note["review"] = reviews.get(field_logs.note_key(note["at"], note["text"]), NOTE_PENDING)
+    return notes
+
+
+class NoteReviewBody(BaseModel):
+    at: str = Field(min_length=1, max_length=40)
+    text: str = Field(min_length=1, max_length=2000)
+    status: str = Field(pattern=f"^({NOTE_PENDING}|{NOTE_APPLIED}|{NOTE_DISMISSED})$")
+
+
+@router.put("/devices/{device_id}/notes/review")
+def review_note(
+    device_id: int,
+    body: NoteReviewBody,
+    _: AdminUser = Depends(current_admin),
+    db: Session = Depends(get_db),
+):
+    """Marca una nota como aplicada al perfil, descartada o de nuevo pendiente (HU-050)."""
+    _device(db, device_id)
+    key = field_logs.note_key(body.at, body.text)
+    row = db.scalar(
+        select(NoteReview).where(NoteReview.device_id == device_id, NoteReview.note_key == key)
+    )
+    if row is None:
+        row = NoteReview(device_id=device_id, note_key=key)
+    row.status = body.status
+    row.updated_at = access.utcnow()
+    db.add(row)
+    db.commit()
+    return {"at": body.at, "text": body.text, "review": row.status}
 
 
 @router.get("/devices/{device_id}/track")

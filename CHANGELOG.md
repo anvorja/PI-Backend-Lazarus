@@ -13,6 +13,10 @@ release del Release Plan de Lazarus.
     facturación o cuota;
   - `POST /api/v1/admin/usage/check` prueba la conexión con Gemini sin gastar minutos;
   - límites configurables desde el panel (`usage_limits`), con aviso desde el 80 %.
+- Notas ligadas a la ruta (HU-050, LAZA-123): el teléfono puede subir `notas_ruta.csv` con
+  la ruta y el punto siguiente de cada nota; `/admin/devices/{id}/notes` los une a la nota
+  junto con su revisión, y `PUT /admin/devices/{id}/notes/review` la marca aplicada,
+  descartada o pendiente.
 - ADR 0001 a 0003 y documentos de arquitectura en `docs/architecture`.
 
 ### Cambiado
