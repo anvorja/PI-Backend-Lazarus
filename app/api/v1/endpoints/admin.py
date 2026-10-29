@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from app.db.models import APPROVED, DISABLED, PENDING, AdminUser, Device, DeviceSession, LogUpload
 from app.db.session import get_db
 from app.schemas.route_profile import RouteProfile
-from app.services import access, admin_auth, field_logs, metrics, route_profiles
+from app.services import access, admin_auth, field_logs, metrics, route_profiles, usage
 from app.services.admin_auth import REFRESH_COOKIE, current_admin
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -87,9 +87,18 @@ class Schedule(BaseModel):
     model_config = {"populate_by_name": True}
 
 
+class UsageLimits(BaseModel):
+    """Límites del mes (HU-051). 0 = sin límite definido."""
+
+    transfer_gb: float = Field(default=100, ge=0, le=100_000)
+    live_minutes: float = Field(default=0, ge=0, le=1_000_000)
+    warn_pct: float = Field(default=80, ge=1, le=100)
+
+
 class SettingsBody(BaseModel):
     service_open: bool | None = None
     schedule: Schedule | None = None
+    usage_limits: UsageLimits | None = None
 
 
 @router.get("/settings")
@@ -108,9 +117,37 @@ def put_settings(
         values["service_open"] = body.service_open
     if body.schedule is not None:
         values["schedule"] = body.schedule.model_dump(by_alias=True)
+    if body.usage_limits is not None:
+        values["usage_limits"] = body.usage_limits.model_dump()
     current = access.put_settings(db, values)
     current["open_now"] = access.service_open(db, access.utcnow())
     return current
+
+
+# ---- Consumo (HU-051) ---------------------------------------------------------
+
+
+@router.get("/usage")
+def get_usage(_: AdminUser = Depends(current_admin), db: Session = Depends(get_db)):
+    """Consumo del mes frente a los límites, y la última falla de Gemini.
+
+    `last_failure` es 'billing' o 'quota' si una sesión reciente se cerró por
+    eso (no se arregla reintentando); None si no.
+    """
+    from app.sockets.live_proxy import last_upstream_failure
+
+    limits = access.get_settings(db)["usage_limits"]
+    out = usage.monthly_usage(db, access.utcnow(), limits)
+    cause = last_upstream_failure()
+    out["last_failure"] = cause if cause in ("billing", "quota") else None
+    out["limits"] = limits
+    return out
+
+
+@router.post("/usage/check")
+async def check_usage(_: AdminUser = Depends(current_admin)):
+    """Prueba ya la conexión con Gemini (sin audio): para la lista de antes de salir."""
+    return await usage.check_gemini()
 
 
 # ---- Dispositivos -----------------------------------------------------------

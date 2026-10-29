@@ -54,6 +54,8 @@ DEFAULT_SETTINGS: dict = {
     "service_open": True,
     # Horario de las jornadas: días 0=lunes … 6=domingo, horas de Colombia.
     "schedule": {"enabled": False, "days": [5], "from": "08:00", "to": "13:00"},
+    # Límites del mes para las alertas de consumo (HU-051).
+    "usage_limits": {"transfer_gb": 100, "live_minutes": 0, "warn_pct": 80},
 }
 
 
