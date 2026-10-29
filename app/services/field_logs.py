@@ -7,6 +7,7 @@ comprimidos y el panel los une en orden para descargarlos completos.
 
 import csv
 import gzip
+import hashlib
 import io
 import json
 import statistics
@@ -30,6 +31,8 @@ ALLOWED_FILES = {
     "gps_track_anterior.csv",
     "notas_campo.csv",
     "notas_campo_anterior.csv",
+    # Ruta y punto de cada nota dictada con una ruta activa (HU-050).
+    "notas_ruta.csv",
 }
 MAX_UPLOAD_BYTES = 5 * 1024 * 1024
 
@@ -135,7 +138,7 @@ def latency(files: dict[str, bytes]) -> dict:
 
 # ---- Notas y recorrido para el editor de rutas del panel ----------------------
 
-NOTE_FILES = {"notas_campo_anterior.csv", "notas_campo.csv"}
+NOTE_FILES = {"notas_campo_anterior.csv", "notas_campo.csv", "notas_ruta.csv"}
 TRACK_FILES = {"gps_track_anterior.csv", "gps_track.csv"}
 # La app escribe la hora del GPS en UTC; el panel trabaja en hora de Colombia.
 _BOGOTA = timedelta(hours=-5)
@@ -149,8 +152,36 @@ def _number(value: str | None) -> float | None:
         return None
 
 
+def _route_of_notes(files: dict[str, bytes]) -> dict[tuple[str, str], dict]:
+    """Ruta y punto siguiente de cada nota dictada con una ruta activa (HU-050).
+
+    La app los escribe en `notas_ruta.csv`, aparte de `notas_campo.csv`: cambiar
+    el encabezado de ese archivo rompería la subida por fragmentos. Se unen por
+    la hora y el texto de la nota.
+    """
+    out: dict[tuple[str, str], dict] = {}
+    text = files.get("notas_ruta.csv", b"").decode("utf-8", "replace")
+    for row in csv.DictReader(io.StringIO(text)):
+        if not row.get("hora") or row.get("hora") == "hora" or not row.get("ruta"):
+            continue
+        point = _number(row.get("punto"))
+        out[(row["hora"], row.get("nota") or "")] = {
+            "route": row["ruta"],
+            "point": int(point) if point is not None else None,
+            "point_name": row.get("nombre_punto") or None,
+        }
+    return out
+
+
+def note_key(at: str, text: str) -> str:
+    """Identificador estable de una nota de un teléfono: su hora y su texto."""
+    return hashlib.sha256(f"{at}\n{text}".encode()).hexdigest()
+
+
 def notes(files: dict[str, bytes]) -> list[dict]:
-    """Notas de campo en orden: hora local, texto, posición y rumbo si los hay."""
+    """Notas de campo en orden: hora local, texto, posición y rumbo si los hay,
+    y la ruta y el punto siguiente si se dictaron con una ruta activa."""
+    routes = _route_of_notes(files)
     out: list[dict] = []
     for name in ("notas_campo_anterior.csv", "notas_campo.csv"):
         text = files.get(name, b"").decode("utf-8", "replace")
@@ -167,6 +198,10 @@ def notes(files: dict[str, bytes]) -> list[dict]:
                     "accuracy_m": _number(row.get("precision_m")),
                     "reliability": row.get("estado_gps") or None,
                     "heading": _number(row.get("rumbo_grados")),
+                    **routes.get(
+                        (row["hora"], row["nota"]),
+                        {"route": None, "point": None, "point_name": None},
+                    ),
                 }
             )
     return out

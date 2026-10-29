@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from sqlalchemy import BigInteger, DateTime, ForeignKey, LargeBinary, String, Text
+from sqlalchemy import BigInteger, DateTime, ForeignKey, LargeBinary, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.session import Base
@@ -140,3 +140,24 @@ class UsageDay(Base):
     day: Mapped[str] = mapped_column(String(10), primary_key=True)  # AAAA-MM-DD, Colombia
     bytes_up: Mapped[int] = mapped_column(BigInteger, default=0)  # app → Gemini
     bytes_down: Mapped[int] = mapped_column(BigInteger, default=0)  # Gemini → app
+
+
+# Estados de la revisión de una nota de campo en el editor de rutas (HU-050).
+NOTE_PENDING = "pending"
+NOTE_APPLIED = "applied"
+NOTE_DISMISSED = "dismissed"
+
+
+class NoteReview(Base):
+    """Revisión de una nota de campo en el editor de rutas (HU-050): si ya se
+    aplicó al perfil o se descartó. La nota se identifica por su hora y su texto
+    (`note_key`), porque vive en el CSV que sube el teléfono."""
+
+    __tablename__ = "note_reviews"
+    __table_args__ = (UniqueConstraint("device_id", "note_key"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    device_id: Mapped[int] = mapped_column(ForeignKey("devices.id", ondelete="CASCADE"))
+    note_key: Mapped[str] = mapped_column(String(64))
+    status: Mapped[str] = mapped_column(String(12), default=NOTE_PENDING)
+    updated_at: Mapped[datetime] = mapped_column(DateTime)

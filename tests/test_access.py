@@ -342,6 +342,10 @@ def test_panel_lee_notas_y_recorrido_para_curar_rutas(client):
         "accuracy_m": 4.9,
         "reliability": "reliable",
         "heading": 34.0,
+        "route": None,
+        "point": None,
+        "point_name": None,
+        "review": "pending",
     }
     assert got[1]["lat"] is None and got[1]["text"] == "sin posición"
     url = f"/api/v1/admin/devices/{device_id}/track"
@@ -354,3 +358,54 @@ def test_panel_lee_notas_y_recorrido_para_curar_rutas(client):
     assert len(other["points"]) == 1 and other["points"][0]["reliability"] == "unknown"
     assert client.get("/api/v1/admin/devices/999999/notes", headers=headers).status_code == 404
     assert client.get(url).status_code == 401
+
+
+def test_notas_ligadas_a_la_ruta_y_su_revision(client):
+    """HU-050: la nota dictada con una ruta activa trae la ruta y el punto
+    siguiente (de `notas_ruta.csv`), y el panel la marca aplicada o descartada."""
+    headers = _admin(client)
+    token = _register(client)
+    device_id = _set_device(token, status="approved", name="Participante 4")
+    notes = (
+        "hora,nota,latitud,longitud,precision_m,estado_gps,rumbo_grados,rumbo_fuente\n"
+        "2026-11-07T09:10:00.123,aquí debe decir gira a la derecha,1.0,-2.0,5.0,reliable,90,gps\n"
+        "2026-11-07T09:12:00.000,hay un escalón,1.0001,-2.0,5.0,reliable,,\n"
+    ).encode()
+    route = (
+        "hora,ruta,punto,nombre_punto,nota\n"
+        "2026-11-07T09:10:00.123,estacion-univalle-ida,3,Cebra,"
+        "aquí debe decir gira a la derecha\n"
+    ).encode()
+    r = client.post(
+        "/api/v1/devices/me/logs",
+        headers={"X-Device-Token": token},
+        files=[
+            ("files", ("notas_campo.csv", notes, "text/csv")),
+            ("files", ("notas_ruta.csv", route, "text/csv")),
+        ],
+    )
+    assert r.status_code == 201
+    url = f"/api/v1/admin/devices/{device_id}/notes"
+    first, second = client.get(url, headers=headers).json()
+    assert (first["route"], first["point"], first["point_name"]) == (
+        "estacion-univalle-ida",
+        3,
+        "Cebra",
+    )
+    assert second["route"] is None and second["review"] == "pending"
+
+    body = {"at": first["at"], "text": first["text"], "status": "applied"}
+    r = client.put(f"{url}/review", headers=headers, json=body)
+    assert r.json()["review"] == "applied"
+    assert client.get(url, headers=headers).json()[0]["review"] == "applied"
+    # Cambiar de opinión actualiza la misma revisión.
+    client.put(f"{url}/review", headers=headers, json={**body, "status": "dismissed"})
+    got = client.get(url, headers=headers).json()
+    assert [n["review"] for n in got] == ["dismissed", "pending"]
+
+    bad = client.put(f"{url}/review", headers=headers, json={**body, "status": "borrada"})
+    assert bad.status_code == 422
+    assert client.put(f"{url}/review", json=body).status_code == 401
+    assert (
+        client.put("/api/v1/admin/devices/999999/notes/review", headers=headers, json=body)
+    ).status_code == 404
