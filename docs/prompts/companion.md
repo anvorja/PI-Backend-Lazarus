@@ -2,6 +2,31 @@
 
 > Registro de versiones del prompt de sistema (`app/prompts/companion.py`). Cada cambio de comportamiento sube `PROMPT_VERSION` y agrega aquí un bloque `## vX.Y.Z — fecha — motivo`, del más reciente al más antiguo. El backend registra la versión en el log al iniciar cada sesión.
 
+## v1.30.0 — 2026-10-29 — Con una ruta activa no dice "no puedo guiarte" ni lee "[RUTA]" (LAZA-126)
+
+**Motivo:** en las jornadas del 27 y el 28 de octubre (hallazgos 37 y 38; D8 y D12 de
+QA-004), con la ruta activa, el asistente dijo "No puedo guiarte hasta Univalle" y "No hay
+una ruta cargada cerca" mientras la guía callaba entre dos puntos. El 28-oct lo dijo 3 veces y
+leyó en voz alta un "[RUTA]" a las 13:25. La causa estaba en la regla "fuera de los mensajes
+'[RUTA]', SIN RUTAS sigue igual", que el asistente aplicó a la ruta activa.
+
+**Cambio en el prompt (5 idiomas), bloque RUTA CURADA, regla nueva RUTA ACTIVA:**
+- La ruta sigue activa desde que `start_route` responde `ok`, `already_active` o
+  `waiting_gps`, o desde que llega un `'[RUTA]'` con `still guiding` (sesión nueva), hasta
+  `finished` o `stop_route`, aunque pasen minutos sin mensajes.
+- Mientras siga activa, nunca dice que no puede guiar ni que no hay una ruta cargada. Si la
+  persona pregunta por dónde sigue, repite la última indicación de `'[RUTA]'` o le dice que
+  la app avisará en el siguiente punto.
+- `stop_route` solo cuando la persona pide con sus palabras dejar la ruta. La descripción de
+  la función también lo dice.
+- Nunca lee en voz alta la etiqueta `'[RUTA]'` ni las palabras en inglés del mensaje
+  (`crossing`, `finished`, `point`, `next`): dice el contenido en el idioma de la persona.
+- Entre dos `'[RUTA]'` sigue sin agregar giros ni distancias por su cuenta (SIN RUTAS).
+
+**Criterio de cierre:** el registro de la siguiente jornada muestra cero "no puedo guiarte" y
+cero "[RUTA]" leídos con la ruta activa (acción 3 de la Retrospective del Sprint 2). Se
+despliega fuera de las jornadas.
+
 ## v1.29.0 — 2026-10-27 — La observación no repite ni dice que la vista sigue igual (LAZA-51)
 
 **Motivo:** en la prueba con TalkBack del 27 de octubre, con la persona quieta en una mesa,

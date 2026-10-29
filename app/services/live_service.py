@@ -307,8 +307,9 @@ _FUNCTION_DECLARATIONS = [
     {
         "name": "stop_route",
         "description": (
-            "Deja de guiar por la ruta curada activa. Úsalo cuando la persona pida "
-            "dejar la ruta, cambie de destino o diga que ya no la necesita."
+            "Deja de guiar por la ruta curada activa. Úsalo solo cuando la persona "
+            "pida con sus palabras dejar la ruta, cambie de destino o diga que ya no "
+            "la necesita; nunca porque pasen minutos sin mensajes '[RUTA]'."
         ),
         "parameters": {"type": "object", "properties": {}},
     },

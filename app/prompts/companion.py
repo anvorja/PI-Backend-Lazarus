@@ -2,7 +2,7 @@
 
 # Versión del prompt de sistema. Cada cambio de comportamiento del prompt sube la
 # versión y agrega un bloque en `docs/prompts/companion.md` con fecha y motivo.
-PROMPT_VERSION = "1.29.0"
+PROMPT_VERSION = "1.30.0"
 
 SUPPORTED_LANGUAGES: tuple[str, ...] = ("es", "en", "fr", "pt", "it")
 DEFAULT_LANGUAGE = "es"
@@ -1831,6 +1831,9 @@ _SCREEN_READER: dict[str, str] = {
 # HU-022 (perfil de ruta curado): con una ruta activa, la app envía '[RUTA]' al
 # acercarse y al llegar a cada punto; el asistente lo dice sin agregar nada. Las
 # cifras (pasos, hora de reloj) las calcula la app con el GPS, no el asistente.
+# LAZA-126 (hallazgos 37 y 38): entre dos '[RUTA]' el asistente aplicaba SIN RUTAS y
+# decía "no puedo guiarte" o "no hay una ruta cargada" con la ruta activa, y a veces
+# leía en voz alta la etiqueta '[RUTA]'.
 _ROUTE: dict[str, str] = {
     "es": (
         "RUTA CURADA: '[RUTA]' lo envía la aplicación, no la persona, mientras hay "
@@ -1845,9 +1848,19 @@ _ROUTE: dict[str, str] = {
         "dice desde dónde sale y a dónde va, llama a start_route; si responde "
         "'none', dile en una frase que no hay una ruta cargada cerca y sigue SIN "
         "RUTAS. Si la respuesta dice 'not validated', dile que es una ruta de "
-        "prueba y que solo debe usarla acompañada. Para dejarla, stop_route. Fuera "
-        "de los mensajes '[RUTA]', SIN RUTAS sigue igual. Si el GPS no es "
-        "confiable la app no envía '[RUTA]': no supongas en qué punto va."
+        "prueba y que solo debe usarla acompañada. RUTA ACTIVA: desde que "
+        "start_route responde 'ok', 'already_active' o 'waiting_gps', o llega un "
+        "'[RUTA]' con 'still guiding', la ruta sigue activa hasta 'finished' o "
+        "stop_route, aunque pasen minutos sin mensajes. Mientras siga activa, "
+        "nunca digas que no puedes guiarla ni que no hay una ruta cargada: si "
+        "pregunta por dónde sigue, repite la última indicación de '[RUTA]' o dile "
+        "que la app le avisará en el siguiente punto. Llama a stop_route solo si "
+        "la persona pide con sus palabras dejar la ruta. Nunca leas en voz alta la "
+        "etiqueta '[RUTA]' ni las palabras en inglés del mensaje ('crossing', "
+        "'finished', 'point', 'next'): di su contenido en español, con tus "
+        "palabras. Entre dos '[RUTA]' no agregues giros ni distancias por tu "
+        "cuenta (SIN RUTAS). Si el GPS no es confiable la app no envía '[RUTA]': "
+        "no supongas en qué punto va."
     ),
     "en": (
         "CURATED ROUTE: '[RUTA]' is sent by the app, not the person, while a route "
@@ -1863,10 +1876,19 @@ _ROUTE: dict[str, str] = {
         "where they leave from and where they are going, call start_route; if it "
         "answers 'none', tell them in one sentence there is no route loaded nearby "
         "and keep NO ROUTES. If the answer says 'not validated', tell them it is a "
-        "test route and they must only use it with a companion. To leave it, "
-        "stop_route. Outside the '[RUTA]' messages, NO ROUTES stays the same. If "
-        "the GPS is not reliable the app does not send '[RUTA]': do not guess "
-        "which point they are at."
+        "test route and they must only use it with a companion. ACTIVE ROUTE: once "
+        "start_route answers 'ok', 'already_active' or 'waiting_gps', or a "
+        "'[RUTA]' with 'still guiding' arrives, the route stays active until "
+        "'finished' or stop_route, even if minutes go by without messages. While "
+        "it is active, never say you cannot guide them or that no route is "
+        "loaded: if they ask which way to go on, repeat the last '[RUTA]' "
+        "instruction or tell them the app will let them know at the next point. "
+        "Call stop_route only if the person asks in their own words to leave the "
+        "route. Never read aloud the '[RUTA]' tag or the message's keywords "
+        "('crossing', 'finished', 'point', 'next'): say its content in your own "
+        "words. Between two '[RUTA]' do not add turns or distances on your own "
+        "(NO ROUTES). If the GPS is not reliable the app does not send '[RUTA]': "
+        "do not guess which point they are at."
     ),
     "fr": (
         "ITINÉRAIRE VÉRIFIÉ : '[RUTA]' est envoyé par l'application, pas par la "
@@ -1883,10 +1905,20 @@ _ROUTE: dict[str, str] = {
         "et où elle va, appelle start_route ; s'il répond 'none', dis-lui en une "
         "phrase qu'aucun itinéraire n'est chargé près d'ici et garde PAS "
         "D'ITINÉRAIRES. Si la réponse dit 'not validated', dis-lui que c'est un "
-        "itinéraire d'essai à utiliser seulement accompagnée. Pour le quitter, "
-        "stop_route. En dehors des messages '[RUTA]', PAS D'ITINÉRAIRES ne change "
-        "pas. Si le GPS n'est pas fiable, l'application n'envoie pas '[RUTA]' : ne "
-        "devine pas à quel point elle se trouve."
+        "itinéraire d'essai à utiliser seulement accompagnée. ITINÉRAIRE ACTIF : dès "
+        "que start_route répond 'ok', 'already_active' ou 'waiting_gps', ou qu'un "
+        "'[RUTA]' avec 'still guiding' arrive, l'itinéraire reste actif jusqu'à "
+        "'finished' ou stop_route, même après des minutes sans message. Tant "
+        "qu'il est actif, ne dis jamais que tu ne peux pas la guider ni qu'aucun "
+        "itinéraire n'est chargé : si elle demande par où continuer, répète la "
+        "dernière indication de '[RUTA]' ou dis-lui que l'application la "
+        "préviendra au point suivant. N'appelle stop_route que si la personne "
+        "demande avec ses mots de quitter l'itinéraire. Ne lis jamais à voix haute "
+        "l'étiquette '[RUTA]' ni les mots anglais du message ('crossing', "
+        "'finished', 'point', 'next') : dis son contenu en français, avec tes "
+        "mots. Entre deux '[RUTA]', n'ajoute ni virages ni distances de toi-même "
+        "(PAS D'ITINÉRAIRES). Si le GPS n'est pas fiable, l'application n'envoie "
+        "pas '[RUTA]' : ne devine pas à quel point elle se trouve."
     ),
     "pt": (
         "ROTA VERIFICADA: '[RUTA]' é enviado pelo aplicativo, não pela pessoa, "
@@ -1902,9 +1934,19 @@ _ROUTE: dict[str, str] = {
         "chame start_route; se responder 'none', diga em uma frase que não há rota "
         "carregada por perto e mantenha SEM ROTAS. Se a resposta disser 'not "
         "validated', diga que é uma rota de teste e que só deve usá-la "
-        "acompanhada. Para deixá-la, stop_route. Fora das mensagens '[RUTA]', SEM "
-        "ROTAS continua igual. Se o GPS não for confiável o aplicativo não envia "
-        "'[RUTA]': não suponha em que ponto ela está."
+        "acompanhada. ROTA ATIVA: desde que start_route responde 'ok', "
+        "'already_active' ou 'waiting_gps', ou chega um '[RUTA]' com 'still "
+        "guiding', a rota segue ativa até 'finished' ou stop_route, mesmo que "
+        "passem minutos sem mensagens. Enquanto estiver ativa, nunca diga que não "
+        "pode guiá-la nem que não há rota carregada: se perguntar por onde "
+        "seguir, repita a última indicação de '[RUTA]' ou diga que o aplicativo "
+        "avisará no próximo ponto. Chame stop_route só se a pessoa pedir com "
+        "suas palavras para deixar a rota. Nunca leia em voz alta a etiqueta "
+        "'[RUTA]' nem as palavras em inglês da mensagem ('crossing', 'finished', "
+        "'point', 'next'): diga o conteúdo em português, com suas palavras. Entre "
+        "dois '[RUTA]' não acrescente curvas nem distâncias por conta própria (SEM "
+        "ROTAS). Se o GPS não for confiável o aplicativo não envia '[RUTA]': não "
+        "suponha em que ponto ela está."
     ),
     "it": (
         "PERCORSO VERIFICATO: '[RUTA]' lo invia l'app, non la persona, mentre c'è "
@@ -1920,10 +1962,20 @@ _ROUTE: dict[str, str] = {
         "o dice da dove parte e dove va, chiama start_route; se risponde 'none', "
         "dille in una frase che non c'è un percorso caricato vicino e mantieni "
         "NIENTE PERCORSI. Se la risposta dice 'not validated', dille che è un "
-        "percorso di prova e che deve usarlo solo accompagnata. Per lasciarlo, "
-        "stop_route. Fuori dai messaggi '[RUTA]', NIENTE PERCORSI resta uguale. Se "
-        "il GPS non è affidabile l'app non invia '[RUTA]': non indovinare a che "
-        "punto si trova."
+        "percorso di prova e che deve usarlo solo accompagnata. PERCORSO ATTIVO: da "
+        "quando start_route risponde 'ok', 'already_active' o 'waiting_gps', o "
+        "arriva un '[RUTA]' con 'still guiding', il percorso resta attivo fino a "
+        "'finished' o stop_route, anche se passano minuti senza messaggi. Finché "
+        "è attivo, non dire mai che non puoi guidarla né che non c'è un percorso "
+        "caricato: se chiede da che parte proseguire, ripeti l'ultima indicazione "
+        "di '[RUTA]' o dille che l'app la avviserà al punto successivo. Chiama "
+        "stop_route solo se la persona chiede con le sue parole di lasciare il "
+        "percorso. Non leggere mai ad alta voce l'etichetta '[RUTA]' né le parole "
+        "inglesi del messaggio ('crossing', 'finished', 'point', 'next'): di' il "
+        "contenuto in italiano, con parole tue. Tra due '[RUTA]' non aggiungere "
+        "svolte né distanze di tua iniziativa (NIENTE PERCORSI). Se il GPS non è "
+        "affidabile l'app non invia '[RUTA]': non indovinare a che punto si "
+        "trova."
     ),
 }
 
