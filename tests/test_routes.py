@@ -126,3 +126,14 @@ def test_ruta_curada_en_el_prompt(language, screen_locked):
     assert c._CROSSING[language].split(":")[0].strip() in rule
     assert c._NO_ROUTES[language].split(":")[0].strip() in rule
     assert prompt.index(c._UNICENTRO[language]) < prompt.index(rule)
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+def test_con_la_ruta_activa_no_dice_que_no_puede_guiar(language):
+    # LAZA-126 (hallazgos 37 y 38): la ruta sigue activa entre dos '[RUTA]', el
+    # asistente no la deja por su cuenta y no lee en voz alta la etiqueta.
+    rule = c._ROUTE[language]
+    for word in ("'ok'", "'already_active'", "'waiting_gps'", "'still guiding'"):
+        assert word in rule
+    assert rule.count("stop_route") >= 2
+    assert "'point'" in rule and "'next'" in rule
