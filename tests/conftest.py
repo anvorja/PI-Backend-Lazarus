@@ -5,6 +5,17 @@ import os
 os.environ.setdefault("GEMINI_API_KEY", "clave-de-prueba")
 os.environ.setdefault("CORS_ORIGINS", '["http://localhost"]')
 
+# El `.env` local (el de desarrollo, con la aprobación de teléfonos activa y
+# las credenciales del panel) no debe cambiar las pruebas: las variables de
+# entorno tienen prioridad sobre el archivo. Sin esto, con un `.env` local
+# fallaban 31 pruebas que en la CI (sin `.env`) pasan.
+os.environ["DEVICE_AUTH_REQUIRED"] = "false"
+os.environ["ADMIN_USERNAME"] = ""
+os.environ["ADMIN_PASSWORD"] = ""
+os.environ["PLATFORM"] = "local"
+os.environ["DEBUG"] = "false"
+os.environ["GEMINI_LIVE_LANGUAGE"] = "es"
+
 # Base de datos de pruebas: SQLite en un archivo temporal, nunca la de Render.
 import tempfile  # noqa: E402
 
