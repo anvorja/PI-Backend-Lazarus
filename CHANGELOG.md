@@ -4,6 +4,22 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y
 [versionado semántico](https://semver.org/lang/es/). Cada versión corresponde a una
 release del Release Plan de Lazarus.
 
+## [Sin publicar] · Sprint 3
+
+### Agregado
+- Alertas de consumo para el panel (HU-051, LAZA-124):
+  - `GET /api/v1/admin/usage` da la transferencia del mes frente al límite del plan de
+    Render, los minutos de Live frente al presupuesto y la última falla de Gemini por
+    facturación o cuota;
+  - `POST /api/v1/admin/usage/check` prueba la conexión con Gemini sin gastar minutos;
+  - límites configurables desde el panel (`usage_limits`), con aviso desde el 80 %.
+- ADR 0001 a 0003 y documentos de arquitectura en `docs/architecture`.
+
+### Cambiado
+- Prompt v1.30.0: con una ruta activa, el asistente no dice "no puedo guiarte" ni lee
+  "[RUTA]" (LAZA-126).
+- Las pruebas no dependen del `.env` local.
+
 ## [0.2.0] — 2026-10-29 · R1: piloto técnico listo para campo
 
 Primera versión del backend usada en campo con un usuario real: prueba diurna controlada

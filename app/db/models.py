@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, LargeBinary, String, Text
+from sqlalchemy import BigInteger, DateTime, ForeignKey, LargeBinary, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.session import Base
@@ -126,3 +126,17 @@ class MetricSample(Base):
     bytes_down: Mapped[int] = mapped_column(default=0)  # Gemini → app en el intervalo
     loop_lag_ms: Mapped[float] = mapped_column(default=0.0)  # peor retraso del event loop
     interval_s: Mapped[float] = mapped_column(default=0.0)
+
+
+class UsageDay(Base):
+    """Tráfico del proxy acumulado por día de Colombia (HU-051).
+
+    Las muestras de `metric_samples` se purgan a los 14 días; este total diario
+    se conserva para comparar el mes contra el límite de transferencia de Render.
+    """
+
+    __tablename__ = "usage_days"
+
+    day: Mapped[str] = mapped_column(String(10), primary_key=True)  # AAAA-MM-DD, Colombia
+    bytes_up: Mapped[int] = mapped_column(BigInteger, default=0)  # app → Gemini
+    bytes_down: Mapped[int] = mapped_column(BigInteger, default=0)  # Gemini → app

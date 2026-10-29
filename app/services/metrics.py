@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.db.models import MetricSample
 from app.db.session import SessionLocal
+from app.services import usage
 from app.services.access import utcnow
 
 # Cada cuántos segundos se revisa el retraso del event loop dentro de un intervalo.
@@ -50,6 +51,15 @@ def active_sessions() -> int:
     return _active_sessions
 
 
+_stored_up = 0
+_stored_down = 0
+
+
+def pending_bytes() -> tuple[int, int]:
+    """Tráfico contado que todavía no se guardó en una muestra."""
+    return max(_bytes_up - _stored_up, 0), max(_bytes_down - _stored_down, 0)
+
+
 def take_sample(
     process: psutil.Process, last_up: int, last_down: int, lag_s: float, interval_s: float
 ) -> tuple[MetricSample, int, int]:
@@ -70,12 +80,17 @@ def take_sample(
 
 
 def _store(sample: MetricSample, purge: bool) -> None:
+    global _stored_up, _stored_down
     with SessionLocal() as db:
         db.add(sample)
+        # Total diario para el consumo del mes (HU-051): sobrevive a la purga.
+        usage.add_day_bytes(db, sample.ts, sample.bytes_up, sample.bytes_down)
         if purge:
             limit = utcnow() - timedelta(days=settings.metrics_retention_days)
             db.execute(delete(MetricSample).where(MetricSample.ts < limit))
         db.commit()
+    _stored_up += sample.bytes_up
+    _stored_down += sample.bytes_down
 
 
 async def run_sampler() -> None:
