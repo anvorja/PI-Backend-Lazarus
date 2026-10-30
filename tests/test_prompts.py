@@ -675,3 +675,22 @@ def test_ruta_con_gps_perdido_no_afirma_la_posicion(language, screen_locked):
     assert rule in c.get_live_system_prompt(language, screen_locked=screen_locked)
     assert "nunca digas en qué punto va" in c._ROUTE["es"]
     assert "never say which point" in c._ROUTE["en"]
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+def test_cruce_con_las_heuristicas_de_orientacion_y_movilidad(language):
+    # HU-020, estado del arte (29-oct): semáforo peatonal vs. vehicular, giro a la
+    # derecha en rojo (Ley 769, art. 118), cebra como cruce sin control, silencio
+    # mientras cruza y la llegada la confirma el bastón.
+    rule = c._CROSSING[language]
+    assert any(n in rule for n in ("Colombia", "Colombie", "Colômbia"))
+    assert rule in c.get_live_system_prompt(language)
+    es = c._CROSSING["es"]
+    for phrase in (
+        "no veo semáforo peatonal",
+        "girar a la derecha en rojo",
+        "los conductores no siempre ceden",
+        "habla lo mínimo",
+        "confirme con el bastón",
+    ):
+        assert phrase in es
