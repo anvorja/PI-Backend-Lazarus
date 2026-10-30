@@ -648,3 +648,27 @@ def test_campo_no_narra_varias_funciones(language):
     # Participante 3: "Ahora consulto la ubicación, la hora y la brújula".
     rule = c._SILENT_TOOLS[language]
     assert "consult" in rule or "check" in rule
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+def test_cruce_con_semaforo_apagado_o_dudoso(language):
+    # HU-020 (LAZA-48): con un semáforo sin luces dice que no ve ninguna luz y que no
+    # se guíe por él; a "¿puedo cruzar?" no lo confirma; ante un bloqueo ofrece el SOS.
+    rule = c._CROSSING[language]
+    assert "SOS" in rule
+    assert "SOS" in c.get_live_system_prompt(language, screen_locked=True)
+    assert "no veo ninguna luz" in c._CROSSING["es"]
+    assert "no puedes confirmarlo" in c._CROSSING["es"]
+    assert "cannot confirm" in c._CROSSING["en"]
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+@pytest.mark.parametrize("screen_locked", [False, True])
+def test_ruta_con_gps_perdido_no_afirma_la_posicion(language, screen_locked):
+    # HU-021 fase 1 (LAZA-49): la app avisa 'gps lost' y 'gps back'; mientras tanto el
+    # asistente no dice en qué punto va ni dónde está.
+    rule = c._ROUTE[language]
+    assert "'gps lost'" in rule and "'gps back'" in rule
+    assert rule in c.get_live_system_prompt(language, screen_locked=screen_locked)
+    assert "nunca digas en qué punto va" in c._ROUTE["es"]
+    assert "never say which point" in c._ROUTE["en"]

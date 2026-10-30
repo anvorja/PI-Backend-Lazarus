@@ -20,6 +20,9 @@ release del Release Plan de Lazarus.
 - ADR 0001 a 0003 y documentos de arquitectura en `docs/architecture`.
 
 ### Cambiado
+- Prompt v1.31.0: en un cruce con el semáforo apagado o dudoso dice que no ve ninguna luz,
+  no confirma "¿puedo cruzar?" y ante un bloqueo ofrece el SOS (HU-020, LAZA-48); con una
+  ruta activa y el GPS perdido lo avisa y no afirma en qué punto va (HU-021, LAZA-49).
 - Prompt v1.30.0: con una ruta activa, el asistente no dice "no puedo guiarte" ni lee
   "[RUTA]" (LAZA-126).
 - Las pruebas no dependen del `.env` local.
