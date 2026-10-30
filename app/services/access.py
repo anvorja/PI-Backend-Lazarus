@@ -170,9 +170,15 @@ def start_session(
     now: datetime,
     carrier: str = "",
     transport: str = "",
+    mode: str = "",
 ) -> int:
     row = DeviceSession(
-        device_id=device_id, started_at=now, ip=ip, carrier=carrier, transport=transport
+        device_id=device_id,
+        started_at=now,
+        ip=ip,
+        carrier=carrier,
+        transport=transport,
+        mode=mode,
     )
     db.add(row)
     db.commit()
@@ -188,6 +194,25 @@ def end_session(db: Session, session_id: int, close_code: int | None, now: datet
     row.close_code = close_code
     db.add(row)
     db.commit()
+
+
+def close_open_direct_sessions(db: Session, device_id: int, now: datetime) -> None:
+    """Cierra las sesiones directas que la app no informó (HU-031): se cuentan
+    hasta ahora, sin pasar de la vida del token."""
+    rows = db.scalars(
+        select(DeviceSession).where(
+            DeviceSession.device_id == device_id,
+            DeviceSession.mode == "direct",
+            DeviceSession.ended_at.is_(None),
+        )
+    ).all()
+    for row in rows:
+        end = min(now, row.started_at + timedelta(seconds=settings.live_token_ttl_s))
+        row.ended_at = end
+        row.duration_s = round((end - row.started_at).total_seconds(), 1)
+        db.add(row)
+    if rows:
+        db.commit()
 
 
 # ---- Sesiones activas (para cerrarlas desde el panel) ---------------------

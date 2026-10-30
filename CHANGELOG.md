@@ -17,6 +17,10 @@ release del Release Plan de Lazarus.
   la ruta y el punto siguiente de cada nota; `/admin/devices/{id}/notes` los une a la nota
   junto con su revisión, y `PUT /admin/devices/{id}/notes/review` la marca aplicada,
   descartada o pendiente.
+- Conexión directa con Gemini Live mediante tokens efímeros (HU-031, LAZA-67):
+  `POST /api/v1/live/token` aplica las reglas del piloto y entrega un token de un solo uso
+  con el prompt y las funciones fijados; `POST /api/v1/live/sessions/{id}/end` cuenta los
+  minutos. Se activa con `LIVE_DIRECT_ENABLED=true`; el proxy `/ws/live` queda de respaldo.
 - ADR 0001 a 0003 y documentos de arquitectura en `docs/architecture`.
 
 ### Cambiado

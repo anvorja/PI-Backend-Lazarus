@@ -1,6 +1,6 @@
 # ADR 0003 — Conexión del cliente con Gemini Live: proxy WebSocket vs. ephemeral tokens
 
-- **Estado:** Aceptado (provisional) — 2026-06-06
+- **Estado:** Aceptado (provisional) — 2026-06-06 · **Actualizado 2026-10-29:** se implementa la opción B con el proxy como respaldo (HU-031, LAZA-67). Ver la sección final.
 - **Decide:** equipo Lazarus
 - **Afecta a:** cliente Flutter (Fase F1), backend, costo e infraestructura
 - **Relacionado:** `lazarus-plan.md`, `docs/architecture/current.md`, `docs/architecture/web-limits.md`
@@ -133,3 +133,42 @@ nunca lo ve.
 
 - **Key embebida en el cliente** — descartada de plano: viola el invariante de seguridad.
 - **Construir A y B a la vez** — descartada: duplica esfuerzo sin beneficio inmediato.
+
+---
+
+## Actualización 2026-10-29 — Opción B implementada, con el proxy de respaldo (HU-031)
+
+**Disparador cumplido:** el 28-oct Render suspendió el backend por agotar la transferencia
+del plan gratuito (hallazgo 47): el audio y la cámara de cada sesión pasaban por el
+servidor en los dos sentidos. Es el segundo disparador de esta ADR.
+
+**Verificación del bloqueo de la configuración (29-oct, contra la API real):**
+- Token creado con `auth_tokens.create` (SDK `google-genai`, `api_version` v1alpha),
+  `uses: 1`, `live_connect_constraints` con el modelo y la configuración, y
+  `lock_additional_fields: []`.
+- El cliente se conectó a `…BidiGenerateContentConstrained?access_token=…` (v1alpha y v1beta)
+  y envió un `setup` con **otro** system prompt: Gemini respondió siguiendo el del token, con y
+  sin `lock_additional_fields`.
+- Con el setup completo de Lazarus (prompt, funciones, voz, proactividad, transcripciones)
+  el asistente llamó a `get_time` con normalidad.
+- El segundo uso del mismo token se rechazó: "Token has been used too many times".
+
+**Diseño:**
+- `POST /api/v1/live/token` aplica las reglas del piloto antes de emitir (servicio abierto,
+  teléfono aprobado, horario y minutos del día) y responde 403 con el mismo código de cierre
+  del proxy (4006–4010) si rechaza. La vida del token es `LIVE_TOKEN_TTL_S` (30 min), sin
+  pasar de los minutos que le quedan al teléfono; un token sin usar vence al minuto.
+- La sesión queda registrada con `mode = "direct"`. La app informa el fin con
+  `POST /api/v1/live/sessions/{id}/end`; si no lo hace, la sesión se cierra al pedir el
+  siguiente token, contada hasta la vida del token.
+- La app usa el proxy `/ws/live` si el endpoint responde 404 (`LIVE_DIRECT_ENABLED=false`),
+  502 o no responde, o si la conexión directa falla antes de abrir.
+- `LIVE_DIRECT_ENABLED` (por defecto `false`) permite activarlo y desactivarlo desde Render
+  sin publicar otra APK.
+
+**Lo que se pierde en el modo directo (aceptado):**
+- "Cerrar sesión" desde el panel no corta una sesión directa en curso: el teléfono no puede
+  abrir la siguiente y la sesión termina, a más tardar, al vencer el token.
+- Los bytes de audio y cámara ya no se miden en el backend: es justo el objetivo. La
+  comparación del criterio 4 se hace con la transferencia del mes del panel (HU-051).
+

@@ -49,6 +49,7 @@ _LATE_COLUMNS = {
     "device_sessions": {
         "carrier": "VARCHAR(40) NOT NULL DEFAULT ''",
         "transport": "VARCHAR(12) NOT NULL DEFAULT ''",
+        "mode": "VARCHAR(8) NOT NULL DEFAULT ''",
     },
 }
 
