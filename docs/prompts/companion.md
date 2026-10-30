@@ -2,6 +2,18 @@
 
 > Registro de versiones del prompt de sistema (`app/prompts/companion.py`). Cada cambio de comportamiento sube `PROMPT_VERSION` y agrega aquí un bloque `## vX.Y.Z — fecha — motivo`, del más reciente al más antiguo. El backend registra la versión en el log al iniciar cada sesión.
 
+## v1.32.0 — 2026-10-29 — Ruta sin GPS: estimación con los pasos y ayuda a los 3 minutos (LAZA-49)
+
+**Motivo:** fase 2 de HU-021 (reglas 2 y 5): guiar sin GPS con los pasos contados y la
+brújula, y sugerir ayuda si pasan 3 minutos sin GPS.
+
+**Cambio en el prompt (5 idiomas), bloque RUTA CURADA → GPS PERDIDO:**
+- Si la persona pregunta cuánto falta o hacia dónde, llama a la función nueva
+  `get_route_progress`, que con el GPS perdido da una estimación con los pasos que contó el
+  teléfono y la brújula, y la dice como estimación.
+- Con `gps still lost` (3 minutos sin GPS) recomienda pedir ayuda a alguien cercano y ofrece
+  el SOS.
+
 ## v1.31.0 — 2026-10-29 — Semáforo apagado o dudoso y ruta con el GPS perdido (LAZA-48, LAZA-49)
 
 **Motivo:** HU-020 (copiloto de cruce) pide decir que no se ve ninguna luz cuando el
@@ -19,10 +31,6 @@ ruta activa y no afirmar una posición sin sustento.
   punto va, cuánto falta ni dónde está; si se lo preguntan, dice que no lo sabe con
   seguridad. Con `gps back` dice que recuperó el GPS y que la guía sigue. Los mensajes los
   envía la app desde la versión con LAZA-49.
-- Fase 2 de HU-021: si la persona pregunta cuánto falta o hacia dónde, llama a la función
-  nueva `get_route_progress`, que con el GPS perdido da una estimación con los pasos que
-  contó el teléfono y la brújula, y la dice como estimación. Con `gps still lost` (3 minutos
-  sin GPS) recomienda pedir ayuda a alguien cercano y ofrece el SOS.
 
 ## v1.30.0 — 2026-10-29 — Con una ruta activa no dice "no puedo guiarte" ni lee "[RUTA]" (LAZA-126)
 
