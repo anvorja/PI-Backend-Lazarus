@@ -2,6 +2,24 @@
 
 > Registro de versiones del prompt de sistema (`app/prompts/companion.py`). Cada cambio de comportamiento sube `PROMPT_VERSION` y agrega aquí un bloque `## vX.Y.Z — fecha — motivo`, del más reciente al más antiguo. El backend registra la versión en el log al iniciar cada sesión.
 
+## v1.31.0 — 2026-10-29 — Semáforo apagado o dudoso y ruta con el GPS perdido (LAZA-48, LAZA-49)
+
+**Motivo:** HU-020 (copiloto de cruce) pide decir que no se ve ninguna luz cuando el
+semáforo está apagado, no confirmar "¿puedo cruzar?" y ofrecer el SOS ante un bloqueo.
+HU-021, fase 1, pide avisar el cambio de modo cuando el GPS deja de ser confiable con una
+ruta activa y no afirmar una posición sin sustento.
+
+**Cambio en el prompt (5 idiomas):**
+- Bloque CRUCES: con el semáforo apagado, sin luces o poco visible, lo dice ("no veo ninguna
+  luz encendida en el semáforo") y pide no guiarse por él. Si la persona pregunta si puede
+  cruzar, dice que no puede confirmarlo y sugiere esperar o pedir ayuda. Ante un bloqueo,
+  una obra o una aglomeración, recomienda detenerse y ofrece el SOS.
+- Bloque RUTA CURADA, regla nueva GPS PERDIDO: con `'[RUTA]'` `gps lost` lo dice una vez y
+  sigue con la cámara (letreros, tiendas, escaleras, puertas) y los pasos, sin decir en qué
+  punto va, cuánto falta ni dónde está; si se lo preguntan, dice que no lo sabe con
+  seguridad. Con `gps back` dice que recuperó el GPS y que la guía sigue. Los mensajes los
+  envía la app desde la versión con LAZA-49.
+
 ## v1.30.0 — 2026-10-29 — Con una ruta activa no dice "no puedo guiarte" ni lee "[RUTA]" (LAZA-126)
 
 **Motivo:** en las jornadas del 27 y el 28 de octubre (hallazgos 37 y 38; D8 y D12 de
