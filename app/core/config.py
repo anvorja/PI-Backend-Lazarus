@@ -27,6 +27,18 @@ class Settings(BaseSettings):
     # sesiones nuevas sin abrir Gemini (no gasta saldo) y la app dice que Lazarus
     # está en pausa. Se cambia en las variables de entorno de Render.
     live_enabled: bool = True
+    # Conexión directa con tokens efímeros (HU-031, ADR-0003 opción B): el
+    # teléfono pide un token de un solo uso a POST /api/v1/live/token y abre la
+    # sesión directo con Gemini, sin pasar el audio ni la cámara por el backend.
+    # Con false el endpoint responde 404 y la app sigue usando el proxy.
+    live_direct_enabled: bool = False
+    # Vida del token: la sesión directa no puede durar más (la app abre otra con
+    # un token nuevo). Un token sin usar vence al minuto.
+    live_token_ttl_s: float = 1800
+    gemini_live_direct_url: str = (
+        "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage."
+        "v1alpha.GenerativeService.BidiGenerateContentConstrained"
+    )
 
     # Control de acceso por dispositivo (HU-044 a HU-046). Base de datos de
     # dispositivos, sesiones y logs de campo: Postgres en producción (Neon,

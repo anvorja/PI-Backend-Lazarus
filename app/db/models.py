@@ -50,6 +50,8 @@ class DeviceSession(Base):
     # Red del teléfono al abrir la sesión (la app la informa en el frame `start`).
     carrier: Mapped[str] = mapped_column(String(40), default="")
     transport: Mapped[str] = mapped_column(String(12), default="")
+    # "direct" si se abrió con un token efímero (HU-031); "" por el proxy.
+    mode: Mapped[str] = mapped_column(String(8), default="")
 
 
 class LogUpload(Base):
