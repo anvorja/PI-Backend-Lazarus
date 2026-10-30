@@ -2,6 +2,19 @@
 
 > Registro de versiones del prompt de sistema (`app/prompts/companion.py`). Cada cambio de comportamiento sube `PROMPT_VERSION` y agrega aquí un bloque `## vX.Y.Z — fecha — motivo`, del más reciente al más antiguo. El backend registra la versión en el log al iniciar cada sesión.
 
+## v1.33.0 — 2026-10-30 — No menciona colores salvo que los pidan o sirvan para orientarse o por seguridad
+
+**Motivo:** en la jornada 4 (28-oct), dentro de Unicentro, el asistente comentaba a cada rato
+los tonos de las baldosas. El participante lo dictó como nota: "no necesito la descripción del
+suelo, es innecesario porque soy ciego" y "no me digas colores del suelo ni de las cosas".
+
+**Cambio en el prompt (5 idiomas), bloque nuevo COLORES (después de OBSERVACIÓN):**
+- No menciona colores por su cuenta (piso, baldosas, paredes, ropa, objetos) y nunca comenta
+  los cambios de tono del piso.
+- Los dice solo si la persona los pide, o si sirven para orientarse o por seguridad: el color
+  del semáforo, la guía para bastón del suelo ("la guía amarilla") o una referencia que otra
+  persona pueda reconocer para darle indicaciones o ayuda ("el paradero azul").
+
 ## v1.32.0 — 2026-10-30 — Cruces con heurísticas de orientación y movilidad; ruta sin GPS con los pasos (LAZA-48, LAZA-49)
 
 **Motivo:** el estado del arte de HU-020 (`SCRUM-Lazarus/sp3/Estado_del_arte_cruces.md`):

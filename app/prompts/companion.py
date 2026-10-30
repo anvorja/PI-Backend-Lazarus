@@ -2,7 +2,7 @@
 
 # Versión del prompt de sistema. Cada cambio de comportamiento del prompt sube la
 # versión y agrega un bloque en `docs/prompts/companion.md` con fecha y motivo.
-PROMPT_VERSION = "1.32.0"
+PROMPT_VERSION = "1.33.0"
 
 SUPPORTED_LANGUAGES: tuple[str, ...] = ("es", "en", "fr", "pt", "it")
 DEFAULT_LANGUAGE = "es"
@@ -1347,6 +1347,56 @@ _UNICENTRO: dict[str, str] = {
 # con todos callados la app envía '[OBSERVA]' cada pocos segundos por el flujo de la
 # cámara. Spike del 6 de octubre: responde en ~1,6 s y avisa de escalones, animales
 # y obstáculos sin que la persona hable.
+# Jornada 4 (28-oct), notas del participante en Unicentro: "no necesito la descripción
+# del suelo, es innecesario porque soy ciego"; "no me digas colores del suelo ni de las
+# cosas". El asistente comentaba a cada rato los tonos de las baldosas. Los colores
+# quedan solo cuando la persona los pide o sirven para orientarse o por seguridad.
+_COLORS: dict[str, str] = {
+    "es": (
+        "COLORES: la persona es ciega. No menciones colores por tu cuenta: ni del "
+        "piso, las baldosas o las paredes, ni de la ropa o los objetos, y nunca "
+        "comentes los cambios de tono del piso. Dilos solo si la persona te los "
+        "pide, o si sirven para orientarse o por seguridad: el color del semáforo, "
+        "la guía para bastón del suelo ('la guía amarilla') o una referencia que "
+        "otra persona pueda reconocer para darle indicaciones o ayuda ('el paradero "
+        "azul')."
+    ),
+    "en": (
+        "COLORS: the person is blind. Do not mention colors on your own: not of the "
+        "floor, tiles or walls, nor of clothes or objects, and never comment on "
+        "changes in the floor's shade. Say them only if the person asks, or if they "
+        "help orientation or safety: the color of the traffic light, the tactile "
+        "guide on the ground ('the yellow guide') or a landmark another person could "
+        "recognize to give them directions or help ('the blue bus stop')."
+    ),
+    "fr": (
+        "COULEURS : la personne est aveugle. Ne mentionne pas de couleurs de toi-même : "
+        "ni du sol, des carreaux ou des murs, ni des vêtements ou des objets, et ne "
+        "commente jamais les changements de teinte du sol. Dis-les seulement si la "
+        "personne les demande, ou si elles servent à s'orienter ou pour la sécurité : "
+        "la couleur du feu, le guidage podotactile au sol ('la bande jaune') ou un "
+        "repère qu'une autre personne peut reconnaître pour lui indiquer le chemin ou "
+        "l'aider ('l'arrêt bleu')."
+    ),
+    "pt": (
+        "CORES: a pessoa é cega. Não mencione cores por conta própria: nem do piso, "
+        "dos ladrilhos ou das paredes, nem de roupas ou objetos, e nunca comente as "
+        "mudanças de tom do piso. Diga-as só se a pessoa pedir, ou se servirem para "
+        "se orientar ou por segurança: a cor do semáforo, o piso tátil ('a faixa "
+        "amarela') ou uma referência que outra pessoa possa reconhecer para dar "
+        "direções ou ajuda ('o ponto de ônibus azul')."
+    ),
+    "it": (
+        "COLORI: la persona è cieca. Non menzionare colori di tua iniziativa: né del "
+        "pavimento, delle piastrelle o delle pareti, né di vestiti o oggetti, e non "
+        "commentare mai i cambi di tonalità del pavimento. Dilli solo se la persona "
+        "li chiede, o se servono per orientarsi o per sicurezza: il colore del "
+        "semaforo, il percorso tattile a terra ('la guida gialla') o un riferimento che "
+        "un'altra persona può riconoscere per darle indicazioni o aiuto ('la fermata "
+        "blu')."
+    ),
+}
+
 _OBSERVE: dict[str, str] = {
     "es": (
         "OBSERVACIÓN: mientras nadie habla, la aplicación te envía '[OBSERVA]' cada "
@@ -2157,6 +2207,7 @@ def get_live_system_prompt(
         _COMMANDS_EXTRA[lang],
         _SOS[lang],
         _OBSERVE[lang],
+        _COLORS[lang],
         _SCREEN_LOCKED[lang],
         _TASK_INTENTS[lang],
         _NO_ROUTES[lang],
