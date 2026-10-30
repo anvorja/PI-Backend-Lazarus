@@ -305,6 +305,16 @@ _FUNCTION_DECLARATIONS = [
         },
     },
     {
+        "name": "get_route_progress",
+        "description": (
+            "Con una ruta curada activa, dice el siguiente punto, a cuántos pasos y "
+            "hacia qué hora de reloj. Si el GPS está perdido, da una estimación con "
+            "los pasos contados por el teléfono desde que se perdió. Úsalo cuando la "
+            "persona pregunte cuánto le falta o hacia dónde sigue."
+        ),
+        "parameters": {"type": "object", "properties": {}},
+    },
+    {
         "name": "stop_route",
         "description": (
             "Deja de guiar por la ruta curada activa. Úsalo solo cuando la persona "

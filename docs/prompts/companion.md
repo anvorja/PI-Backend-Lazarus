@@ -2,6 +2,32 @@
 
 > Registro de versiones del prompt de sistema (`app/prompts/companion.py`). Cada cambio de comportamiento sube `PROMPT_VERSION` y agrega aquí un bloque `## vX.Y.Z — fecha — motivo`, del más reciente al más antiguo. El backend registra la versión en el log al iniciar cada sesión.
 
+## v1.32.0 — 2026-10-30 — Cruces con heurísticas de orientación y movilidad; ruta sin GPS con los pasos (LAZA-48, LAZA-49)
+
+**Motivo:** el estado del arte de HU-020 (`SCRUM-Lazarus/sp3/Estado_del_arte_cruces.md`):
+ningún servicio comparable decide el cruce (Be My Eyes, Aira), Gemini Live ve 1 cuadro por
+segundo y los modelos multimodales leen mal el semáforo peatonal (VIABench 2026). Y la fase
+2 de HU-021 (reglas 2 y 5).
+
+**Cambio en el prompt (5 idiomas), bloque CRUCES:**
+- Distingue el semáforo peatonal (figura de persona) del vehicular; si no ve uno peatonal,
+  lo dice. Describe el color solo si lo ve claro varios segundos con la cámara quieta y
+  agrega que puede cambiar en cualquier momento.
+- Un carro que gira no indica paso: en Colombia se puede girar a la derecha en rojo (Ley 769,
+  art. 118). Con el tráfico ya en movimiento, sugiere esperar el próximo cambio.
+- Cebra sin semáforo o cruce sin control: los conductores no siempre ceden; cruzar solo si
+  oye los vehículos con tiempo suficiente; con curva, cuesta o ruido, buscar otro punto o
+  ayuda. No promete ver a tiempo vehículos rápidos ni motos.
+- Mientras la persona cruza, habla lo mínimo. Nunca dice que llegó a la otra acera: pide
+  confirmarlo con el bastón.
+
+**Cambio en el prompt (5 idiomas), bloque RUTA CURADA → GPS PERDIDO:**
+- Si la persona pregunta cuánto falta o hacia dónde, llama a la función nueva
+  `get_route_progress`, que con el GPS perdido da una estimación con los pasos que contó el
+  teléfono y la brújula, y la dice como estimación.
+- Con `gps still lost` (3 minutos sin GPS) recomienda pedir ayuda a alguien cercano y ofrece
+  el SOS.
+
 ## v1.31.0 — 2026-10-29 — Semáforo apagado o dudoso y ruta con el GPS perdido (LAZA-48, LAZA-49)
 
 **Motivo:** HU-020 (copiloto de cruce) pide decir que no se ve ninguna luz cuando el
