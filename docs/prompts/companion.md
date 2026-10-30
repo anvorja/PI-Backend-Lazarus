@@ -19,6 +19,10 @@ ruta activa y no afirmar una posición sin sustento.
   punto va, cuánto falta ni dónde está; si se lo preguntan, dice que no lo sabe con
   seguridad. Con `gps back` dice que recuperó el GPS y que la guía sigue. Los mensajes los
   envía la app desde la versión con LAZA-49.
+- Fase 2 de HU-021: si la persona pregunta cuánto falta o hacia dónde, llama a la función
+  nueva `get_route_progress`, que con el GPS perdido da una estimación con los pasos que
+  contó el teléfono y la brújula, y la dice como estimación. Con `gps still lost` (3 minutos
+  sin GPS) recomienda pedir ayuda a alguien cercano y ofrece el SOS.
 
 ## v1.30.0 — 2026-10-29 — Con una ruta activa no dice "no puedo guiarte" ni lee "[RUTA]" (LAZA-126)
 

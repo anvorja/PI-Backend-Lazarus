@@ -1893,7 +1893,10 @@ _ROUTE: dict[str, str] = {
         "ayudando con la cámara. Hasta que llegue 'gps back', guía solo con lo que "
         "ves (letreros, tiendas, escaleras, puertas) y sus pasos; nunca digas en "
         "qué punto va, cuánto le falta ni dónde está, y si te lo pregunta dile que "
-        "no lo sabes con seguridad y que sigan con precaución. Si dice 'gps back', dile en "
+        "no lo sabes con seguridad y que sigan con precaución. Si pregunta cuánto le falta o "
+        "hacia dónde, llama a "
+        "get_route_progress y dilo como una estimación. Si dice 'gps still lost', "
+        "recomiéndale pedir ayuda a alguien cercano y ofrécele el SOS. Si dice 'gps back', dile en "
         "una frase que recuperaste el GPS y que la guía sigue."
     ),
     "en": (
@@ -1927,8 +1930,11 @@ _ROUTE: dict[str, str] = {
         "helping them with the camera. Until 'gps back' arrives, guide only with "
         "what you see (signs, stores, stairs, doors) and their steps; never say "
         "which point they are at, how far they have to go or where they are, and "
-        "if they ask, tell them you are not sure and to go on carefully. If it "
-        "says 'gps back', tell them in one sentence that you have the GPS again "
+        "if they ask, tell them you are not sure and to go on carefully. If they "
+        "ask how far or which way, call get_route_progress and say it as an "
+        "estimate. If it says 'gps still lost', recommend asking someone nearby for "
+        "help and offer the SOS. If it says 'gps back', tell them in one sentence that you have "
+        "the GPS again "
         "and the guidance goes on."
     ),
     "fr": (
@@ -1965,7 +1971,11 @@ _ROUTE: dict[str, str] = {
         "'gps back', guide-la seulement avec ce que tu vois (panneaux, magasins, "
         "escaliers, portes) et ses pas ; ne dis jamais à quel point elle est, "
         "combien il lui reste ni où elle se trouve, et si elle le demande, dis-lui "
-        "que tu ne le sais pas avec certitude et de continuer prudemment. S'il dit 'gps back', "
+        "que tu ne le sais pas avec certitude et de continuer prudemment. Si elle demande combien "
+        "il reste ou par où, appelle "
+        "get_route_progress et dis-le comme une estimation. S'il dit 'gps still "
+        "lost', recommande-lui de demander de l'aide à quelqu'un de proche et propose "
+        "le SOS. S'il dit 'gps back', "
         "dis-lui en une phrase que tu as retrouvé le GPS et que le guidage "
         "continue."
     ),
@@ -2000,7 +2010,10 @@ _ROUTE: dict[str, str] = {
         "ajudando com a câmera. Até chegar 'gps back', guie só com o que vê "
         "(placas, lojas, escadas, portas) e os passos dela; nunca diga em que "
         "ponto ela está, quanto falta nem onde está, e se perguntar diga que não "
-        "tem certeza e que sigam com cuidado. Se disser 'gps back', diga em uma "
+        "tem certeza e que sigam com cuidado. Se perguntar quanto falta ou para onde, chame "
+        "get_route_progress e diga como uma estimativa. Se disser 'gps still lost', "
+        "recomende pedir ajuda a alguém próximo e ofereça o SOS. Se disser 'gps "
+        "back', diga em uma "
         "frase que recuperou o GPS e que a orientação continua."
     ),
     "it": (
@@ -2035,7 +2048,11 @@ _ROUTE: dict[str, str] = {
         "fotocamera. Finché non arriva 'gps back', guida solo con ciò che vedi "
         "(cartelli, negozi, scale, porte) e i suoi passi; non dire mai a che "
         "punto è, quanto manca né dove si trova, e se lo chiede dille che non lo "
-        "sai con certezza e di proseguire con prudenza. Se dice 'gps back', dille in una "
+        "sai con certezza e di proseguire con prudenza. Se chiede quanto manca o da che parte, "
+        "chiama "
+        "get_route_progress e dillo come una stima. Se dice 'gps still lost', "
+        "raccomandale di chiedere aiuto a qualcuno vicino e offri l'SOS. Se dice "
+        "'gps back', dille in una "
         "frase che hai di nuovo il GPS e che la guida continua."
     ),
 }

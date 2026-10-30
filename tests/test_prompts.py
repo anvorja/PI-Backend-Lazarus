@@ -669,6 +669,9 @@ def test_ruta_con_gps_perdido_no_afirma_la_posicion(language, screen_locked):
     # asistente no dice en qué punto va ni dónde está.
     rule = c._ROUTE[language]
     assert "'gps lost'" in rule and "'gps back'" in rule
+    # Fase 2: estimación con los pasos y, a los 3 minutos, ayuda o SOS.
+    assert "get_route_progress" in rule and "'gps still lost'" in rule
+    assert "SOS" in rule
     assert rule in c.get_live_system_prompt(language, screen_locked=screen_locked)
     assert "nunca digas en qué punto va" in c._ROUTE["es"]
     assert "never say which point" in c._ROUTE["en"]

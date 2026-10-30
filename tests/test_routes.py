@@ -110,7 +110,7 @@ def test_la_app_descarga_los_perfiles_solo_aprobada(client):
 
 def test_el_asistente_tiene_las_funciones_de_ruta():
     names = {f["name"] for f in _FUNCTION_DECLARATIONS}
-    assert {"start_route", "stop_route"} <= names
+    assert {"start_route", "stop_route", "get_route_progress"} <= names
 
 
 @pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
