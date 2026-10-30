@@ -45,6 +45,7 @@ def test_los_cinco_idiomas_tienen_todas_las_partes():
         c._CAMERA_OFF,
         c._SOS,
         c._OBSERVE,
+        c._COLORS,
         c._SCREEN_LOCKED,
     ]
     for table in tables:
@@ -693,4 +694,19 @@ def test_cruce_con_las_heuristicas_de_orientacion_y_movilidad(language):
         "habla lo mínimo",
         "confirme con el bastón",
     ):
+        assert phrase in es
+
+
+@pytest.mark.parametrize("language", c.SUPPORTED_LANGUAGES)
+@pytest.mark.parametrize("screen_locked", [False, True])
+def test_no_menciona_colores_salvo_que_los_pidan_o_sirvan(language, screen_locked):
+    # Jornada 4 (28-oct): en Unicentro describía a cada rato los tonos de las baldosas;
+    # el participante pidió "no me digas colores del suelo ni de las cosas".
+    rule = c._COLORS[language]
+    assert rule in c.get_live_system_prompt(language, screen_locked=screen_locked)
+    es = c._COLORS["es"]
+    for phrase in ("baldosas", "cambios de tono del piso", "si la persona te los pide"):
+        assert phrase in es
+    # Excepciones útiles: semáforo, guía para bastón y referencias para pedir ayuda.
+    for phrase in ("semáforo", "la guía amarilla", "el paradero azul"):
         assert phrase in es

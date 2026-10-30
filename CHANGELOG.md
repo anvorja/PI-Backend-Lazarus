@@ -24,6 +24,9 @@ release del Release Plan de Lazarus.
 - ADR 0001 a 0003 y documentos de arquitectura en `docs/architecture`.
 
 ### Cambiado
+- Prompt v1.33.0: no menciona colores por su cuenta (piso, baldosas, objetos); solo si la
+  persona los pide o sirven para orientarse o por seguridad, como el semáforo o la guía para
+  bastón (pedido del participante en la jornada 4).
 - Prompt v1.31.0: en un cruce con el semáforo apagado o dudoso dice que no ve ninguna luz,
   no confirma "¿puedo cruzar?" y ante un bloqueo ofrece el SOS (HU-020, LAZA-48); con una
   ruta activa y el GPS perdido lo avisa y no afirma en qué punto va (HU-021, LAZA-49).
